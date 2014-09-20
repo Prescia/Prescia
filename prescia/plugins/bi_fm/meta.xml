@@ -1,0 +1,13 @@
+<BI_FM dbname="sys_fmanager"
+			  keys="filenm"
+			  systemModule="true"
+			  permissionoverride="AAAAAAAAA"
+			  volatile="false"
+			  plugins="bi_fm"
+			  >
+	<FILENM unique="true" mandatory="true" custom="true">VC</FILENM>
+	<ID_ALLOWED_GROUP restrict="10">GROUPS</ID_ALLOWED_GROUP>
+	<ALLOWED_USERS restrict="10" html="true" custom="true">TEXT</ALLOWED_USERS>
+	<HAS_EXPIRATION default='n'>BOL</HAS_EXPIRATION>
+	<EXPIRATION_DATE default="0000-00-00" conditional="has_expiration=y">DATE</EXPIRATION_DATE>
+</BI_FM>

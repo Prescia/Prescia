@@ -1,0 +1,1278 @@
+<div class="lxmladm_box">
+	
+	<div class="lxmladm_title">Estatísticas</div>
+	
+	<div class="lxmladm_box" id="topmenudiv">
+		<div id="tabtop0" onclick="tab(0);" style="cursor:pointer;float:left;width:120px;border-bottom:1px solid #222222">
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Geral
+		</div>
+		<div id="tabtop6" onclick="tab(6);" style="cursor:pointer;float:left;width:100px;">
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Últimas 24h
+		</div>
+		<div id="tabtop1" onclick="tab(1);" style="cursor:pointer;float:left;width:120px;">
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Horários
+		</div>
+		<div id="tabtop2" onclick="tab(2);" style="cursor:pointer;float:left;width:120px;">
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Páginas
+		</div>
+		<div id="tabtop3" onclick="tab(3);" style="cursor:pointer;float:left;width:150px;">
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Referências e busca
+		</div>
+		<div id="tabtop4" onclick="tab(4);" style="cursor:pointer;float:left;width:100px;">
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Caminho
+		</div>
+		<div id="tabtop5" onclick="tab(5);" style="cursor:pointer;float:left;width:100px;">
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Tecnologia
+		</div>
+		<br style="clear:both"/>
+	</div>
+	
+	<div id="tab0">
+	<div class="lxmladm_box" style="width:1006px">
+		<b>Gráficos principais</b><br/>
+		<div id="tab0options">
+			<select id="graphictype" onchange="resetGraphics();" style="float:left">
+				<option value="h">Visitas</option>
+				<option value="u">Visitantes únicos</option>
+				<option value="hu">Páginas/Visitantes</option>
+				<option value="b">Aceitação/Rejeição</option>
+				<option value="r">Retornos em 24h</option>
+				<option value="k">Chegaram via Bookmark</option>
+			</select>
+			<select id="graphicperiod" onchange="resetGraphics(false,true);" style="float:left">
+				<option value="m">Último mês</option>
+				<option value="t">Último trimestre</option>
+				<option value="s">Último semestre</option>
+				<option value="a">Último ano</option>
+				<option value="e">Especificar intervalo</option>
+			</select>
+			<div id="especificardiv" style="display:none;float:left;margin-left:10px">
+				Período <input type="text" name="data_inicio" id="data_inicio" style="width:80px" value="{data_inicio|date|d/m/Y}"/>
+				<img id='divcalendar_data_inicio' onclick="calendarHandler.showCalendar('data_inicio','divcalendar_data_inicio',-80,-8);" src="/pages/_js/calendar/gifs/dyncalendar.gif" style="width:16px;height:16px;position:relative;top:3px;left:2px" alt="{_t}calendar{/t}"/> -
+				<input type="text" name="data_fim" id="data_fim" style="width:80px" value="{data_fim|date|d/m/Y}"/>
+				<img id='divcalendar_data_fim' onclick="calendarHandler.showCalendar('data_fim','divcalendar_data_fim',-80,-8);" src="/pages/_js/calendar/gifs/dyncalendar.gif" style="width:16px;height:16px;position:relative;top:3px;left:2px" alt="{_t}calendar{/t}"/>
+				<input type="button" value=" atualizar " onclick="resetGraphics('e',true);"/>
+			</div>
+			<input type="button" value=" Exportar " style="float:right" onclick="window.open('stats_export.php','_blank');"/>
+			<input type="button" value=" Imprimir " style="float:right" onclick="printmode()"/>
+			<div style="clear:both"></div>
+		</div>
+	</div>
+	
+	<div class="lxmladm_box" style="position:relative">
+		<div style="position:relative;">
+			<canvas id="maincanvas" style="cursor:crosshair;position:relative;width:1000px;height:210px;background:#fff" onmousemove="omo(event);" onmouseout="$('canvasover').style.display='none'"></canvas>
+			<div style="border:1px solid #000000;padding:2px;line-height:16px;height:16px;width:994px">
+				<div style="width:100px;float:left;" id="startdatediv"></div>
+				<div style="width:100px;float:right;text-align:right" id="enddatediv"></div>
+				<div style="width:300px;float:left;text-align:center" id="maingraphdata"></div>
+				<div style="width:300px;float:right;text-align:center" id="secondarygraphdata" title="A variação calcula a diferença entre a primeira e a segunda metade do gráfico"></div>
+			</div>
+			<div id="canvasovervar" style="pointer-events:none;display:none;position:absolute;top:0px;left:0px;width:10px;height:210px;background:#ffffff;"></div>
+			<div id="canvasover" style="display:none;position:absolute;top:150px;left:490px;border:1px solid #000000;background:#ffffff;padding:2px;width:100px;height:16px;line-height:12px;color:#000000;font-size:10px;"></div>
+		</div>
+	</div>
+	
+	<div id="smalldatadiv" class="lxmladm_box" style="position:relative;">
+		<div style="width:490px;float:left;height:240px">
+			<div onclick="resetGraphics('h');" style="cursor:pointer;text-align:center;height:80px"
+				title="Visitas, ou pageviews, conta todo tipo de página apresentada no período"
+				>
+				Visitas (páginas vistas)<br/>
+				<canvas id="littleh" style="width:400px;height:40px;background:#fff"></canvas><br/>
+				<span id="littleh_total"></span>
+			</div>
+			<div onclick="resetGraphics('hu');" style="cursor:pointer;text-align:center;height:80px"
+				title="Quantidade média de páginas que cada visitante único (pessoa) visitou no site antes de sair">
+				Páginas/Visitantes<br/>
+				<canvas id="littlehu" style="width:400px;height:40px;background:#fff"></canvas><br/>
+				<span id="littlehu_total"></span>
+			</div>
+			<div onclick="resetGraphics('r');" style="cursor:pointer;text-align:center;height:80px"
+				title="Quantos visitantes únicos (pessoas) voltaram ao site pelo menos uma vez em menos de 24h depois da última visita">
+				Retornos em 24h<br/>
+				<canvas id="littler" style="width:400px;height:40px;background:#fff"></canvas><br/>
+				<span id="littler_total"></span>
+			</div>
+		</div>
+		<div style="width:490px;float:left;overflow:auto;height:240px">
+			<div onclick="resetGraphics('u');" style="cursor:pointer;text-align:center;height:80px"
+				title="Quantos visitantes únicos (pessoas) acessaram o site no período">
+				Visitantes únicos<br/>
+				<canvas id="littleu" style="width:400px;height:40px;background:#fff"></canvas><br/>
+				<span id="littleu_total"></span>
+			</div>
+			<div onclick="resetGraphics('b');" style="cursor:pointer;text-align:center;height:80px"
+				title="Taxa de quantos visitantes únicos (pessoas) permanesceram no site (aceitação) depois de visitar uma página, ou seja, visitaram mais de uma página. NOTA: estatísticamente, o valor ideal é acima de 20%">
+				Aceitação/Rejeição<br/>
+				<canvas id="littleb" style="width:400px;height:40px;background:#fff"></canvas><br/>
+				<span id="littleb_total"></span>
+			</div>
+			<div onclick="resetGraphics('k');" style="cursor:pointer;text-align:center;height:80px"
+				title="Quantos visitantes únicos (pessoas) chegaram ao site a partir de um bookmark ou digitaram o endereço do site direto no navegador">
+				Chegaram via Bookmark<br/>
+				<canvas id="littlek" style="width:400px;height:40px;background:#fff"></canvas><br/>
+				<span id="littlek_total"></span>
+			</div>
+		</div>
+		<div style="clear:both"></div>
+	</div>
+	</div>{_}tab0{/}
+	
+	
+	<div class="lxmladm_box" style="position:relative;display:none" id="tab1">
+		<strong>Horários de maior visitação</strong><br/>
+		Azul sendo mais fraco, Vermelho o mais forte. <b>As últimas 4 semanas</b> são usadas como base, o valor apresentado é a média das 4 semanas<br/>
+		<br/>
+		<strong>VISITAS (pageview)</strong>
+		<div style="width:1000px;height:255px;border:1px solid #b0b0b0;background:#ffffff;position:relative;">
+			{timelapse}
+		</div>
+		<br/><br/>
+		<strong>VISITANTES ÚNICOS (pessoas)</strong>
+		<div style="width:1000px;height:255px;border:1px solid #b0b0b0;background:#ffffff;position:relative;">
+			{timelapse2}
+		</div>
+	</div>{_}tab1{/}
+	
+	
+	<div class="lxmladm_box" style="position:relative;display:none" id="tab2">
+		<strong>Páginas mais visitadas nos últimos 31 dias</strong><br/>
+		<div style="position:relative;">
+			<canvas id="pagescanvas" style="cursor:crosshair;position:relative;width:990px;height:300px;background:#fff" onmousemove="omop(event);" onmouseout="$('canvasoverp').style.display='none'"></canvas>
+			<div id="canvasovervarp" style="pointer-events:none;display:none;position:absolute;top:0px;left:0px;width:33px;height:300px;background:#ffffff;z-index:10000"></div>
+			<div id="canvasoverp" style="display:none;position:absolute;top:150px;left:490px;border:1px solid #000000;background:#ffffff;padding:2px;width:200px;z-index:10001;line-height:12px;color:#000000;font-size:10px;"></div>
+		</div>
+		<div style="border:1px solid #000000;padding:2px;line-height:14px;width:984px;font-size:12px;">
+			<div id="pagecheckdata" style="width:490px;float:left;font-size:11px;text-align:right"></div>
+			<div id="pagedata" style="width:490px;float:right;font-size:11px">
+				<canvas id="pagepie" style="position:relative;width:480px;height:480px;background:#fff;margin-left:10px;margin-top:10px;"></canvas>
+			</div>
+			<br style="clear:both"/>
+		</div>
+	</div>{_}tab2{/}
+	
+	<div id="tab3" style="display:none">
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Referências (outro site linkando para este) hoje</strong><br/>
+	
+			<div style="margin:0px 20px 0px 20px">
+				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+					<tr>
+					  <td width="400">Referer</td>
+					  <td colspan="2">Hits</td>
+					</tr>
+					{_refd}
+					<tr>
+					  <td style="border-bottom:1px dotted #7f7f7f;overflow:hidden">{referer}</td>
+					  <td style="width:400px;"><div style="float:left;background:#ccccee;height:10px;width:{width}px;"></div></td>
+					  <td>{hits}</td>
+					</tr>
+					{/refd}
+				</tbody></table>
+			</div>
+	
+		</div>
+	
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Referências (outro site linkando para este) últimos 30 dias</strong><br/>
+			<div style="margin:0px 20px 0px 20px">
+				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+					<tr>
+					  <td width="400">Referer</td>
+					  <td colspan="2">Hits</td>
+					</tr>
+					{_refh}
+					<tr>
+					  <td style="border-bottom:1px dotted #7f7f7f;overflow:hidden">{referer}</td>
+					  <td style="width:400px;"><div style="float:left;background:#ccccee;height:10px;width:{width}px;"></div></td>
+					  <td>{h}</td>
+					</tr>
+					{/refh}
+				</tbody></table>
+			</div>
+		</div>
+	
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Palavras chave usadas para chegar à este site (últimos 30 dias)</strong><br/>
+			<div style="margin:0px 20px 0px 20px">
+				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+					<tr>
+					  <td >Site</td>
+					  <td >Palavras</td>
+					  <td colspan="2">Hits</td>
+					</tr>
+					{_query}
+					<tr>
+					  <td style="border-bottom:1px dotted #7f7f7f;overflow:hidden">{engine}</td>
+					  <td style="border-bottom:1px dotted #7f7f7f">{query}</td>
+				  	  <td style="width:400px;"><div style="float:left;background:#ccccee;height:10px;width:{width}px;"></div></td>
+					  <td style="padding-left:2px;">{hits} ({percent|number|2}%)</td>
+					</tr>
+					{/query}
+				</tbody></table>
+			</div>
+		</div>
+	
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Página de entrada, por referência (últimos 30 dias)</strong><br/>
+			<div style="margin:0px 20px 0px 20px">
+				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+					<tr>
+						<td width="240">Referer</td>
+						<td width="159">Entrada</td>
+						<td>Hits</td>
+					</tr>
+					{_refe}
+					<tr>
+						<td style="border-bottom:1px dotted #7f7f7f;overflow:hidden">{referer}</td>
+						<td style="border-bottom:1px dotted #7f7f7f;overflow:hidden">{entrypage}</td>
+				  		<td style="width:400px;"><div style="float:left;background:#ccccee;height:10px;width:{width}px;"></div></td>
+						<td>{h}</td>
+					</tr>
+					{/refe}
+				</tbody></table>
+			</div>
+		</div>
+	</div> {_}tab3{/}
+	
+	<div class="lxmladm_box" id="tab4" style="display:none">
+		<strong>Caminho usado</strong>
+		<form name="frmbase">
+			Página:
+			<select name="page" id="page">{_pages}<option value="{page}" {checked}>{_t}{page}{/t}</option>{/pages}</select>
+			<input type="button" onclick="atualize();" value=" Ver "/>
+		</form>
+		<br/>
+		<div id="content" style="height:250px;overflow:hidden;width:960px">
+			<div style="text-align:center">Aguarde</div>
+		</div>
+	</div>{_}tab4{/}
+	
+	<div id="tab5" style="display:none">
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Navegador - Gráfico por tempo (30 dias)</strong><br/>
+			<canvas width="990" height="300" id="canvasbrowser"></canvas>
+		</div>
+	
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Navegador - Totais por tipo (30 dias)</strong>
+			<div style="margin:0px 20px 0px 20px">
+				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+				{_browser}
+				<tr>
+				  <td style="width:200px">{browser}</td>
+			  	  <td style="width:400px;border-bottom:1px #{color} solid"><div style="float:left;background:#{color};height:10px;width:{width}px;"></div></td>
+				  <td style="padding-left:2px;">{hits} ({percent|number|2}%)</td>
+				</tr>
+				{/browser}
+				</tbody></table>
+				<br/><br/>
+				<strong>Dispositivos Mobile:</strong> {mobpercent|number|1}% das visitas se deu por um dispositivo mobile
+			</div>
+		</div>
+	
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Navegador - Totais por versão (30 dias)</strong><br/>
+	
+			<div style="margin:0px 20px 0px 20px">
+				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+					{_browserEX}
+					<tr>
+					  <td style="width:200px">{browser|truncate|35}</td>
+			  		  <td style="width:400px;"><div style="background:#ccccee;float:left;height:10px;width:{width}px;"></div></td>
+					  <td style="padding-left:2px;">{hits} ({percent|number|2}%)</td>
+					</tr>
+					{/browserEX}
+				</tbody></table>
+			</div>
+		</div>
+	
+	
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Resolução de tela - Por padrão (30 dias)</strong>
+			<div style="margin:0px 20px 0px 20px">
+				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+					{_prop}
+					<tr>
+						<td style="width:200px">{prop}</td>
+						<td style="width:400px;"><div class="div_progressbar" style="background:#ccccee;float:left;height:10px;width:{width}px;"></div></td>
+						<td style="padding-left:2px;">{hits} ({percent|number|2}%)</td>
+					</tr>
+					{/prop}
+				</tbody></table>
+			</div>
+		</div>
+	
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Resolução de tela - Detalhado (30 dias)</strong><br/>
+			<div style="margin:0px 20px 0px 20px">
+				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+					{_res}
+					<tr>
+					  <td style="width:200px">{resolution}</td>
+			  			  <td style="width:400px;"><div class="div_progressbar" style="background:#ccccee;float:left;height:10px;width:{width}px;"></div></td>
+					  <td style="padding-left:2px;">{hits} ({percent|number|2}%)</td>
+					</tr>
+					{/res}
+				</tbody></table>
+			</div>
+		</div>
+	</div>{_}tab5{/}
+	
+	<div id="tab6" style="display:none">
+		<div class="lxmladm_box" style="position:relative">
+			<canvas id="canvas24" width="990" height="300" style="position:relative;cursor:crosshair;" onmousemove="omot(event);" onmouseout="$('canvasovert').style.display='none'"></canvas>
+			<div id="canvasovervart" style="pointer-events:none;display:none;position:absolute;top:0px;left:0px;width:10px;height:300px;background:#ffffff;"></div>
+			<div id="canvasovert" style="display:none;position:absolute;top:150px;left:490px;border:1px solid #000000;background:#ffffff;padding:2px;width:100px;height:28px;line-height:12px;color:#000000;font-size:10px;"></div>
+		</div>
+	
+		<div class="lxmladm_box" style="position:relative" id="todaysummary">
+		</div>
+	
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Visitantes atuais</strong><br/>
+			EM MANUTENÇÃO
+		</div>
+	
+	</div>
+</div>
+
+<script type="text/javascript"><!--
+	// BGC and SMC related to main graphics, not pages or others
+	var BGCwidth = 1000;
+	var BGCheight = 210;
+	var SMCwidth = 400;
+	var SMCheight = 40;
+	var curtype = '';
+	var curperiod = '';
+	var statsdata = {data};
+	var pagedata = {datapages};
+	var statsbrowser = {statsbrowser};
+	var browsernames = {browsernames};
+	var statstoday = {statstoday};
+	var yesterday = "{yesterday}";
+	var yesterdayDate = new Date(yesterday.split("-")[0],yesterday.split("-")[1],yesterday.split("-")[2]);
+	var totalDays = statsdata.length;
+	var curtab = 0;
+	var colors = ['9393fb','7aa6e9','6ccbdf','62d5b3','63cd81','61bd5d','97cf6e','9fb360','99934d','a77e4e','c56f5d','e57277','f180c0','d075dd','9961c9'];
+
+	function tab(idx) {
+		$('tabtop' + curtab).style.borderBottom = "0px";
+		$('tabtop' + idx).style.borderBottom = "1px solid #222222";
+		$('tab' + curtab).style.display = 'none';
+		$('tab' + idx).style.display = '';
+		curtab = idx;
+	}
+
+	var startIndex = 0; // current graphic period END (it starts right to left)
+	var totalDays = 30; // period size
+
+	function resetGraphics(switchTo,updateAll) {
+		if (!switchTo) switchTo = $('graphictype').value;
+		switchPeriod = $('graphicperiod').value;
+		switch(switchPeriod) {
+			case "m":
+				 startIndex = 0;
+				 totalDays = 30;
+				 $('especificardiv').style.display = 'none';
+			break;
+			case "t":
+				 startIndex = 0;
+				 totalDays = 91;
+				 $('especificardiv').style.display = 'none';
+			break;
+			case "s":
+				 startIndex = 0;
+				 totalDays = 182;
+				 $('especificardiv').style.display = 'none';
+			break;
+			case "a":
+				 startIndex = 0;
+				 totalDays = 365;
+				 $('especificardiv').style.display = 'none';
+			break;
+			case "e":
+				 startIndex = 0;
+				 totalDays = 30;
+				 $('especificardiv').style.display = '';
+				 calcInterval();
+			break;
+		}
+		$('data_fim').value = fixDate(statsdata[startIndex][0],true);
+		$('data_inicio').value = startIndex+totalDays<statsdata.length?fixDate(statsdata[startIndex+totalDays][0],true):fixDate(statsdata[statsdata.length-1][0],true);
+		curtype = switchTo;
+		curperiod = switchPeriod;
+		$('canvasovervar').style.display = 'none';
+		$('canvasover').style.display = 'none';
+		drawGraphics(switchTo,$('maincanvas').getContext('2d'),BGCwidth,BGCheight,true);
+		if (updateAll) {
+			drawGraphics('h');
+			drawGraphics('u');
+			drawGraphics('hu');
+			drawGraphics('b');
+			drawGraphics('r');
+			drawGraphics('k');
+		}
+	}
+	function calcInterval() {
+		dI = $('data_inicio').value;
+		dE = $('data_fim').value;
+		if (ereg(dI,'([^0-9]*)([0-9]{\}1,2})\/([0-9]{\}1,2})\/([0-9]{\}2,4})([^0-9]*)') &&
+			ereg(dE,'([^0-9]*)([0-9]{\}1,2})\/([0-9]{\}1,2})\/([0-9]{\}2,4})([^0-9]*)')
+			) {
+			dI = dI.replace(" ","");
+			dI = dI.split("/");
+			if (dI[2].length == 2) dI[2] = "20" + dI[2];
+			dI = new Date(dI[2],dI[1],dI[0]);
+			dE = dE.replace(" ","");
+			dE = dE.split("/");
+			if (dE[2].length == 2) dE[2] = "20" + dE[2];
+			dE = new Date(dE[2],dE[1],dE[0]);
+			var one_day=1000*60*60*24;
+
+			startIndex = Math.floor(yesterdayDate.getTime() - dE.getTime()) / one_day;
+			if (startIndex<0) startIndex = 0;
+			if (startIndex+30>statsdata.length) startIndex = statsdata.length-30;
+			totalDays = 1+Math.ceil(dE.getTime()-dI.getTime()) / one_day; // note: javascript dumb shit is not leap year aware, in fact, it considers all monthes as 31 days
+			if (totalDays < 7) totalDays = 7;
+			if (totalDays+startIndex>statsdata.length) totalDays = statsdata.length - startIndex;
+
+			// for some really random reason, sometimes the values get here as float ...
+			startIndex = Math.floor(startIndex);
+			totalDays = Math.ceil(totalDays);
+
+		} else if (dI != '')
+			alert("Aviso: Datas inválidas, use o formato DD/MM/AAAA");
+	}
+
+	function omo(e) {
+		var e = e || window.event;
+		var posX = e.clientX - Position.page($('maincanvas'))[0];
+		var posY = e.clientY - Position.page($('maincanvas'))[1];
+		dataToShow = getDataFromGraphic(posX);
+		if (dataToShow != '') {
+			$('canvasover').innerHTML = dataToShow;
+			$('canvasover').style.top = (posY + 10) + "px";
+			if (e.clientX > 950)
+				$('canvasover').style.left = (posX -90) + "px";
+			else
+				$('canvasover').style.left = (posX + 10) + "px";
+			step = totalDays < 250 ? 1 : (totalDays < 500 ? 2 : 4);
+			columnSize = step*BGCwidth / (totalDays-1);
+			column = Math.floor((posX+(columnSize/2)) / columnSize);
+			if (((column*columnSize)-(columnSize/2))<0) { // first
+				$('canvasovervar').style.left = "0px";
+				$('canvasovervar').style.width= (columnSize/2) + "px";
+			} else if ((((column+1)*columnSize)-(columnSize/2))>1000) { // last
+				$('canvasovervar').style.left = ((column*columnSize)-(columnSize/2)) + "px";
+				$('canvasovervar').style.width= (columnSize/2) + "px";
+			} else {
+				$('canvasovervar').style.left = ((column*columnSize)-(columnSize/2)) + "px";
+				$('canvasovervar').style.width= columnSize + "px";
+			}
+			$('canvasovervar').style.display = '';
+			$('canvasovervar').setOpacity(0.5);
+			$('canvasover').style.display = '';
+		} else {
+			$('canvasovervar').style.display = 'none';
+			$('canvasover').style.display = 'none';
+		}
+
+	}
+	function getDataFromGraphic(posX) {
+		columnSize = BGCwidth / (totalDays-1);
+		column = Math.ceil((posX+(columnSize/2)) / columnSize);
+		index = startIndex + (totalDays-column);
+		if (index<statsdata.length) {
+			switch (curtype) {
+				case "u":
+					return fixDate(statsdata[index][0]) + ": " + statsdata[index][2];
+				case "hu":
+					return fixDate(statsdata[index][0]) + ": " + (Math.floor(10*statsdata[index][1]/statsdata[index][2])/10);
+				case "b":
+					return fixDate(statsdata[index][0]) + ": " + statsdata[index][3] + " (" + (Math.floor(1000*statsdata[index][3]/statsdata[index][2])/10) + "%)";
+				case "r":
+					return fixDate(statsdata[index][0]) + ": " + statsdata[index][4] + " (" + (Math.floor(1000*statsdata[index][4]/statsdata[index][2])/10) + "%)";
+				case "k":
+					return fixDate(statsdata[index][0]) + ": " + statsdata[index][5] + " (" + (Math.floor(1000*statsdata[index][5]/statsdata[index][2])/10) + "%)";
+				default:
+					return fixDate(statsdata[index][0]) + ": " + statsdata[index][1];
+			}
+
+		} else
+			return "";
+	}
+	function fixDate(mysqldate,withYear) {
+		if (withYear)
+			return mysqldate.substr(8,2) + "/" + mysqldate.substr(5,2) + "/" + mysqldate.substr(2,2);
+		else
+			return mysqldate.substr(8,2) + "/" + mysqldate.substr(5,2);
+	}
+	function printmode() {
+		document.body.innerHTML = $('affbi_adm_content').innerHTML;
+		$('topmenudiv').style.display = 'none';
+		$('tab0options').style.display = 'none';
+		resetGraphics(false,true);
+		self.print();
+	}
+
+	loading = false;
+	function atualize() {
+		if (loading) return false;
+		frm = document.frmbase;
+		loading = true;
+		$('content').innerHTML = "Aguarde";
+		page = frm.page.value;
+		query = "stats_pathajax.ajax?layout=2&page="+page;
+	  	ajax = new Ajax.Updater('content', query, {asynchronous:true,
+		                                                       onComplete:detailCame}
+			                       );
+	}
+
+	function detailCame() {
+		loading = false;
+	}
+
+	function getpage(page) {
+		if (page == "INTERNET") return false;
+		if (loading) return false;
+		frm = document.frmbase;
+		for (c = 0; c < frm.page.length; c++)
+			if (frm.page.options[c].value == page)
+				frm.page.selectedIndex = c;
+		atualize();
+	}
+
+
+
+	// ########### CANVAS ###########
+	// -- dashedLine for canvas (http://stackoverflow.com/questions/4576724/dotted-stroke-in-canvas)
+	if (!is_legacy) {
+		var CP = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
+		if (CP && CP.lineTo) {
+		    CP.dashedLine = function(x, y, x2, y2, da) {
+		        if (!da) da = [10,5];
+		        this.save();
+		        var dx = (x2-x), dy = (y2-y);
+		        var len = Math.sqrt(dx*dx + dy*dy);
+		        var rot = Math.atan2(dy, dx);
+		        this.translate(x, y);
+		        this.moveTo(0, 0);
+		        this.rotate(rot);
+		        var dc = da.length;
+		        var di = 0, draw = true;
+		        x = 0;
+		        while (len > x) {
+		            x += da[di++ % dc];
+		            if (x > len) x = len;
+		            draw ? this.lineTo(x, 0): this.moveTo(x, 0);
+		            draw = !draw;
+		        }
+		        this.restore();
+		    }
+		}
+	}
+	function drawGraphics(gdata,canvas,w,h,isMain) {
+		if (!h) h = SMCheight;
+		if (!w) w = SMCwidth;
+		if (!gdata) gdata = 'h'; // h, u, hu, b, r, k
+		isPercent = 0;
+		idx = 1;
+		idxBIG = 1;
+		if (isMain) {
+			step = totalDays < 250 ? 1 : (totalDays < 500 ? 2 : 4);
+		} else {
+			step = totalDays < 100 ? 1 : (totalDays < 200 ? 2 : (totalDays < 500 ? 3 : 4));
+		}
+		atenuatedStep = (totalDays < 31) ? 3 : ((totalDays < 91) ? 5 : 7);
+		strikeWidth = totalDays < 100 ? 4 : totalDays < 250 ? 3 : 2;
+		switch(gdata) {
+			case 'u': // unique
+				if (!canvas) canvas = $('littleu').getContext('2d');
+				idx = 2;
+				idxBIG = 2;
+				break;
+			case 'hu' : // hit/unique
+				if (!canvas) canvas = $('littlehu').getContext('2d');
+				idx = 1;
+				idxBIG = 2;
+				isPercent = 1;
+				break;
+			case 'b': // interest (browsing hit)
+				if (!canvas) canvas = $('littleb').getContext('2d');
+				idx = 3;
+				idxBIG = 2; // is a percent of b/u
+				isPercent = 2;
+				break;
+			case 'r': // returning hit
+				if (!canvas) canvas = $('littler').getContext('2d');
+				idx = 4;
+				idxBIG = 2; // is a percent of r/u
+				isPercent = 2;
+				break;
+			case 'k': // from bookmark
+				idx = 5;
+				idxBIG = 2; // is a percent of k/u
+				isPercent = 2;
+				if (!canvas) canvas = $('littlek').getContext('2d');
+				break;
+			default:
+				if (!canvas) canvas = $('littleh').getContext('2d');
+				break;
+		}
+
+		total = 0;
+		totalU = 0;
+		totalFirstHalf = 0;
+		totalFirstHalfU = 0;
+		paddingTop = 3;
+		canvas.canvas.width = w;
+		canvas.canvas.height = h;
+		canvas.clearRect(0,0,w,h);
+		canvas.save();
+		biggest = 0;
+		days = 1;
+
+		for (pos=startIndex;pos<startIndex+totalDays;pos++) { // remember, statsdata is DECRESCENT
+			if (pos>=statsdata.length) break;
+			if (isPercent != 1) {
+				if (statsdata[pos][idxBIG]>biggest) biggest = statsdata[pos][idxBIG];
+			} else {
+				if (statsdata[pos][1]/statsdata[pos][2]>biggest) biggest = statsdata[pos][1]/statsdata[pos][2];
+			}
+			total += statsdata[pos][idx];
+			totalU += statsdata[pos][2];
+			if (days>totalDays/2) {
+				totalFirstHalf +=statsdata[pos][idx];
+				totalFirstHalfU	+=statsdata[pos][2];
+			}
+			days++;
+		}
+		column = w / (totalDays-1);
+		cropped = false;
+
+		//-- DAYS
+		if (isMain) {
+			canvas.beginPath();
+			for (pos=startIndex+step;pos<startIndex+totalDays;pos+=step) {
+				if (pos>=statsdata.length) {
+					cropped = true;
+					pos-=step;
+					break;
+				}
+				canvas.moveTo(w-(column*(pos-startIndex)),0);
+				canvas.lineTo(w-(column*(pos-startIndex)),h);
+			}
+			canvas.lineWidth = 1;
+			canvas.strokeStyle = "#efefff";
+			canvas.stroke();
+			canvas.closePath();
+			canvas.restore();
+			canvas.save();
+		}
+
+		//-- FILL
+		canvas.beginPath();
+		switch (isPercent) {
+			case 0:
+				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[startIndex][idx]/biggest));
+				break;
+			case 1:
+				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[startIndex][1]/statsdata[startIndex][2]/biggest));
+				break;
+			case 2:
+				dotValue = paddingTop+(h-paddingTop)* (1-(statsdata[startIndex][idx]/statsdata[startIndex][idxBIG]));
+				break;
+		}
+		canvas.moveTo(w,dotValue);
+		for (pos=startIndex+step;pos<startIndex+totalDays;pos+=step) {
+			if (pos>=statsdata.length) {
+				cropped = true;
+				pos-=step;
+				break;
+			}
+			switch (isPercent) {
+				case 0:
+					dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][idx]/biggest));;
+					break;
+				case 1:
+					dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][1]/statsdata[pos][2]/biggest));
+					break;
+				case 2:
+					dotValue = paddingTop+(h-paddingTop)* (1-(statsdata[pos][idx]/statsdata[pos][idxBIG]));
+					break;
+			}
+			canvas.lineTo(w-(column*(pos-startIndex)),dotValue);
+		}
+		canvas.lineTo(w-(column*(pos-startIndex)),h);
+		canvas.lineTo(w,h);
+		switch (isPercent) {
+			case 0:
+				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][idx]/biggest));
+				break;
+			case 1:
+				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][1]/statsdata[pos][2]/biggest));
+				break;
+			case 2:
+				dotValue = paddingTop+(h-paddingTop)* (1-(statsdata[pos][idx]/statsdata[pos][idxBIG]));
+				break;
+		}
+		canvas.lineTo(w,dotValue);
+		canvas.fillStyle = '#ddddff';
+		canvas.fill();
+		canvas.closePath();
+		canvas.restore();
+		canvas.save();
+
+		//-- STROKE
+		//canvas.lineCap = 'round';
+		canvas.lineJoin = 'bevel';
+		canvas.beginPath();
+		switch (isPercent) {
+			case 0:
+				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[startIndex][idx]/biggest));
+				break;
+			case 1:
+				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[startIndex][1]/statsdata[startIndex][2]/biggest));
+				break;
+			case 2:
+				dotValue = paddingTop+(h-paddingTop)* (1-(statsdata[startIndex][idx]/statsdata[startIndex][idxBIG]));
+				break;
+		}
+		canvas.moveTo(w,dotValue);
+		for (pos=startIndex+step;pos<startIndex+totalDays;pos+=step) {
+			if (pos>=statsdata.length) {
+				pos-=step;
+				cropped = true;
+				break;
+			}
+			switch (isPercent) {
+				case 0:
+					dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][idx]/biggest));
+					break;
+				case 1:
+					dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][1]/statsdata[pos][2]/biggest));
+					break;
+				case 2:
+					dotValue = paddingTop+(h-paddingTop)* (1-(statsdata[pos][idx]/statsdata[pos][idxBIG]));
+					break;
+			}
+			canvas.lineTo(w-(column*(pos-startIndex)),dotValue);
+		}
+		canvas.lineWidth = isMain && (gdata=='h' || gdata == 'u') ? Math.floor(strikeWidth/2) : strikeWidth; // h and u have atenuated values
+		canvas.strokeStyle = "#3333cc";
+		canvas.stroke();
+		canvas.closePath();
+		canvas.restore();
+		canvas.save();
+
+		//-- BALLS
+		if (isMain) {
+			canvas.restore();
+			canvas.strokeStyle = "#3333cc";
+			canvas.lineWidth = 1;
+			canvas.fillStyle = '#ddddff';
+			for (pos=startIndex;pos<startIndex+totalDays;pos+=step) {
+				if (pos>=statsdata.length) {
+					pos-=step;
+					cropped = true;
+					break;
+				}
+				switch (isPercent) {
+					case 0:
+						dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][idx]/biggest));
+						break;
+					case 1:
+						dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][1]/statsdata[pos][2]/biggest));
+						break;
+					case 2:
+						dotValue = paddingTop+(h-paddingTop)* (1-(statsdata[pos][idx]/statsdata[pos][idxBIG]));
+						break;
+				}
+			 	canvas.beginPath();
+			 	canvas.arc(w-(column*(pos-startIndex)),dotValue, strikeWidth, 0 , 2 * Math.PI);
+			 	canvas.fill();
+				canvas.stroke();
+			 	canvas.closePath();
+			}
+			canvas.save();
+		}
+
+		//-- STROKE (atenuated)
+		if (isMain && (gdata=='h' || gdata == 'u')) {
+
+			canvas.lineJoin = 'bevel';
+			canvas.globalAlpha = 0.5;
+			canvas.beginPath();
+			dotValue = 0;
+			dotValueSum = 0;
+			for (x=startIndex+atenuatedStep;x>startIndex-atenuatedStep-1;x--) {
+				if (x>0 && x<statsdata.length) {
+					dotValue += statsdata[x][idx];
+					dotValueSum++;
+				}
+			}
+			dotValue = paddingTop+(h-paddingTop)*(1-((dotValue/dotValueSum)/biggest));
+			canvas.moveTo(w,dotValue);
+			for (pos=startIndex+step;pos<startIndex+totalDays;pos+= step) {
+				if (pos>=statsdata.length) {
+					pos-=step;
+					cropped = true;
+					break;
+				}
+				dotValue = 0;
+				dotValueSum = 0;
+				for (x=pos+atenuatedStep;x>pos-atenuatedStep-1;x--) {
+					if (x>0 && x<statsdata.length) {
+						dotValue += statsdata[x][idx];
+						dotValueSum++;
+					}
+				}
+				dotValue = paddingTop+(h-paddingTop)*(1-((dotValue/dotValueSum)/biggest));
+				canvas.lineTo(w-(column*(pos-startIndex)),dotValue);
+			}
+			canvas.lineWidth = strikeWidth;
+			canvas.strokeStyle = "#1111bb";
+			canvas.stroke();
+			canvas.closePath();
+			canvas.restore();
+			canvas.save();
+			canvas.globalAlpha = 1;
+		}
+
+		if (cropped) {
+			canvas.beginPath();
+			if (!is_legacy) {
+				canvas.dashedLine(w-(column*(pos-startIndex)),0,
+								  w-(column*(pos-startIndex)),h,
+								  [2,2]
+							);
+			}
+			canvas.lineWidth = 1;
+			canvas.strokeStyle = "#aaaaff";
+			canvas.stroke();
+			canvas.closePath();
+			canvas.restore();
+			canvas.save();
+		}
+
+		if (totalFirstHalf==0) totalFirstHalf = 1;
+		if (totalFirstHalfU==0) totalFirstHalfU = 1;
+
+		switch (isPercent) {
+			case 0:
+				change = ((total-totalFirstHalf)/totalFirstHalf)-1;
+				break;
+			case 1:
+				change =  (((total-totalFirstHalf)/(totalU-totalFirstHalfU))/(totalFirstHalf/totalFirstHalfU))-1;
+				break;
+			case 2:
+				change = (((total-totalFirstHalf)/(totalU-totalFirstHalfU))/(totalFirstHalf/totalFirstHalfU))-1;
+				break;
+		}
+
+		if (isNaN(change)) change = 0;
+
+		switch(gdata) {
+			case 'u':
+				$('littleu_total').innerHTML = total;
+				break;
+			case "hu":
+				$('littlehu_total').innerHTML = Math.floor(10*total/totalU)/10;
+				break;
+			case 'b':
+				$('littleb_total').innerHTML = total + " (" + (Math.ceil(10000*total/totalU)/100) + "%)";
+				break;
+			case 'r':
+				$('littler_total').innerHTML = total + " (" + (Math.ceil(10000*total/totalU)/100) + "%)";;
+				break;
+			case 'k':
+				$('littlek_total').innerHTML = total + " (" + (Math.ceil(10000*total/totalU)/100) + "%)";;
+				break;
+			default:
+				$('littleh_total').innerHTML = total;
+				break;
+		}
+		if (isMain) {
+			$('startdatediv').innerHTML = fixDate(statsdata[pos][0],true);
+			$('enddatediv').innerHTML = fixDate(statsdata[startIndex][0],true);
+			switch(gdata) {
+				case 'u':
+					$('maingraphdata').innerHTML = "<b>Visitantes Únicos</b>: " + total;
+					$('graphictype').selectedIndex = 1;
+					break;
+				case "hu":
+					$('maingraphdata').innerHTML = "<b>Páginas/Visitantes</b>: " + (Math.floor(10*total/totalU)/10);
+					$('graphictype').selectedIndex = 2;
+					break;
+				case 'b':
+					$('maingraphdata').innerHTML = "<b>Aceitação</b>: " + total + " (" + (Math.ceil(10000*total/totalU)/100) + "% dos visitantes únicos)";
+					$('graphictype').selectedIndex = 3;
+					break;
+				case 'r':
+					$('maingraphdata').innerHTML = "<b>Retornos em 24h</b>: " + total + " (" + (Math.ceil(10000*total/totalU)/100) + "% dos visitantes únicos)";
+					$('graphictype').selectedIndex = 4;
+					break;
+				case 'k':
+					$('maingraphdata').innerHTML = "<b>Bookmark</b>: " + total + " (" + (Math.ceil(10000*total/totalU)/100) + "% dos visitantes únicos)";;
+					$('graphictype').selectedIndex = 5;
+					break;
+				default:
+					$('maingraphdata').innerHTML = "<b>Visitas</b>: " + total;
+					$('graphictype').selectedIndex = 0;
+					break;
+			}
+			change = Math.floor(100*change);
+			if (totalFirstHalf==1)
+				$('secondarygraphdata').innerHTML = "";
+			else {
+				$('secondarygraphdata').innerHTML = "<b>Variação:</b> "+((change<0)?"<span style='color:#ee0000'>⇓ "+change+"%</span>":"<span style='color:#009900'>⇑ " + change+"%</span>");
+				if (isPercent==2)	$('secondarygraphdata').innerHTML += " (" + totalFirstHalf + " → " + (total-totalFirstHalf) + ")";
+			}
+		}
+	}
+
+	var whichpages = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+	function drawPages() {
+		GRAPHHEIGHT = 300;
+
+		whichpages = []; // check which pages to show
+		for (c=0;c<pagedata.length;c++) {
+			if ($('page_'+c).checked) whichpages.push(c);
+		}
+		if (whichpages.length == 0) whichpages = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+
+
+		canvas = $('pagescanvas').getContext('2d');
+		canvas.canvas.width = 990;
+		canvas.canvas.height = GRAPHHEIGHT;
+		canvas.clearRect(0,0,990,GRAPHHEIGHT);
+		canvas.save();
+		columnWidth = 33;
+		// locate most visited day
+		totalPages = pagedata.length;
+		biggest = 0;
+		currentPeaks = [];
+		for (d=0;d<31;d++) {
+			sum = 0;
+			for (c=0;c<totalPages;c++) {
+				if (whichpages.indexOf(c)==-1)continue;
+				sum += pagedata[c][1][d];
+			}
+			if (sum>biggest) biggest = sum;
+			currentPeaks[d] = 0; // stores where in the graphic each day is for the composite graphic
+		}
+		// draw graphics
+		for (page=totalPages-1;page>=0;page--) {
+			if (whichpages.indexOf(page)==-1) continue;
+			canvas.beginPath();
+			canvas.moveTo(990,GRAPHHEIGHT-currentPeaks[0]);
+			for(d=1;d<31;d++) { // goes all the way BACKWARDS with base of the graphic (peak)
+				canvas.lineTo(990-d*columnWidth,GRAPHHEIGHT-currentPeaks[d]);
+			}
+			for(d=30;d>=0;d--) { // returns with new graphics
+				currentPeaks[d] += GRAPHHEIGHT*pagedata[page][1][d]/biggest
+				canvas.lineTo(990-d*columnWidth,GRAPHHEIGHT-currentPeaks[d]);
+			}
+			canvas.fillStyle = '#'+colors[page];
+			canvas.fill();
+			canvas.closePath();
+
+		}
+	}
+	function omop(event) {
+		var e = e || window.event;
+		var posX = e.clientX - Position.page($('pagescanvas'))[0];
+		var posY = e.clientY - Position.page($('pagescanvas'))[1];
+
+		columnSize = 33;
+		column = Math.floor((posX+(columnSize/2)) / columnSize);
+		index = (30-column);
+
+		dateToShow = new Date();
+		day = dateToShow.getDate();
+		dateToShow.setDate(day-index-1);
+		month = dateToShow.getMonth()+1;
+		day = dateToShow.getDate();
+
+		dataToShow = day + "/" + month + ":<br/>";
+		for (page = 0;page<pagedata.length;page++) {
+			if (whichpages.indexOf(page)!=-1 && pagedata[page][1][index]>0) {
+				dataToShow += "<div style='margin-bottom:10px'><div style='float:left;width:14px;height:14px;background:#" + colors[page] + "'>&nbsp;</div>" + pagedata[page][0] + ": " + pagedata[page][1][index] + "</div>";
+			}
+		}
+
+		$('canvasoverp').innerHTML = dataToShow;
+		$('canvasoverp').style.top = (posY + 10) + "px";
+		if (e.clientX > 950)
+			$('canvasoverp').style.left = (posX -190) + "px";
+		else
+			$('canvasoverp').style.left = (posX + 10) + "px";
+
+		if (((column*columnSize)-(columnSize/2))<0) { // first
+			$('canvasovervarp').style.left = "0px";
+			$('canvasovervarp').style.width= (columnSize/2) + "px";
+		} else if ((((column+1)*columnSize)-(columnSize/2))>990) { // last
+			$('canvasovervarp').style.left = ((column*columnSize)-(columnSize/2)) + "px";
+			$('canvasovervarp').style.width= (columnSize/2) + "px";
+		} else {
+			$('canvasovervarp').style.left = ((column*columnSize)-(columnSize/2)) + "px";
+			$('canvasovervarp').style.width= columnSize + "px";
+		}
+		$('canvasovervarp').style.display = '';
+		$('canvasovervarp').setOpacity(0.5);
+		$('canvasoverp').style.display = '';
+	}
+
+	function drawCheckboxPages() {
+		output = "Percentuais em relação ao total de visitas durante o dia (inclúi páginas que não estão na lista)<br/><br/>";
+		totalViewsInMonth = 0;
+		for (c=0;c<31;c++) {
+			if (statsdata.length<=c) break;
+			totalViewsInMonth += statsdata[c][1];
+		}
+		if (totalViewsInMonth ==0) totalViewsInMonth = 1;
+		pageTotal = [];
+
+		canvas = $('pagepie').getContext('2d');
+		canvas.canvas.width = 480;
+		canvas.canvas.height = 480;
+		canvas.clearRect(0,0,480,480);
+		canvas.save();
+		lA= 0; // last angle
+
+
+		for (page = 0;page<pagedata.length;page++) {
+			pageTotal[page] = 0;
+			for(d=0;d<31;d++) {
+				pageTotal[page] += pagedata[page][1][d];
+			}
+			output += "<label for='page_"+page+"'><div style='float:right;width:14px;height:14px;position:relative;top:4px;background:#" + colors[page] + "'>&nbsp;</div>" + pagedata[page][0] + " ("+(Math.floor(1000*pageTotal[page]/totalViewsInMonth)/10)+"%)<input type='checkbox' checked='checked' onchange='drawPages();' id='page_" + page + "'></label><br/>";
+			canvas.beginPath();
+			canvas.moveTo(240,240);
+			nA = lA + 2*Math.PI*pageTotal[page]/totalViewsInMonth;
+			canvas.arc(240,240,230,-lA,-nA,true);
+			lA = nA;
+			canvas.fillStyle = '#'+colors[page];
+			canvas.fill();
+			canvas.closePath();
+		}
+		canvas.beginPath();
+		canvas.lineWidth = 1;
+		canvas.moveTo(240,240);
+		canvas.arc(240,240,230,-lA,0,true);
+		canvas.strokeStyle = '#ddddff';
+		canvas.stroke();
+		canvas.closePath();
+
+		$('pagecheckdata').innerHTML = output;
+	}
+	function drawBrowser() {
+		GRAPHHEIGHT = 300;
+		canvas = $('canvasbrowser').getContext('2d');
+		canvas.canvas.width = 990;
+		canvas.canvas.height = GRAPHHEIGHT;
+		canvas.clearRect(0,0,990,GRAPHHEIGHT);
+		canvas.save();
+		columnWidth = 33;
+		// locate daily hit sum
+		sum = [];
+		for (d=0;d<30;d++) {
+			sum[d] = 0;
+			for (c=0;c<browsernames.length;c++) {
+				sum[d] += statsbrowser[d][c+1];
+			}
+		}
+		// draw horizontal
+		canvas.beginPath();
+		canvas.moveTo(0,0);
+		canvas.lineTo(990,0);
+		canvas.moveTo(990,GRAPHHEIGHT/2);
+		canvas.lineTo(0,GRAPHHEIGHT/2);
+		canvas.moveTo(0,GRAPHHEIGHT);
+		canvas.lineTo(990,GRAPHHEIGHT);
+		canvas.lineWidth = 1;
+		canvas.strokeStyle = "#efefff";
+		canvas.stroke();
+		canvas.closePath();
+		// draw days
+		canvas.beginPath();
+		for (pos=0;pos<31;pos++) {
+			canvas.moveTo(990-(columnWidth*(pos)),0);
+			canvas.lineTo(990-(columnWidth*(pos)),GRAPHHEIGHT);
+		}
+		canvas.lineWidth = 1;
+		canvas.strokeStyle = "#efefff";
+		canvas.stroke();
+		canvas.closePath();
+
+		// draw graphics
+		for (b=0;b<browsernames.length;b++) {
+			canvas.beginPath();
+			dotvalue = Math.floor(GRAPHHEIGHT*statsbrowser[0][b+1]/sum[0]);
+			canvas.moveTo(990,GRAPHHEIGHT-dotvalue);
+			for(d=1;d<31;d++) { // goes all the way BACKWARDS
+				dotvalue = Math.floor(GRAPHHEIGHT*statsbrowser[d][b+1]/sum[d]);
+				canvas.lineTo(990-d*columnWidth,GRAPHHEIGHT-dotvalue);
+			}
+			canvas.lineWidth = 1;
+			canvas.strokeStyle = '#'+browsernames[b][1];
+			canvas.stroke();
+			canvas.closePath();
+		}
+	}
+	function drawToday() {
+		GRAPHHEIGHT = 300;
+		canvas = $('canvas24').getContext('2d');
+		canvas.canvas.width = 990;
+		canvas.canvas.height = GRAPHHEIGHT;
+		canvas.clearRect(0,0,990,GRAPHHEIGHT);
+		canvas.save();
+		columnWidth = 39;
+		sum = 0;
+		sumu = 0;
+
+		// current hour:
+		var d = new Date();
+		var n = d.getHours();
+		canvas.beginPath();
+		canvas.lineWidth = 3;
+		canvas.strokeStyle = '#333366';
+		canvas.moveTo((n+1)*columnWidth+columnWidth/2,0);
+		canvas.lineTo((n+1)*columnWidth+columnWidth/2,GRAPHHEIGHT);
+		canvas.stroke();
+		canvas.closePath();
+
+		canvas.fillStyle = "black";
+		canvas.font = "10px sans-serif";
+		canvas.textAlign = "left";
+		canvas.translate((n+1)*columnWidth+columnWidth/2,0);
+		canvas.rotate(Math.PI/2);
+		canvas.fillText("Ontem",5,-3);
+		canvas.rotate(Math.PI);
+		canvas.textAlign = "right";
+		canvas.fillText("Hoje",-5,-3);
+
+		canvas.restore();
+		canvas.save();
+
+		// draw times (and take the chance to detect higher)
+		canvas.beginPath();
+		biggest = 0;
+		canvas.fillStyle = "black";
+		canvas.font = "10px sans-serif";
+		canvas.textAlign = "center";
+		for(h=0;h<24;h++) {
+			canvas.dashedLine((h+1)*columnWidth,0,(h+1)*columnWidth,GRAPHHEIGHT,[10,10]);
+			if (statstoday[h][0]>biggest) biggest =statstoday[h][0];
+			sum += statstoday[h][0];
+			sumu += statstoday[h][1];
+			canvas.fillText(h+"h",(h+1)*columnWidth,GRAPHHEIGHT-10);
+		}
+		canvas.lineWidth = 1;
+		canvas.strokeStyle = '#efefff';
+		canvas.stroke();
+		canvas.closePath();
+		canvas.restore();
+		canvas.save();
+
+		// draw graphic (hits)
+		canvas.beginPath();
+		dotvalue = Math.floor(GRAPHHEIGHT-(GRAPHHEIGHT*statstoday[0][0]/biggest));
+
+		canvas.moveTo(columnWidth,dotvalue);
+		for(h=1;h<24;h++) {
+			dotvalue = Math.floor(GRAPHHEIGHT-(GRAPHHEIGHT*statstoday[h][0]/biggest));
+			canvas.lineTo((h+1)*columnWidth,dotvalue);
+		}
+		canvas.lineWidth = 1;
+		canvas.strokeStyle = '#3333cc';
+		canvas.stroke();
+		canvas.closePath();
+		canvas.restore();
+		canvas.save();
+
+		// draw graphic (uhits)
+		canvas.beginPath();
+		dotvalue = Math.floor(GRAPHHEIGHT-(GRAPHHEIGHT*statstoday[0][1]/biggest));
+		canvas.moveTo(columnWidth,dotvalue);
+		for(h=1;h<24;h++) {
+			dotvalue = Math.floor(GRAPHHEIGHT-(GRAPHHEIGHT*statstoday[h][1]/biggest));
+			canvas.lineTo((h+1)*columnWidth,dotvalue);
+		}
+		canvas.lineWidth = 1;
+		canvas.strokeStyle = '#1111bb';
+		canvas.stroke();
+		canvas.closePath();
+		canvas.restore();
+		canvas.save();
+		// balls and text
+		canvas.fillStyle = '#ddddff';
+		canvas.lineWidth = 1;
+		canvas.strokeStyle = '#3333cc';
+		for(h=0;h<24;h++) {
+			dotvalue = Math.floor(GRAPHHEIGHT-(GRAPHHEIGHT*statstoday[h][0]/biggest));
+			canvas.beginPath();
+			canvas.arc((h+1)*columnWidth,dotvalue, 5, 0 , 2 * Math.PI);
+			canvas.fill();
+			canvas.stroke();
+			canvas.closePath();
+
+		}
+		$('todaysummary').innerHTML = "<strong>Totais das últimas 24 horas:</strong><br/>Visitantes: <strong>" + sum + "</strong><br/>Visitantes únicos: <strong>" + sumu + "</strong>";
+	}
+	function omot(e) {
+		var e = e || window.event;
+		var posX = e.clientX - Position.page($('canvas24'))[0];
+		var posY = e.clientY - Position.page($('canvas24'))[1];
+		columnSize = 39;
+		column = Math.floor((posX+(39/2)) / 39);
+		if (column==0 || column==25) {
+			$('canvasovervart').style.display = 'none';
+			$('canvasovert').style.display = 'none';
+			return;
+		}
+		$('canvasovert').style.top = (posY + 10) + "px";
+		if (e.clientX > 950)
+			$('canvasovert').style.left = (posX -90) + "px";
+		else
+			$('canvasovert').style.left = (posX + 10) + "px";
+
+		$('canvasovert').innerHTML = '<b>' + (column-1) + "h:</b> " + statstoday[column-1][0] + ' visitas<br/>' + statstoday[column-1][1] + ' únicos';
+		if (((column*29)-(39/2))<0) { // first
+			$('canvasovervart').style.left = "0px";
+			$('canvasovervart').style.width= (columnSize/2) + "px";
+		} else if ((((column+1)*39)-(39/2))>990) { // last
+			$('canvasovervart').style.left = ((column*columnSize)-(columnSize/2)) + "px";
+			$('canvasovervart').style.width= (columnSize/2) + "px";
+		} else {
+			$('canvasovervart').style.left = ((column*columnSize)-(columnSize/2)) + "px";
+			$('canvasovervart').style.width= columnSize + "px";
+		}
+		$('canvasovervart').style.display = '';
+		$('canvasovervart').setOpacity(0.5);
+		$('canvasovert').style.display = '';
+
+	}
+
+	if (!is_legacy) {
+		drawGraphics('h');
+		drawGraphics('u');
+		drawGraphics('hu');
+		drawGraphics('b');
+		drawGraphics('r');
+		drawGraphics('k');
+		drawGraphics('h',$('maincanvas').getContext('2d'),BGCwidth,BGCheight,true);
+
+		setTimeout(drawCheckboxPages,100); // top page checkboxes
+		setTimeout(drawPages,200); // top pages
+		setTimeout(atualize,300); // path
+		setTimeout(drawBrowser,400); // browser
+		setTimeout(drawToday,500); // 24h
+	} else {
+		alert("Caro usuário. É necessário um navegador atualizado para a renderização das estatísticas. Opções:\nInternet Explorer 9+\nFirefox 7+\nChrome 10+\nSafari 5+,Opera 10+\n\n\nO seu navegador foi identificado como:" + agt_txt);
+	}
+
+	var calendarHandler = new dynCalendar('/pages/_js/calendar/gifs/');
+//--></script>

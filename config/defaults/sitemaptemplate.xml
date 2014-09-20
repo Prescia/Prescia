@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{_url}
+<url>
+ <loc>{loc}</loc>
+ {_}<lastmod>{lastmod}</lastmod>
+ {/}<changefreq>{changefreq}</changefreq>
+ {_priority}<priority>{priority}</priority>{/priority}
+</url>{/url}
+</urlset> 
+{_}
+	changefreq:	always
+				hourly
+				daily
+				weekly
+				monthly
+				yearly
+				never
+	lastmod: YYYY-MM-DD
+	priority: 0 - 1 (0.5 default)
+	
+	<searchengine_URL>/ping?sitemap=sitemap_url
+{/}

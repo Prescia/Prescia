@@ -1,0 +1,498 @@
+{_removeonajax}
+<div class="lxmladm_box">
+	<div class="lxmladm_title">
+		<div class="ladm_titleicons">
+			{_mup}<div class="ladm_icomup" onclick="waitWhileLoad(); document.location='edit.php?module={module}&mup=true';" title="{_t}mup{/t} "></div>{/mup}
+			{_edit}
+			<div class="ladm_icoprint" onclick="waitWhileLoad();document.location='preview.php?module={module}&{allkeys}&layout=1';" title="{_t}printver{/t} "></div>
+			<div class="ladm_iconew" onclick="waitWhileLoad();document.location='edit.php?module={module}';" title="{_t}new{/t} "></div>
+			{/edit}
+			<div class="ladm_icolist" onclick="waitWhileLoad();document.location='list.php?module={module}';" title="{_t}list{/t} "></div>
+			<div class="ladm_icosearch" onclick="waitWhileLoad();document.location='list.php?module={module}&searchFieldOn=true';" title="{_t}search{/t} "></div>
+		</div>
+		{_t}{vaction}{/t} {_t}{module}{/t}
+	</div>
+
+	{_multiple}
+	<div class="lxmladm_notice">{_t}editing{/t} {multipleCount} {_t}itens{/t}:<br/>
+		{_t}itens_being_edited{/t}: {itemlist}
+	</div>
+	{/multiple}
+
+	{_warning}
+	<div class="ladm_info">
+		{warning}
+	</div>
+	{/warning}
+
+{_}
+
+
+				------------------------------------------------------------------------------------------------------------------
+														FORM AND VALIDATION BELOW
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+
+<script type="text/javascript"><!--
+
+	{include_from_listhtml}
+
+	{_mup_field}
+	function checkfile() {
+		filename = $('mup_file').value;
+		filename = filename.split(".");
+		ext = filename.pop();
+		if (ext.toLowerCase() != 'zip') {
+			alert("{_t}mup_file_must_be_zip{/t}");
+			return false;
+		}
+		return true;
+	}
+	{/mup_field}
+
+	myAF = new CAutoform('frmbase',
+					  {
+					 mandatory: [{af_mandatory}],
+					 translation: [{af_translation}],
+					 defaults: [],
+					 is_id: [{af_is_id}],
+					 is_cpf: [{af_is_cpf}],
+					 is_cnpj: [{af_is_cnpj}],
+					 integer: [{af_integer}],
+					 float: [{af_float}],
+					 mail: [{af_mail}],
+					 date: [{af_date}],
+					 datetime: [{af_datetime}],
+					 time: [{af_time}],
+					 login: [{af_login}]
+					   },
+					   'warning_class',
+					   20,
+					   10,
+					   'absolute',
+					   '{_t}atencao{/t}',
+					   "{af_datepattern}",
+					   '',
+					   ''
+					   {_mup_field}
+						,'checkfile'
+					   {/mup_field}
+		);
+	myAF.errorcallback = remove_wwl;
+//--></script>
+
+	<form name="frmbase" id="frmbase" method="post" action="edit.php" enctype="multipart/form-data">
+	<input type="hidden" name="gfc" value="1"/><input type="hidden" name="haveinfo" value="1"/>
+	<input type="hidden" name="MAX_FILE_SIZE" value="{MFS}" />
+	<input type="hidden" name="module" value="{module}" />
+	<input type="hidden" name="vaction" value="{vaction}" />
+	<input type="hidden" name="postaction" value="0" />
+	{_multiple}<input type="hidden" name="multiSelectedIds" value="{multiSelectedIds}"/>{/multiple}
+	{hidden}
+
+{/removeonajax}
+
+	{_mup_field}
+		<div style="padding:10px">
+			<div class="lxmladm_aviso">{_t}mup_notice{/t} {maxsize}</div>
+			{_t}mup{/t}*: <input type="file" size="50" width="350px" id="mup_file" name="mup_file" /> max {maxsize}<br/>
+			<input type="checkbox" name="mup_autofill" id="mup_autofill"/><label for="mup_autofill">{_t}mup_autofill{/t}</label><br/>
+			<input type="checkbox" name="mup_autofill2" id="mup_autofill2"/><label for="mup_autofill2">{_t}mup_autofill2{/t}</label>
+		</div>
+	{/mup_field}
+
+
+	{_upload_field}
+	  	<input type="file" size="50" width="350px" id="{field}" name="{field}" /> {maxres} {maxsize} {exts}
+	  	{_hasFile}<div class="dgw_frame" style="margin-left: 10px;padding:10px;margin-top:5px">
+		    {_downloadable}
+		    <div class="grifo_inferior" style="height:20px">
+				<div style="float:left">Download:</div>
+				<div style="margin-left:150px">
+				    <a href="{download}"><img class="img_hoverable" src="{SKIN_PATH}ft/{ico}_ico.gif" width="16" heigth="16" alt="" title="{download}"/></a>
+				</div>
+			</div>
+		    {/downloadable}
+		    {_presentable}
+		    <div class="dgw_frame" style="padding:2px">
+			    {_img}<img class="img_hoverable" src="{download}" alt="" title="{download}" width="{width}" height="{height}" />{/img}
+			    {_swf}
+			  	{_FLASHME}{download}|{width}|{height}{/FLASHME}
+			    {/swf}
+			</div>
+		    {/presentable}
+			<div class="grifo_inferior" style="height:20px;width:300px">
+				<input type="checkbox" name="{field}_delete" id="{field}_delete" /><label for="{field}_delete">{_t}delete_file{/t}</label>
+			</div>
+		    <div class="grifo_inferior" style="height:20px;width:300px">
+		    	<div style="float:left">{_t}size{/t}:</div>
+				<div style="margin-left:150px">{filesize}</div>
+			</div>
+		    {_isImage}
+				<div class="grifo_inferior" style="height:20px;width:300px">
+				    <div style="float:left">{_t}dimension{/t}:</div>
+					<div style="margin-left:150px">{dim}</div>
+				</div>
+			    {_hasThumbs}
+				<div class="grifo_inferior" style="height:35px;width:300px">
+				    <div style="float:left">{_t}thumbnails{/t}:</div>
+					<div style="margin-left:150px">
+						{_thumb}<a href="{tdownload}" rel="lightbox[arr{field}]"><img class="img_hoverable" src="{SKIN_PATH}ft/jpg_ico.gif" width="16" heigth="16" alt="" title=""/></a> {/thumb}
+						<br/>
+						<input type="button" onclick="window.open('edit_thumbnails.php?module={module}&{allkeys}&field={field}','_blank');" value="{_t}adm_edit_thumbnails{/t}"  class="ladm_buttonblue" style="font-size:10px"/>
+					</div>
+				</div>
+			    {/hasThumbs}
+		  	{/isImage}
+		</div>{/hasFile}
+	{/upload_field}
+	{_serializearray_field}
+		<div id="serialized_{field}"></div>
+		<input type="text" name="{field}" id="serialized_{field}_data" value=""/>
+		<div class="ladm_iconew" onclick="" title="{_t}new{/t} "></div>
+
+
+	{/serializearray_field}
+	{_selecttree_field}
+		<span id="{field}_ara">
+			<select name="{field}" style="width:99%" id="{field}" onchange="selectChange('{field}');{_multiple}$('me_edit_{field}').checked = true;{/multiple}">
+				{_optional}<option value=""></option>{/optional}
+
+				{_sdirs}
+					<option value="{id}" {selected|map|1=selected='selected' class='selectedoption'}>{treetitle} ({id})</option>
+				   	{_insubdirs}{subdirs}{/insubdirs}
+				{/sdirs}
+				{_ssubdirs}
+					<option value="{id}" {selected|map|1=selected='selected' class='selectedoption'}>{level|map|1=……,2=…………,3=………………,4=……………………,5=……………………}{treetitle} ({id})</option>
+			  		{_insubdirs}{subdirs}{/insubdirs}
+				{/ssubdirs}
+			</select>
+		</span>
+		{_removeonajax}<br/>{_link}<a href="list.php?module={rmodule}&affreferer={affreferer}&affrefererkeys={affrefererkeys}">[{_t}list{/t}]</a><a href="edit.php?module={rmodule}&affreferer={affreferer}&affrefererkeys={affrefererkeys}">[{_t}new{/t}]</a>{/link}{/removeonajax}
+		<br/><span style="font-size:9px">{helper}</span>
+	{/selecttree_field}
+
+	{_select_field}
+		<span id="{field}_ara"><select name="{field}" style="width:99%" id="{field}" onchange="selectChange('{field}');{_multiple}$('me_edit_{field}').checked = true;{/multiple}">
+		{_optional}<option value=""></option>{/optional}{_options}<option value="{ids}" {selected|map|1=selected='selected' class='selectedoption'}>{title} ({ids})</option>{/options}</select></span>
+		{_removeonajax}<br/>
+		{_link}<a href="list.php?module={rmodule}&affreferer={affreferer}&affrefererkeys={affrefererkeys}">[{_t}list{/t}]</a>
+		<a href="edit.php?module={rmodule}&affreferer={affreferer}&affrefererkeys={affrefererkeys}">[{_t}new{/t}]</a>
+		{/link}{/removeonajax}
+		<br/><span style="font-size:9px">{helper}</span>
+	{/select_field}
+
+	{_normal_field}
+	<input type="{type}" name="{field}" style="width:{width}" id="{field}" value="{value|parse|html}" {_multiple}onchange="$('me_edit_{field}').checked = true;"{/multiple} />{calendar}<br/>
+	<span style="font-size:9px">{helper}</span>
+	{/normal_field}
+
+	{_slider_field}
+	<div style="height:20px":>
+		<div id="slidertrack_{field}" style="width:200px; background-color:#ccc; height:10px;margin-bottom:5px; float:left">
+			<div id="sliderhandle_{field}" style="width:20px; height:15px; background-color:#111; cursor:move;color:#eeeeee;text-align:center">{value}</div>
+		</div>
+	</div>
+	<input type="hidden" id="{field}" name="{field}" value="{value}" />
+	<span style="font-size:9px">{helper}</span>
+	<script type="text/javascript">
+		new Control.Slider('sliderhandle_{field}', 'slidertrack_{field}', {
+			onSlide: function(v) {
+				v = Math.floor(v);
+				$('{field}').value =  v;
+				$('sliderhandle_{field}').innerHTML = v;
+				{_multiple}$('me_edit_{field}').checked = true;{/multiple}
+			},
+			onChange: function(v) {
+				v = Math.floor(v);
+				$('{field}').value =  v;
+				$('sliderhandle_{field}').innerHTML = v;
+				{_multiple}$('me_edit_{field}').checked = true;{/multiple}
+			},
+			range: $R({minor}, {major}),
+			sliderValue: {value}
+		});
+	</script>
+	{/slider_field}
+
+	{_textarea_field}
+	<div id="{field}_autoformposition" style="position:relative">
+		<textarea name="{field}" id="{field}" style="width:90%" rows="12">{value}</textarea>
+		<span style="font-size:9px">{helper}</span>
+	</div>
+	{/textarea_field}
+
+	{_FORM_field}
+
+	<table width="100%" style="margin-bottom:5px;padding-bottom:1px;position:relative" id="tableitem{title}"><tbody>
+		<tr>
+			<td class="lgrifo_inferior" style="vertical-align:top;width:150px;text-align:left">
+				{_multiple}<input type="checkbox" name="me_edit_{title}" id="me_edit_{title}" alt="{_t}edit_on_me{/t}"/> {/multiple}{_t}{title}{/t} {mandatory|map|y=*}:
+			</td>
+			<td class="lgrifo_inferior" style="text-align:left;position:relative">
+				{field}
+			</td>
+		</tr>
+	</tbody></table>
+	{/FORM_field}
+
+
+{_}
+
+
+				------------------------------------------------------------------------------------------------------------------
+												END OF FORM, NOW OPTIONS
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+{_removeonajax}
+
+	<div style="text-align:right;padding:10px">
+		{_nmultiple}
+		{_edit}
+		<input type="button" class="ladm_buttonred" value="{_t}delete{/t}" onclick="deleteme('{module}','{allkeys}');" style="margin-right:20px" />
+		{_public}
+		<input type="button" class="ladm_buttonblue" value="{_t}public_page{/t}" onclick="window.open('{publicpage}','_public');" style="margin-right:20px" />		{/public}
+		{/edit}
+
+		<input class="ladm_buttongreen" onclick="{_nmup}this.form.postaction.value = $('affsaveand').value;{/nmup}waitWhileLoad();" type="submit" value="{_t}{vaction}{/t}" style="margin-left:10px{vaction|map|mup=;font-size:10px}"/>
+
+
+		{_t}and{/t}
+		<select id='affsaveand'>
+			<option value='0'>{_t}show_list{/t}</option>
+			<option value='1'>{_t}keep_editing{/t}</option>
+			<option value='2'>{_t}create_new_equal{/t}</option>
+			{_referer}<option value='3' selected="selected">{_t}return_to_referer{/t}</option>{/referer}
+			{_public}<option value='4'>{_t}go_to_public{/t}</option>{/public}
+		</select>
+
+		{/nmultiple}
+		{_multiple}
+		<input class="ladm_buttongreen" type="submit" onclick="waitWhileLoad();" value="{_t}edit{/t} ({multipleCount})" style="margin-left:10px"/>
+		{/multiple}
+
+	</div>
+</form>
+{_removeajax}
+</div>
+{/removeajax}
+
+{_}
+
+
+				------------------------------------------------------------------------------------------------------------------
+						END OF OPTIONS, NOW RELATED MODULES. THOSE SPECIFIED AN "merge" SHOULD BE ABOVE WITH THE FORM
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+
+{_relatedmodules}
+<div class="lxmladm_box">
+	<div class="lxmladm_title">{_t}relatedContent{/t}:</div>
+	{_rm}
+	<div class="lxmladm_box" style="border-bottom:#7f7f7f 1px solid">
+		{_merged}
+		<div class="lxmladm_title">
+			<div class="ladm_titleicons">
+		{/merged}
+				<div class="ladm_icolist" onclick="waitWhileLoad();document.location='list.php?module={module}&{referer}';" style="float:right;"></div>
+				<div class="ladm_iconew" onclick="waitWhileLoad();document.location='edit.php?module={module}&{keys}&{referer}';" style="float:right"></div>
+		{_merged}
+			</div>
+			<div class="ladm_titleicons" style="float:left">
+				<div class="ladm_icodown" onclick="toggleRM('{module}','{keys}&{referer}');this.style.display='none';"></div>
+			</div>
+			{_t}{module}{/t}
+			<div style="clear:both"></div>
+		</div>
+		{/merged}
+		<div id="fillmein{module}" style="display:none;clear:both">{_t}wait{/t}...</div>
+		<div class="ladm_listsubtitle ladm_paging" style="margin-top:5px;display:none" id="frm{module}_paging">{_}built by js{/}</div>
+	</div>
+	{/rm}
+</div>
+{/relatedmodules}
+
+<div class="lxmladm_fakebox">
+	<div class="lxmladm_title">
+		<div class="ladm_titleicons">
+			{_mup}<div class="ladm_icomup" onclick="waitWhileLoad(); document.location='edit.php?module={module}&mup=true';" title="{_t}mup{/t} "></div>{/mup}
+			{_edit}
+			<div class="ladm_icoprint" onclick="waitWhileLoad();document.location='preview.php?module={module}&{allkeys}&layout=1';" title="{_t}printver{/t} "></div>
+			<div class="ladm_iconew" onclick="waitWhileLoad();document.location='edit.php?module={module}';" title="{_t}new{/t} "></div>
+			{/edit}
+			<div class="ladm_icolist" onclick="waitWhileLoad();document.location='list.php?module={module}';" title="{_t}list{/t} "></div>
+			<div class="ladm_icosearch" onclick="waitWhileLoad();document.location='list.php?module={module}&searchFieldOn=true';" title="{_t}search{/t} "></div>
+		</div>
+		{_t}{vaction}{/t} {_t}{module}{/t}
+	</div>
+</div>
+
+{_}
+
+
+				------------------------------------------------------------------------------------------------------------------
+												MASTER JAVASCRIPT AREA (except validation)
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+
+<script type="text/javascript"><!--
+	function selectChange(startingField) { // for ajax fill
+		// each ajaxHandler have a list with the FIRST item being the item which can be changed, and the others which items can cause changes on it
+		try {
+			for (var c=0;c<ajaxHandlers.length;c++) { // for each field that is ajax controled
+				canChange = true;
+				isMyChild = false;
+				var ajaxQuery = "";
+				if (ajaxHandlers[c][0] == startingField) break; // I should not start a change in myself
+				for (var c2=2;c2<ajaxHandlers[c].length;c2++) { // checks pre-requisites are filled
+					if (ajaxHandlers[c][c2]==startingField) isMyChild = true;
+					if ($(ajaxHandlers[c][c2]) != undefined && $(ajaxHandlers[c][c2]).value != undefined && $(ajaxHandlers[c][c2]).value != '') {
+						ajaxQuery += "&" + ajaxHandlers[c][c2] + "=" + $(ajaxHandlers[c][c2]).value;
+					} else {
+						canChange =false
+						break;
+					}
+				}
+				if (canChange && isMyChild) {
+					startAjaxSelectFill( ajaxHandlers[c][1], ajaxHandlers[c][0],ajaxQuery,'{module}',$(ajaxHandlers[c][2]).form,true,'','','90%',true);
+				}
+			}
+
+		} catch (ee) {
+			alert('ajaxHandler selectChange error:' + ee);
+			return;
+		}
+	}
+	function checkopts(field) {
+		var output = "";
+		try {
+			c=0;
+			while ($(field+"_"+c)) {
+				output += $(field+"_"+c).checked ? '1' : '0';
+				c++;
+			}
+			$(field).value = output + "000";
+		} catch(ee) {
+			$(field).value = output + "000";
+		}
+		{_multiple}
+		$('me_edit_'+field).checked = true;
+		{/multiple}
+	}
+
+	function checkConditions() {
+		{conditioncheck}
+	}
+	var RM = [];
+	function toggleRM(module,query) {
+		$('fillmein' + module).innerHTML = CONS_JS_WAITING;
+		$('fillmein' + module).style.display = '';
+		query += "&module=" + module + "&embeded=1";
+		var hasRM = false;
+		for (c=0;c<RM.length;c++) {
+			if (RM[c][0] == module) {
+				hasRM = c;
+				break;
+			}
+		}
+
+		if (!hasRM) {
+			hasRM = RM.length;
+			RM[hasRM] = [module,0,false,0,query];
+		}
+		new Ajax.Request("list.ajax?module=" + module + "&embeded=1&p_size=10&" + query, {
+			onComplete: function(req) {
+					RMcallback.call(this,req,hasRM);
+				}
+		});
+	}
+	function RMcallback(data,RMn) {
+		var module = RM[RMn][0];
+		$('fillmein' + module).innerHTML = parseajax(data);
+		$('fillmein' + module).style.display = 'none';
+		if (RM[RMn][2]==false)	RM[RMn][2] = new CAjaxList('RM['+RMn+'][2]',module,RM[RMn][1],RM[RMn][4],'frm'+module+'_list','frm'+module+'_paging',true);
+		RM[RMn][2].p_size = RM[RMn][3];
+		RM[RMn][2].updatePaging(); // must be after parseajax, because parseajax will trigger setPagingTotal
+		new Effect.BlindDown('fillmein' + module);
+	}
+	function setPagingTotal(module,total,p_size) { // when you load a RM, this will be called to set the total for the paging (triggered by list.html)
+		for (c=0;c<RM.length;c++) {
+			if (RM[c][0] == module) {
+				RM[c][1] = total;
+				RM[c][3] = p_size;
+				return;
+			}
+		}
+	}
+{_hasSerializedField}
+{_}
+
+
+				------------------------------------------------------------------------------------------------------------------
+															SERIALIZATION OPTIONS
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+	Cserialization = Class.create();
+	Cserialization.prototype = {
+		inv: new Hash(),
+		titles: new Hash(),
+		initialize: function(arraylist) {
+			for (c=0;c<arraylist.length;c++) {
+				this.inv.set(arraylist[c],new Array());
+				this.titles.set(arraylist[c],new Array());
+			}
+		},
+		fillData: function(aname,fields,indata) {
+			this.titles.set(aname,fields);
+			this.inv.set(aname,indata);
+			$('serialized_'+aname+"_data").value = Object.toJSON(indata);
+			this.build(aname);
+		},
+		build: function(aname) {
+			var output = "<table width='99%'>";
+			var data = this.inv.get(aname);
+			var titles = this.titles.get(aname);
+			output += "<tr>";
+			for (var c=0;c<titles.length;c++) {
+				output += "<th>" + titles[c] + "</th>";
+			}
+			output += "<th style='width:80px'>&nbsp;</th></tr>";
+			for (var c=0;c<data.length;c++) {
+				output += "<tr>";
+				for (var cs=0;cs<titles.length;cs++) {
+					output += "<td>" + data[c][cs] + "</td>";
+				}
+				output += "<td style='text-align:center'>";
+				output += "<img src='{SKIN_PATH}edit.png' onclick='Cserialization.edit(\""+aname+"\","+cs+");' alt='{_t}edit{/t}' title='{_t}edit{/t}'/>";
+				output += "<img src='{SKIN_PATH}delete.png' onclick='Cserialization.delete(\""+aname+"\","+cs+");' alt='{_t}delete{/t}' title='{_t}delete{/t}'/>";
+				output += "</td></tr>";
+			}
+			output += "</table>";
+			$('serialized_'+aname).innerHTML = output;
+			output = "";
+		},
+		edit: function(aname,id) {
+		},
+		delele: function(aname,id) {
+		}
+	}
+	CScontroler = new Cserialization([{serialized_arrays}]); {_} <-- will add in this array all fields that are arrays on the serialized content {/}
+
+{/hasSerializedField}
+	{_} -----------------------------------------------------------------------
+	  below, part of the list.html javascript is pasted to allow paging on ajax
+	--------------------------------------------------------------------- {/}
+	{commonscript}
+	{endscripts}
+//--></script>
+{/removeonajax}

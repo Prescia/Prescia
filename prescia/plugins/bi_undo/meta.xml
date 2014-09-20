@@ -1,0 +1,16 @@
+<BI_UNDO dbname="sys_undo"
+			 systemModule="true"
+			 title="data"
+			 permissionOverride="AAAAAAAAAD"
+			 order="data-"
+			 plugins="bi_undo"
+			 backup="no"
+	>
+	<MODULO mandatory="true" size="20">VC</MODULO>
+	<EVENT mandatory="true">ENUM:'update','delete'</EVENT>
+	<IDS mandatory="true" default=''>VC</IDS>
+	<HISTORY mandatory="true" custom="true">LONGTEXT</HISTORY>
+	<FILES mandatory="true" default=''>VC</FILES>
+	<DATA timestamp="true">DATETIME</DATA>
+	<ID_AUTHOR join="left">USERS</ID_AUTHOR>
+</BI_UNDO>

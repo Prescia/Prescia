@@ -1,0 +1,773 @@
+{_removeonajax}
+<div class="lxmladm_box">
+	<div class="lxmladm_title">
+		{_removeonpopup}
+		<div class="ladm_titleicons">
+			{_mup}<div class="ladm_icomup" onclick="waitWhileLoad(); document.location='edit.php?module={module}&mup=true';" title="{_t}mup{/t}"></div>{/mup}
+			{_editbtn}<div class="ladm_iconew" onclick="waitWhileLoad(); document.location='edit.php?module={module}';" title="{_t}new{/t}"></div>{/editbtn}
+			{_searcharea}<div class="ladm_icosearch" onclick="new Effect.toggle('searchdiv','Blind');" title="{_t}search{/t}"></div>{/searcharea}
+		</div>
+		{/removeonpopup}
+		{_t}listando{/t} {_t}{module}{/t}
+
+	</div>
+	<form name="frm{module}" id="frm{module}" action="list.html" method="post">
+	<input type="hidden" name="gfc" value="1" /><input type="hidden" name="haveinfo" value="1" />
+    <input type="hidden" name="p_size" id="frm_p_size" value="{p_size}" /> {_}page size{/}
+    <input type="hidden" name="p_init" id="p_init" value="{p_init}"/> {_}pagination start{/}
+    <input type="hidden" name="module" value="{module}" /> {_}which module is being listed{/}
+    <input type="hidden" name="order" value="{order}" /> {_}order of the list{/}
+    <input type="hidden" name="akrreferer" value="{akrreferer}" /> {_}which module are we to return to (edit) after actions on this list{/}
+    <input type="hidden" name="akrrefererkeys" value="{akrrefererkeys}" /> {_}keys to the module we are to return to{/}
+    <input type="hidden" name="multiSelectedIds" id="multiSelectedIds" value="{multiSelectedIds}" /> {_}which items are selected on this list{/}
+	<input type="hidden" name="notitle" id="frm_notitle" value="1"/> {_}flag that prevents list title on ajax calls{/}
+	{skeys}
+{/removeonajax}
+{_removeonpopup}
+{_}
+
+				------------------------------------------------------------------------------------------------------------------
+												SEARCH FIELDS (simplified version of the edit form)
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+	<div class="lxmladm_box">
+		{total} {_t}{total|map|1=item|itens}{/t}
+		<span id="selectedItens">{selectedItens}</span>
+	    {_filterOn}<br/><span onclick="new Effect.toggle('searchdiv','Blind');" style="color:#ee0000;font-size:10px;cursor:pointer">({_t}filters{/t}: {filtering})</span>{/filterOn}
+	</div>
+
+
+	<div id="searchdiv" class="lxmladm_box" style="margin-top:10px;{searchFieldOn|map|0=display:none}">
+		<div class="lxmladm_subtitle">{_t}filter_options{/t}</div>
+		<div style="text-align:right;padding:5px;">
+		    {_filterOn} <input type="button" onclick="waitWhileLoad(); document.location='list.html?module={module}&searchFieldOn=1';" class="ladm_buttonred" value="{_t}reset{/t}" style="margin-right:20px"/>{/filterOn}
+		    <input class="ladm_buttongreen" type="submit" onclick="waitWhileLoad();" value="{_t}begin_search{/t}"/>
+		</div>
+
+		{_select_field}<span id="{field}_ara"><select name="{field}" style="width:{width}" id="{field}" onchange="selectChange('{field}');">{_optional}<option value=""></option>{/optional}{_options}<option value="{ids}" {selected|select}>{title} ({ids})</option>{/options}</select></span>{/select_field}
+		{_normal_field}<input class="ladm_fancyinput" type="{type|onnull|text}" name="{field}" style="width:{width}" id="{field}" value="{value|parse|html}" />{/normal_field}
+		{_datetime_field}<input class="ladm_fancyinput" type="{type|onnull|text}" name="{field}" style="width:{width}" id="{field}" value="{value|parse|html}" />{calendar}
+			<div style="margin-left:65px;display:{isbetween|map|0=none}" id="betweenfield_{field}"><input type="{type}" name="between_{field}" style="width:{width}" id="between_{field}" value="{between_value|parse|html}" />{calendar2}</div>
+		{/datetime_field}
+
+		{_FORM_field}
+		<table class="ladm_line{CLASS}" width="100%" cellspacing="0"><tbody>
+			<tr style="height:20px">
+				<td style="vertical-align:top;width:150px;text-align:left;height:20px">
+					{_t}{name}{/t}:
+				</td>
+				<td style="height:20px;text-align:left">
+					<select name="match_{name}" style="width:65px;float:left;" onchange="checkbetween(this,'{name}');">
+			      		{_string}
+			      		<option value="c" title="{_t}contem{/t}" {selected|select|c}>&ni;</option>
+			      		{/string}
+			      		<option value="i" title="{_t}igual{/t}" {selected|select|i}>=</option>
+			      		<option value="d" title="{_t}diferente{/t}" {selected|select|d}>&ne;</option>
+			      		{_numeric}
+			      		<option value="g" title="{_t}maior{/t}" {selected|select|g}>&gt;</option>
+			      		<option value="l" title="{_t}menor{/t}" {selected|select|l}>&lt;</option>
+			      		{/numeric}
+			      		{_month}
+			      		<option value="m" title="{_t}month{/t}" {selected|select|m}>{_t}month{/t}</option>
+			      		{/month}
+			      		{_between}
+			      		<option value="b" title="{_t}between{/t}" {selected|select|b}>{_t}between{/t}</option>
+			      		{/between}
+			      	</select>
+					{field}
+				</td>
+			</tr>
+		</tbody></table>
+		{/FORM_field}
+		<div style="clear:both"></div>
+
+		{_smartfields}
+		<div style="text-align:right;padding:5px">
+			<input type="button" class="ladm_buttonblue" onclick="this.style.display = 'none';$('smartfields').style.display='';" value="{_t}more_fields{/t} "/>
+		</div>
+		<div id="smartfields" style="display:none;">
+		{smartfields}
+		</div>
+		{/smartfields}
+
+		<div style="text-align:right;padding: 5px">
+		    {_filterOn} <input type="button" onclick="waitWhileLoad(); document.location='list.html?module={module}&searchFieldOn=1';" class="ladm_buttonred" value="{_t}reset{/t}" style="margin-right:20px"/>{/filterOn}
+		    <input class="ladm_buttongreen" type="submit" onclick="$('vaction').value='repage';waitWhileLoad();" value="{_t}begin_search{/t}"/>
+		</div>
+	</div>
+
+
+
+{_}
+
+
+				------------------------------------------------------------------------------------------------------------------
+												STUFF START REALLY HERE
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+
+
+
+{_hastabs}
+	<div style="float:left;padding:2px 10px 2px 10px;cursor:pointer;{affbi_adm_tab|map|none=font-weight:bold;}" onclick="document.location='list.html?module={module}&affbi_adm_tab=none'"><img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> {_t}all{/t}</div>{/tab}
+	{_tab}<div style="float:left;padding:2px 10px 2px 10px;cursor:pointer;{affbi_adm_tab|map|current=font-weight:bold;}" onclick="document.location='list.html?module={module}&affbi_adm_tab={#}'"><img src="{SKIN_PATH}smtab.png" style="vertical-align:bottom" alt=""/> {_t}{tabname}{/t}</div>{/tab}
+	<div style="clear:both"></div>
+{/hastabs}
+{/removeonpopup}
+
+
+{_} ------------------------------------------------------------------------------------------------------------------
+											TOP OF THE TABLE (options)
+ ------------------------------------------------------------------------------------------------------------------{/}
+{_listtitle}
+	<div class="ladm_listsubtitle">
+		{_checkbox}
+		<div style="float:left">
+			<img style="cursor:pointer" src="{SKIN_PATH}select_all.gif" width="16" height="12" alt="" title="{_t}select_all{/t}" onclick="myAjaxList.startSelect(true);" /><br/>
+			<img style="cursor:pointer" src="{SKIN_PATH}deselect_all.gif" width="16" height="12" alt="" title="{_t}deselect_all{/t}" onclick="myAjaxList.startSelect(false)" />
+		</div>
+		{/checkbox}
+		{_paging}
+		<div style="margin-left:30px">
+			Exibir:
+			<select onchange="if (this.value != '') getObjectFor('{module}').executeRepage(this.value);">
+				<option value="{p_size}">{p_size}</option>
+				<option {p_size|map|30=selected="selected" }value="30">30</option>
+				<option {p_size|map|100=selected="selected" }value="100">100</option>
+				<option {p_size|map|500=selected="selected" }value="500">500</option>
+				<option {p_size|map|1000=selected="selected" }value="1000">1000</option>
+			</select>
+		</div>
+		{/paging}
+	</div>
+{_} ------------------------------------------------------------------------------------------------------------------
+											ROW TITLES
+ ------------------------------------------------------------------------------------------------------------------{/}
+	<div class="ladm_listitem">
+		{_checkbox}<div class="ladm_listtitle linebutton">&nbsp;</div>{/checkbox}
+		{_editbtn}<div class="ladm_listtitle linebutton" style="width:40px">&nbsp;</div>{/editbtn}
+		{_listbuttonheader}<div class="ladm_listtitle linebutton">&nbsp;</div>{/listbuttonheader}
+		<div class="ladm_listtitle linebutton" style="float:right">&nbsp;</div> {_} <-- delete button {/}
+		<div class="ladm_listcenter">
+			{_top_row}<div class="ladm_listtitle" style="float:left;width:{tdwidth}%">{_t}{name}{/t}{extra}{_removeonpopup} {_order}<div class="ladm_order"><a onclick="waitWhileLoad();" href="list.html?{qs}order={field}\\"><img src="{SKIN_PATH}sort_desc.png" alt="∧"/></a><br/><a onclick="waitWhileLoad();" href="list.html?{qs}order={field}/"><img src="{SKIN_PATH}sort_asc.png" alt="∨"/></a></div>{/order}{/removeonpopup}</div>{/top_row}
+		</div>
+	</div>
+	{/listtitle}
+{_} ------------------------------------------------------------------------------------------------------------------
+										LIST LOOP ITSELF
+------------------------------------------------------------------------------------------------------------------{/}
+	<div id="frm{module}_list">
+	{_lineTemplate}
+	<div class="ladm_listitem">
+		{_checkbox}<div class="ladm_line{CLASS} linebutton"><input type="checkbox" id="checkbox_{checkkeys}" onchange="myAjaxList.switchCheck('{checkkeys}');" {checked|checked}/></div>{/checkbox}
+		{_editbtn}<div class="ladm_line{CLASS} linebutton"><img src="{SKIN_PATH}edit.png" alt="{_t}edit{/t}" title="{_t}edit{/t}" onclick="waitWhileLoad(); document.location='edit.php?module={module}&{skeys}'"/></div>
+		<div class="ladm_line{CLASS} linebutton"><img src="{SKIN_PATH}zoom.png" alt="{_t}preview{/t}" title="{_t}preview{/t}" id="previewicon_{checkkeys}" onclick="loadpreview('{checkkeys}','preview.ajax?module={module}&{skeys}');"/></div>
+		{/editbtn}
+		{_listbutton}<div class="ladm_line{CLASS} linebutton"><img src="{SKIN_PATH}{buttonimg}" onclick="waitWhileLoad(); document.location='{url}'" alt="{_t}{alt}{/t}" title="{_t}{alt}{/t}"/></div>{/listbutton}
+		<div class="ladm_line{CLASS} linebutton" style="float:right"><img onclick="deleteme('{module}','{skeys}','{_t}{module}{/t}');" src="{SKIN_PATH}delete.png" alt="{_t}delete{/t}" title="{_t}delete{/t}"/></div>
+		<div class="ladm_listcenter">
+			{_row}<div class="ladm_line{CLASS}" style="float:left;width:{tdwidth}%" {_removeonpopup}onclick="$('checkbox_{checkkeys}').checked = !$('checkbox_{checkkeys}').checked;myAjaxList.switchCheck('{checkkeys}')"{/removeonpopup}>{content|}&nbsp;</div>{/row}
+		</div>
+	</div>
+	<div class="ladm_linepreview" id="preview_{checkkeys}" style="display:none"></div>
+	{/lineTemplate}
+	</div>
+{_} ------------------------------------------------------------------------------------------------------------------
+										IN-LIST EDIT SYSTEM (aol)
+------------------------------------------------------------------------------------------------------------------{/}
+	{_la}
+	<div class="ladm_listitem">
+		<div class="ladm_listtitle"><b>{_t}add{/t}</b></div>
+	</div>
+	<div class="ladm_listitem">
+		{_checkbox}<div class="ladm_listtitle linebutton">&nbsp;</div>{/checkbox}
+		{_editbtn}<div class="ladm_listtitle linebutton" style="width:40px">&nbsp;</div>{/editbtn}
+		{_listbuttonheader}<div class="ladm_listtitle linebutton">&nbsp;</div>{/listbuttonheader}
+		<div class="ladm_listtitle linebutton" style="float:right">&nbsp;</div> {_} <-- delete button {/}
+		<div class="ladm_listcenter">
+			{_rowla}<div class="ladm_listtitle" style="float:left;width:{tdwidth}%" >{contentla}</div>{/rowla}
+		</div>
+	</div>
+	<div class="ladm_listitem">
+		<div class="ladm_listtitle" style="text-align:right">
+			<input type="button" class="ladm_buttongreen" title="+" value="Adicionar" onclick="getObjectFor('{module}').laedit(['{lafields}']);"/>
+		</div>
+	</div>
+	{/la}
+{_}	------------------------------------------------------------------------------------------------------------------
+										OPTIONS, PAGING, END OF THE LIST
+------------------------------------------------------------------------------------------------------------------{/}
+
+{_removeonpopup}
+	<div id="floaterbar" class="ladm_listsubtitle">
+		<div style="font-size:16px;position:absolute;top:0px;right:5px;width:10px;height:10px;cursor:pointer" onclick="floaterbarSW();" id="floaterbarbtn">↘</div>
+		<div class="ladm_paging" id="frm{module}_paging">{_}built by js{/}</div>
+		{_checkbox}
+		<div style="float:left;width:30px;margin-top:5px;">
+			<img style="cursor:pointer" src="{SKIN_PATH}select_all.gif" width="16" height="12" alt="" title="{_t}select_all{/t}" onclick="myAjaxList.startSelect(true);" /><br/>
+	    	<img style="cursor:pointer" src="{SKIN_PATH}deselect_all.gif" width="16" height="12" alt="" title="{_t}deselect_all{/t}" onclick="myAjaxList.startSelect(false)" />
+	    </div>
+	    {/checkbox}
+		<div style="height:24px;text-align:center;padding-top:5px;padding-bottom:5px;">
+	    	<div style="margin:0px auto;height:20px">
+	    		{_t}select_multiple_action{/t}:
+	    		<select name="vaction" id="vaction">
+	    			<option value="">{_t}select_vaction{/t}</option> {_} <- this counts as standard pagination {/}
+	    			<option value="repage">{_t}repage{/t}</option>
+	    			<option value="delete">{_t}multiple_delete{/t}</option>
+					{_can_multiple}
+		   			<option value="multiple">{_t}multiple_edit{/t}</option>
+					{/can_multiple}
+	    			{_relatewithlinker}
+	    			<option value="linker">{_t}relate_with{/t} {_t}{linkermodule_relate}{/t}</option>
+	    			{/relatewithlinker}
+	    			{_can_reorder}
+	    			<option value="reorder">{_t}multiple_reorder{/t}</option>
+	    			{/can_reorder}
+	    			{_has_label}
+	    			<option value="labelprint">{_t}label_print{/t}</option>
+	    			{/has_label}
+
+	    		</select>
+	    		<input type="button" value="{_t}perform_action{/t}" onclick="vaction_start();"/>
+	    		<span style="font-size: 10px">{_t}multiple_warning_allpages{/t}</span>
+	    	</div>
+		</div>
+	</div>
+
+	<div class="lxmladm_box">
+		{total} {_t}{total|map|1=item|itens}{/t}
+	    <span id="selectedItens2">{selectedItens}</span>
+	    {_filterOn}<br/><span onclick="new Effect.toggle('searchdiv','Blind');" style="color:#ee0000;font-size:10px;cursor:pointer">({_t}filters{/t}: {filtering})</span>{/filterOn}
+	    {_hasAutoclean}<br/><span style="font-size:9px">{_t}autoclean_warning{/t}</span>{/hasAutoclean}
+	</div>
+
+	<div class="lxmladm_title ladm_titleclosure">
+		<div class="ladm_titleicons">
+			{_mup}<div class="ladm_icomup" onclick="waitWhileLoad(); document.location='edit.php?module={module}&mup=true';" title="{_t}mup{/t}"></div>{/mup}
+			{_editbtn}<div class="ladm_iconew" onclick="waitWhileLoad(); document.location='edit.php?module={module}';" title="{_t}new{/t}"></div>{/editbtn}
+			{_searcharea}<div class="ladm_icosearch" onclick="new Effect.toggle('searchdiv','Blind');" title="{_t}search{/t}"></div>{/searcharea}
+		</div>
+	</div>
+
+{_}
+
+
+				------------------------------------------------------------------------------------------------------------------
+											POP-IN TO RELATE ITEMS WITH OTHER MODULE
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+
+{_relatewithlinker}
+<div id="linker_div" style="z-index:10000;position:fixed;display:none;width:300px;height:100px;background:#ffffff;border:1px solid #000000;padding:20px;">
+	{_t}select_which_item_to_relate{/t}:<br/>
+	<select id="linker_div_pop" name="linker_div_pop" style="width:100%">
+	{_linkermodule_options}<option value="{id}">{title}</option>{/linkermodule_options}
+	{_linkermodule_optionstree}
+		{_sdirs}
+			<option value="{id}">{treetitle} ({id})</option>
+		   	{_insubdirs}{subdirs}{/insubdirs}
+		{/sdirs}
+		{_ssubdirs}
+			<option value="{id}">{level|map|1=……,2=…………,3=………………,4=……………………,5=……………………}{treetitle} ({id})</option>
+	  		{_insubdirs}{subdirs}{/insubdirs}
+		{/ssubdirs}
+	{/linkermodule_optionstree}
+	</select><br/>
+	<input type="button" onclick="linkergo(false);" value="{_t}cancel{/t} " class="ladm_buttonred" style="float:right"/>
+	<input type="button" onclick="linkergo(true);" value="{_t}save{/t} " class="ladm_buttonblue" style="float:right"/>
+</div>
+{/relatewithlinker}
+
+
+{_}
+
+
+				------------------------------------------------------------------------------------------------------------------
+											POP-IN TO PRINT LABELS WITH THE SELECTED ITEMS
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+{_has_label}
+	<div id="label_div" style="z-index:10000;position:fixed;display:none;width:300px;height:120px;background:#ffffff;border:1px solid #000000;padding:20px;">
+		<b>{_t}label_print_options{/t}:</b><br/>
+		{_t}label_skip{/t}:<br/>
+		<input type="text" name="label_skip" id="label_skip" value="0"/><br/>
+		{_t}label_template{/t}:<br/>
+		<select name="label_template" id="label_template">
+		{_label_template}<option value="{id}">{name} {cols}x{rows}</option>{/label_template}
+		</select><br/>
+		<input type="button" onclick="labelgo(false);" class="ladm_buttonred" value="{_t}cancel{/t}" style="float:right"/>
+		<input type="button" onclick="labelgo(true);" value="{_t}label_print{/t}" class="ladm_buttongreen" style="float:right;font-size:10px"/>
+	</div>
+{/has_label}
+
+
+{_}
+
+
+				------------------------------------------------------------------------------------------------------------------
+															END OF FORM, START JAVASCRIPT
+				------------------------------------------------------------------------------------------------------------------
+
+{/}
+
+	</form>
+
+</div>
+
+<div style="height:110px;display:none" id="floaterbar_spacer">&nbsp;</div>
+
+<script type="text/javascript"><!--
+
+{_commonScripts}
+	var CONS_JS_WAITING = "{_t}waiting_ajax_results{/t}";
+
+
+
+var CAjaxList = Class.create();
+CAjaxList.prototype = {
+	myname: null,
+	currentpage: 0,
+	pageSelectionSize: 1,
+	frm: false, // if a form provided, use it, otherwise, use the query
+	query: false,
+	frmmode: false,
+	p_size: 0,
+	p_init: 0,
+	listcontainerdiv: null,
+	pagingcontainerdiv: null,
+	total: 0,
+	module: '',
+	isembeded: false,
+	checkboxautomaticfill: false,
+	doingla: false,
+	initialize: function(objectname,module,total,formid,listid,pageid,isembeded) {
+		this.myname = objectname;
+		this.module = module;
+		this.total = total;
+		if (formid.indexOf("=") == -1) {
+			this.frm = $(formid);
+			this.frmmode = true;
+			this.p_size = parseInt(this.frm.elements['p_size'].value);
+			this.p_init = parseInt(this.frm.elements['p_init'].value);
+		} else {
+			this.query = formid.split("&"); // remove p_init and p_size, also notitle
+			this.frmmode = false;
+			temp = "";
+			for (c=0;c<this.query.length;c++) {
+				myitem = this.query[c].split("=");
+				if (myitem[0] == "p_init") {
+					this.p_init = parseInt(myitem[0]);
+				} else if (myitem[0] == "p_size") {
+					this.p_size = parseInt(myitem[1]);
+				} else if (myitem[0] != "notitle")
+					temp += myitem[0] + "=" + myitem[1] + "&";
+			}
+			this.query = temp;
+		}
+		this.listcontainerdiv = $(listid);
+		this.pagingcontainerdiv= $(pageid);
+		this.isembeded = isembeded;
+	},
+	updatePaging: function() {
+		var totalPages = Math.ceil((this.total) / this.p_size);
+		if (totalPages == 0) totalPages = 1;
+		var currentpage_ex = 1 + this.currentpage / this.p_size;
+		var output = "";
+		if (currentpage_ex < totalPages) {
+			output = "<div class=\"ladm_pagemore\" onclick=\""+this.myname+".pagingstart("+(this.p_size*(currentpage_ex))+");\"> Carregar mais ... </div>";
+		}
+		output += "<div class=\"ladm_pages\"><div class=\"ladm_pagefirst\" onclick=\""+this.myname+".pagingstart(0);\">Primeira</div>";
+		startP = currentpage_ex - 5;
+		if (startP <= 0) startP = 1;
+		endP = startP + 10;
+		if (endP > totalPages) endP = totalPages;
+		for (p = startP; p<=endP;p++) {
+			pageVisible = p <= currentpage_ex && p >= currentpage_ex - this.pageSelectionSize + 1;
+			output += "<div class=\"ladm_pagingpage"+(pageVisible?' pagecurrent':'')+"\" onclick=\""+this.myname+".pagingstart("+(this.p_size*(p-1))+");\">" + p + "</div>";
+		}
+		output += "<div class=\"ladm_pagelast\" onclick=\""+this.myname+".pagingstart("+((totalPages-1)*this.p_size)+");\">Última</div>";
+		output += "</div>";
+		this.pagingcontainerdiv.innerHTML = output;
+		this.pagingcontainerdiv.style.display = '';
+		if (typeof Shadowbox !== 'undefined') {
+			Shadowbox.clearCache();
+			Shadowbox.setup();
+		}
+		if (this.isembeded || !this.frmmode) return;
+		// now checkboxes
+		this.checkboxautomaticfill = true;
+		selectall(this.frm,false,'checkbox_'); // empty all of them
+		chk = this.frm.elements["multiSelectedIds"].value.split(',');
+		for (c=0;c<chk.length;c++) {
+			if (chk[c] != '' && this.frm.elements['checkbox_' + chk[c]]) {
+				this.frm.elements['checkbox_' + chk[c]].checked = true;
+			}
+		}
+		this.checkboxautomaticfill = false;
+	},
+	pagingstart: function(page,force) {
+		if (!force && page == this.currentpage) return;
+		waitWhileLoad();
+		page = parseInt(page);
+		if (this.frmmode) {
+			this.frm.elements["p_init"].value = page;
+			this.p_init = page;
+			new Ajax.Request('list.ajax?layout=2',{
+				method: 'post',
+				parameters: this.frm.serialize(true),
+				asynchronous: true,
+				onComplete:	this.ajaxlistcallback.bind(this,page)
+			});
+		} else {
+			this.p_init = page;
+			new Ajax.Request('list.ajax?layout=2',{
+				method: 'post',
+				postBody: this.query + "p_init=" + this.p_init + "&p_size=" + this.p_size + "&notitle=1",
+				asynchronous: true,
+				onComplete:	this.ajaxlistcallback.bind(this,page)
+			});
+		}
+		return;
+	},
+	ajaxlistcallback: function(newpage,data) {
+		req= parseajax(data);
+		remove_wwl();
+		newpage = parseInt(newpage);
+		if (newpage == this.currentpage+this.p_size) {
+			this.listcontainerdiv.innerHTML += "<div id=\"newpage"+this.module+newpage+"\" style=\"display:none\">"+req+"</div>";
+			this.pageSelectionSize++;
+			new Effect.BlindDown("newpage" + this.module+newpage);
+		} else {
+			this.listcontainerdiv.innerHTML = req;
+			this.pageSelectionSize=1;
+		}
+		this.currentpage = newpage;
+		this.updatePaging();
+	},
+	startSelect:function(mode) { // does not exist in querymode
+		waitWhileLoad();
+		new Ajax.Request('list.ajax?module={module}&layout=2&vaction=mark&markmode='+(mode?"true":"false"),
+			{asynchronous: true,
+			 onComplete:this.selectioncallback.bind(this)}
+		);
+	},
+	selectioncallback:function(data) { // does not exist in querymode
+		remove_wwl();
+		data = parseajax(data);
+		this.frm.elements['multiSelectedIds'].value = data==','?'':data;
+		this.checkboxautomaticfill = true;
+		selectall(this.frm,data != ',','checkbox_');
+		if ($('selectedItens')) $('selectedItens').innerHTML = ",{_t}selected_itens{/t}: "+(str_count(",",$('multiSelectedIds').value)-1);
+		if ($('selectedItens2')) $('selectedItens2').innerHTML = $('selectedItens').innerHTML;
+		this.checkboxautomaticfill = false;
+	},
+	executeRepage: function(npage) {
+		this.p_size = parseInt(npage);
+		this.p_init = 0;
+		if (this.frmmode) {
+			this.frm.elements['p_size'].value = npage;
+			this.frm.elements['p_init'].value = 0;
+			this.frm.elements['notitle'].value = 0;
+			waitWhileLoad();
+			this.frm.submit();
+		} else {
+			this.currentpage = 0;
+			waitWhileLoad();
+			new Ajax.Request('list.ajax?layout=2',{
+				method: 'post',
+				postBody: this.query + "p_init=0&p_size=" + this.p_size + "&notitle=1",
+				asynchronous: true,
+				onComplete:	this.ajaxlistcallback.bind(this,0)
+			});
+		}
+
+	},
+	switchCheck:function (ids) { // does not exist in querymode
+		if (this.checkboxautomaticfill) return;
+		this.checkboxautomaticfill = true;
+		alreadySelected = ereg(this.frm.elements['multiSelectedIds'].value,","+ids+",");
+		if (alreadySelected) {
+			this.frm.elements['multiSelectedIds'].value = str_replace(","+ids+",",",",this.frm.elements['multiSelectedIds'].value,2); // remove
+		} else {
+			this.frm.elements['multiSelectedIds'].value += ","+ids+","; // add
+		}
+		this.frm.elements['multiSelectedIds'].value = str_replace(",,",",",this.frm.elements['multiSelectedIds'].value,10);
+		if ($('selectedItens')) $('selectedItens').innerHTML = ",{_t}selected_itens{/t}: "+(str_count(",",this.frm.elements['multiSelectedIds'].value)-1);
+		if ($('selectedItens2')) $('selectedItens2').innerHTML = $('selectedItens').innerHTML;
+		this.checkboxautomaticfill = false;
+	},
+	laedit: function(lafields) {
+		if (this.doingla) return;
+		this.doingla = true;
+		var query = "laedit.ajax";
+		var pB = "haveinfo=1&layout=2&module="+this.module+"&";
+		for (c=0;c<lafields.length;c++) {
+			pB += lafields[c] + "=" + $('la_' + lafields[c]).value + "&";
+		}
+		waitWhileLoad(true);
+		new Ajax.Request(query,{
+			method: 'post',
+			postBody: pB,
+			asynchronous: true,
+			onComplete: this.laeComplete.bind(this)
+			}
+		);
+	},
+	laeComplete: function(data) {
+		data= parseajax(data);
+		this.doingla = false;
+		if (data == 'ok') {
+			alert("Item incluído com sucesso! Atualizando listagem");
+			this.total++;
+			this.pagingstart(0,true);
+		} else {
+			alert("Erro incluíndo item" + data);
+			remove_wwl();
+		}
+	}
+}
+
+	function loadpreview(divkeys,query) {
+		if ($('preview_' + divkeys).innerHTML != '') {
+			$('preview_' + divkeys).innerHTML = "";
+			$('preview_' + divkeys).style.display = 'none';
+			$('previewicon_' + divkeys).src = '{SKIN_PATH}zoom.png';
+			return;
+		}
+		$('preview_' + divkeys).innerHTML = CONS_JS_WAITING;
+		$('preview_' + divkeys).style.display = '';
+		new Ajax.Request(query,{
+			asynchronous: true,
+			onComplete: function(req) {
+					previewcallback.call(this,req,divkeys);
+				}
+		});
+	}
+	function previewcallback(data,divkeys) {
+		data = parseajax(data);
+		remove_wwl();
+		$('preview_' + divkeys).style.display = 'none';
+		$('preview_' + divkeys).innerHTML = data;
+		new Effect.BlindDown('preview_' + divkeys);
+		$('previewicon_' + divkeys).src = '{SKIN_PATH}zoomup.png';
+	}
+	function deleteme(module,skeys,module_tl) {
+		if (!module_tl) module_tl = module
+		if (confirm("{_t}delete{/t} ("+module_tl+")?")) {
+			waitWhileLoad();
+	  		document.location = 'delete.html?module='+module+'&'+skeys;
+	  	}
+	}
+	function listselectchange(module,skeys, value, field) {
+		waitWhileLoad(true);
+		new Ajax.Request("ajaxedit.php?module="+module+"&layout=2&field="+field+"&value="+value+"&keys="+skeys,{
+			asynchronous: true,
+			onComplete: lscComplete
+		});
+	}
+	function lscComplete(data) {
+		remove_wwl();
+		data = parseajax(data);
+		ok = data[0] == "o";
+		if (!ok) alert("{_t}lscC_error{/t}" + (data=='e'?'':data));
+
+	}
+	function getObjectFor(module) {
+		if (typeof myAjaxList !== 'undefined') return myAjaxList;
+		else {
+			for (c=0;c<RM.length;c++) {
+				if (RM[c][0] == module) {
+					return RM[c][2];
+					break;
+				}
+			}
+		}
+	}
+{/commonScripts}
+	function checkbetween(obj,id) { // dates in search form
+		if (obj.value == 'm' && !isnumber($(id).value))
+			$(id).value = "";
+		$('betweenfield_'+id).style.display = obj.value == 'b'?'':'none';
+	}
+	function vaction_start(data) {
+		$vaction = $('vaction').value;
+		switch ($vaction) {
+			case "repage":
+				var npage = parseInt(prompt("{_t}type_p_size{/t}",$('frm_p_size').value));
+				if (!npage) return;
+				if (isNaN(npage) || npage < 1) npage = 1;
+				$('frm_p_size').value = npage;
+				$('frm_notitle').value = 0;
+				waitWhileLoad();
+				$('frm{module}').submit();
+				break;
+			case "delete":
+				items = $('multiSelectedIds').value.split(","); // have an extra comma, so actual number is - 2
+				total = items.length - 2;
+				if (total<1) {
+					alert("{_t}select_at_least_one{/t}");
+				} else {
+					if (confirm("{_t}delete{/t} "+(total)+" ({_t}{module}{/t})?")) {
+						waitWhileLoad();
+						$('frm{module}').submit();
+					}
+				}
+
+				break;
+			case "multiple":
+				items = $('multiSelectedIds').value.split(","); // have an extra comma, so actual number is - 2
+				total = items.length - 2;
+				if (total<2) {
+					alert("{_t}select_at_least_two{/t}");
+				} else {
+					waitWhileLoad();
+					$('frm{module}').submit();
+				}
+
+				break;
+			case "reorder":
+				items = $('multiSelectedIds').value.split(","); // have an extra comma, so actual number is - 2
+				total = items.length - 2;
+				if (total<2) { // there is always a comma at the start, so actual number is -1
+					alert("{_t}select_at_least_two{/t}");
+				} else {
+					waitWhileLoad();
+					$('frm{module}').submit();
+				}
+
+				break;
+			case "linker":
+				items = $('multiSelectedIds').value.split(","); // have an extra comma, so actual number is - 2
+				total = items.length - 2;
+				if (total<1) {
+					alert("{_t}select_at_least_one{/t}");
+				} else {
+					dim = windowDimensions();
+					$('linker_div').style.left = (dim[0]/2 - 150) + "px";
+					$('linker_div').style.top = (dim[1]/2 - 50) + "px";
+					$('linker_div').style.display = '';
+					$('div_wait').appear({
+						duration: 0.5, from: 0, to: 0.5
+					});
+				}
+				break;
+			case "labelprint":
+				items = $('multiSelectedIds').value.split(","); // have an extra comma, so actual number is - 2
+				total = items.length - 2;
+				if (total<1) {
+					alert("{_t}select_at_least_one{/t}");
+				} else {
+					dim = windowDimensions();
+					$('label_div').style.left = (dim[0]/2 - 150) + "px";
+					$('label_div').style.top = (dim[1]/2 - 50) + "px";
+					$('label_div').style.display = '';
+					$('div_wait').appear({
+						duration: 0.5, from: 0, to: 0.5
+					});
+				}
+				break;
+			default:
+				waitWhileLoad();
+				$('frm{module}').submit();
+			break;
+		}
+	}
+	function linkergo(save) {
+		$('div_wait').style.display = 'none';
+		$('linker_div').style.display = 'none';
+		if (!save) return;
+		items = $('multiSelectedIds').value.split(","); // have an extra comma, so actual number is - 2
+		query = "list.php";
+		waitWhileLoad(true);
+		new Ajax.Request(query,{
+			method: 'post',
+			postBody: "haveinfo=1&layout=2&module={linkermodule}&vaction=linker&started={module}&ids=" + items + "&toid=" + $('linker_div_pop').value,
+			asynchronous: true,
+			onComplete: lscComplete
+		});
+	}
+	function labelgo(goprint) {
+		$('div_wait').style.display = 'none';
+		$('label_div').style.display = 'none';
+		if (!goprint) return;
+		waitWhileLoad(true);
+		$('frmbase').submit();
+	}
+
+	function selectChange(startingField) { // for ajax fill
+		// each ajaxHandler have a list with the FIRST item being the item which can be changed, and the others which items can cause changes on it
+		try {
+			for (var c=0;c<ajaxHandlers.length;c++) { // for each field that is ajax controled
+				canChange = true;
+				isMyChild = false;
+				var ajaxQuery = "";
+				if (ajaxHandlers[c][0] == startingField) break; // I should not start a change in myself
+				for (var c2=2;c2<ajaxHandlers[c].length;c2++) { // checks pre-requisites are filled
+					if (ajaxHandlers[c][c2]==startingField) isMyChild = true;
+					if ($(ajaxHandlers[c][c2]) != undefined && $(ajaxHandlers[c][c2]).value != undefined && $(ajaxHandlers[c][c2]).value != '') {
+						ajaxQuery += "&" + ajaxHandlers[c][c2] + "=" + $(ajaxHandlers[c][c2]).value;
+					} else {
+						canChange =false
+						break;
+					}
+				}
+				if (canChange && isMyChild) {
+					startAjaxSelectFill( ajaxHandlers[c][1], ajaxHandlers[c][0],ajaxQuery,'{module}',$(ajaxHandlers[c][2]).form,true,'','','90%',true);
+				}
+			}
+
+		} catch (ee) {
+			alert('ajaxHandler selectChange error:' + ee);
+			return;
+		}
+	}
+
+	var fbsw = false;
+	floaterbarD = componentDimensions('floaterbar');
+	function floaterbarSW() {
+		if (fbsw) {
+			$('floaterbar').style.position = 'relative';
+			$('floaterbar').style.bottom = '';
+			$('floaterbar').style.right = '';
+			$('floaterbar').style.width = floaterbarD[0] != 0?floaterbarD[0] + "px":'100%';
+			$('floaterbar').style.borderTop = '0px';
+			$('floaterbar').style.borderLeft = '0px';
+			$('floaterbar').style.backgroundColor = 'transparent';
+			$('floaterbarbtn').innerHTML = "↘";
+			$('floaterbar_spacer').style.display = 'none';
+		} else {
+			$('floaterbar').style.position = 'fixed';
+			$('floaterbar').style.bottom = '0px';
+			$('floaterbar').style.width = floaterbarD[0] != 0?floaterbarD[0] + "px":'100%';
+			$('floaterbar').style.right = '0px';
+			$('floaterbar').style.borderTop = '1px solid #333333';
+			$('floaterbar').style.borderLeft = '1px solid #333333';
+			$('floaterbar').style.backgroundColor = '#ffffff';
+			$('floaterbar').style.zIndex = '10';
+			$('floaterbarbtn').innerHTML = "↖";
+			$('floaterbar_spacer').style.display = '';
+		}
+		fbsw = !fbsw;
+
+	}
+
+	{endscripts}
+
+	var myAjaxList = new CAjaxList('myAjaxList','{module}',{total},'frm{module}','frm{module}_list','frm{module}_paging',false);
+	myAjaxList.updatePaging();
+
+//--></script>
+
+
+{/removeonpopup}
+
+{_embededCall}<script type="text/javascript">setPagingTotal("{module}",{total},{p_size});</script>{/embededCall}

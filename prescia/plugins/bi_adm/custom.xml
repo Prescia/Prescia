@@ -1,0 +1,3 @@
+<minlvltooptions mandatory="true" default="90">INT</minlvltooptions>
+<quota mandatory="true" restrict="100" default="1048576000">INT</quota>
+<affbi_adm_skin mandatory="true" default='base' meta="values will be ignored and replaced by available skins, but a base skin should always exist">ENUM:'base','mini'</affbi_adm_skin>

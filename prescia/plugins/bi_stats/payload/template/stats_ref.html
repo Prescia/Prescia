@@ -1,0 +1,92 @@
+<script type="text/javascript"><!--
+		function detailReferer(referer) {	
+			$('refaba').innerHTML = "Loading...";
+			document.location = "#refabaanchor";
+			new Ajax.Request("stats_refdet.ajax?referer=" + referer, { 
+								method:'get',
+								onComplete: arc
+										}
+							);
+		}
+		function arc(theData) {
+			theData = parseajax(theData);
+			$('refaba').innerHTML = theData;
+			Effect.BlindDown('refaba');
+		}
+//--></script> 
+Referências hoje<br/>
+<a name="refabaanchor"></a>
+<div id="refaba"></div>
+<div style="margin:0px 20px 0px 20px">
+	<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+		<tr>
+		  <td width="400">Referer</td>
+		  <td colspan="2">Hits</td>
+		  <td>&nbsp;</td>
+		</tr>		
+		{_refd}
+		<tr>
+		  <td>{referer}</td>
+		  <td style="width:400px;"><div style="float:left;background:#ccccee;height:10px;width:{width}px;"></div></td>
+		  <td>{hits}</td>
+		  <td><a href="#" onclick="detailReferer('{referer}');">[{_t}detalhes{/t}]</a></td>
+		</tr>
+		{/refd}
+	</tbody></table>
+</div>
+<br/><br/>
+Referência no último mês
+
+<div style="margin:0px 20px 0px 20px">
+	<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+		<tr>
+		  <td width="400">Referer</td>
+		  <td colspan="2">Hits</td>
+		</tr>		
+		{_refh}
+		<tr>
+		  <td>{referer}</td>
+		  <td style="width:400px;"><div style="float:left;background:#ccccee;height:10px;width:{width}px;"></div></td>
+		  <td>{h}</td>
+		</tr>		
+		{/refh}
+	</tbody></table>
+</div>
+	
+Palavras chave (no mês, mostrando top 100)
+<div style="margin:0px 20px 0px 20px">
+	<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+		<tr>
+		  <td >Site</td>
+		  <td >Palavras</td>
+		  <td colspan="2">Hits</td>
+		</tr>		
+		{_query}
+		<tr>
+		  <td>{engine}</td>
+		  <td>{query}</td>
+	  	  <td style="width:400px;"><div style="float:left;background:#ccccee;height:10px;width:{width}px;"></div></td>
+		  <td style="padding-left:2px;">{hits} ({percent|number|float|2}%)</td>
+		</tr>		
+		{/query}
+	</tbody></table>
+</div>
+	
+Página de entrada, por referencia (top 100)
+<div style="margin:0px 20px 0px 20px">
+	<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+		<tr>
+		  <td width="240">Referer</td>
+		  <td width="159">Entrada</td>
+		  <td>Hits</td>
+		</tr>		
+		{_refe}
+		<tr>
+		  <td>{referer}</td>
+		  <td>{entrypage}</td>
+	  	  <td style="width:400px;"><div style="float:left;background:#ccccee;height:10px;width:{width}px;"></div></td>
+		  <td>{h}</td>
+		</tr>		
+		{/refe}
+	</tbody></table>
+</div>

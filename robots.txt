@@ -1,0 +1,8 @@
+User-agent: *
+Crawl-delay:60
+Request-rate: 1/60 
+Disallow: /*.jpg$
+Disallow: /*.gif$
+Disallow: /*.png$
+Disallow: /adm/
+

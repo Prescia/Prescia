@@ -1,0 +1,43 @@
+<div class="lxmladm_box">
+<div class="lxmladm_title">{_t}undo_central{/t}:</div>
+
+<div class="ladm_aviso">{_t}history_lasts_7days{/t}</div>
+
+	<table cellspacing="0" width="100%">
+		<tr style="height:17px">
+			<td class="ladm_listtitle" style="height:17px;width:25px">&nbsp;</td>
+			<td class="ladm_listtitle" style="height:17px;">
+				{_t}modulo{/t}
+			</td>
+			<td class="ladm_listtitle" style="height:17px;">
+				{_t}event{/t}
+			</td>
+			<td class="ladm_listtitle" style="height:17px;">
+				{_t}data{/t}
+			</td>
+			<td class="ladm_listtitle" style="height:17px;">
+				{_t}author{/t}
+			</td>
+		</tr>
+		{_events}
+		<tr>
+			<td class="ladm_line{#|each|2=even|odd}">
+				<input style="font-size:9px;margin:0px;" type="button" class="ladm_buttonblue" onclick="waitWhileLoad();document.location='history.html?id={id}'" value="{_t}see{/t}"/>
+			</td>
+			<td class="ladm_line{#|each|2=even|odd}">
+				{_t}{modulo}{/t}
+			</td>
+			<td class="ladm_line{#|each|2=even|odd}">
+				{_t}{event|map|delete=deletion,update=update_undo}{/t}
+			</td>
+			<td class="ladm_line{#|each|2=even|odd}">
+				{data|datetime}
+			</td>
+			<td class="ladm_line{#|each|2=even|odd}">
+				{author_name}
+			</td>
+		</tr>
+		{/events}
+	</table>
+
+</div>

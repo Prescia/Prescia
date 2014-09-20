@@ -1,0 +1,72 @@
+	
+	{_upload_field}
+	  	<div class="dgw_frame" style="margin-left: 10px;padding:10px;margin-top:5px">
+		    {_downloadable}
+		    <div class="grifo_inferior" style="height:20px">
+				<div style="float:left">Download:</div>
+				<div style="margin-left:150px">
+				    <a href="{download}"><img class="img_hoverable" src="{SKIN_PATH}ft/{ico}_ico.gif" width="16" heigth="16" alt="" title="{download}"/></a>
+				</div>
+			</div>
+		    {/downloadable}
+		    {_presentable}
+		    <div class="dgw_frame" style="padding:2px">
+			    {_img}<img class="img_hoverable" src="{download}" alt="" title="{download}" width="{width}" height="{height}" />{/img}
+			    {_swf}
+			  	{_FLASHME}{download}|{width}|{height}{/FLASHME}
+			    {/swf}
+			</div>
+		    {/presentable}
+		    {_isImage}
+				<div class="grifo_inferior" style="height:20px;width:300px">
+				    <div style="float:left">{_t}dimension{/t}:</div>
+					<div style="margin-left:150px">{dim}</div>
+				</div>
+			    {_hasThumbs}
+				<div class="grifo_inferior" style="height:35px;width:300px">
+				    <div style="float:left">{_t}thumbnails{/t}:</div>
+					<div style="margin-left:150px">
+						{_thumb}<a href="{tdownload}" rel="lightbox[arr{field}]"><img class="img_hoverable" src="{SKIN_PATH}ft/jpg_ico.gif" width="16" heigth="16" alt="" title=""/></a> {/thumb}
+					</div>
+				</div>
+			    {/hasThumbs}
+		  	{/isImage}
+		</div>
+	{/upload_field}
+	
+	{_selecttree_field}
+		{tree}
+	{/selecttree_field}
+	
+	{_select_field}
+		{title}
+	{/select_field}
+	
+	{_normal_field}
+		{value}
+	{/normal_field}
+	
+	{_slider_field}
+	<div style="height:20px">
+		<div id="slidertrack_{field}" style="width:200px; background-color:#ccc; height:10px;margin-bottom:5px; float:left">
+			<div id="sliderhandle_{field}" style="position:relative;width:20px; height:15px; left:{value}px; background-color:#111; cursor:move;color:#eeeeee;text-align:center">{value}</div>
+		</div>
+	</div>
+	{/slider_field}
+	
+	{_textarea_field}
+		<div>{value}</div>
+	{/textarea_field}
+	
+	{_FORM_field}
+	<table width="100%" style="margin-bottom:5px;padding-bottom:1px"><tbody>
+		<tr>
+			<td class="grifo_inferior"  style="vertical-align:top;width:150px;text-align:left">
+				<strong>{_t}{title}{/t}:</strong>
+			</td>
+			<td class="grifo_inferior"  style="text-align:left">
+				{field}
+			</td>
+		</tr>
+	</tbody></table>
+	{/FORM_field}

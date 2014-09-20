@@ -1,0 +1,151 @@
+<div class="ladm_frame" id="div_admframe">
+	{_LOGGED}
+
+	<div class="ladm_topbar">
+		<div class="ladm_logocliente"><a onclick="waitWhileLoad();" href="index.php">{CLIENT_LOGO}</a></div>
+
+		<div class="ladm_loggeduser">
+			<div class="ladm_loggedimage"></div>
+			<a class="ladm_loggedusername" href="edit.php?module=users&id={LOGGED_USERID}">{LOGGED_USER|truncate|22|…}</a>
+			<a class="ladm_loggeduserprofile" href="edit.php?module=users&id={LOGGED_USERID}">Perfil</a>
+			<a class="ladm_loggedusersettings" href="options.php">Opções</a>
+			<a class="ladm_loggeduserlogout" href="/?logout=true">Sair</a>
+		</div>
+
+		{_hasMonitor}{_can_monitor}
+		<div class="ladm_monitor" id="adm_monitor" style="width:{monitorareawidth}px">
+			{_monitor}
+			<div class="ladm_monitoricon">
+				<div onclick="document.location='monitor.php?filter={monitor}';" style="width:24px;height:24px;background:url('{SKIN_PATH}notification/ico_{level}.png') no-repeat;position:relative;left:9px;top:9px;cursor:pointer" title="{notifies} {txt}" alt="{notifies} {txt}">
+					<div style="text-align:center;width:10px;height:10px;padding:1px;color:#ffffff;background:#ff0000;font-size:8px;{notifies|map|0=display:none};position:absolute;top:0px;right:0px" title="{notifies} {txt}" alt="{notifies} {txt}">{notifies}</div>
+				</div>
+			</div>
+			{/monitor}
+		</div>
+		{/can_monitor}{/hasMonitor}
+	</div>
+	{_}END TOP BAR{/}
+
+	{_}MENU BAR{/}
+	<div class="ladm_menubar" id="admmenubar">
+
+			<div class="ladm_searchbox">
+				<form name="frmadmsearch" action="mainsearch.html" method="post">
+					<input type="text" class="ladm_searchinput" name="searchfield" value="Busca…" onfocus="if (this.value=='Busca…') this.value='';" onblur="if (this.value == '') this.value = 'Busca…';"/>
+					<input type="submit" class="ladm_searchsubmit" value=""/>
+				</form>
+
+			</div>
+			<div class="ladm_menuline">&nbsp;</div>
+			{_dirs}
+			<div class="ladm_menuitem" onclick="menuClick('{id}','{chields}','{link}','{level}');">
+				<img src="{SKIN_PATH}notification/ico_{icon|onnull|list}.png" alt="" />{title}
+			</div>
+		   	{_insubdirs}<div class="ladm_menusubitem_holder" id="menu{id}" style="display:none">
+		   		<div class="ladm_menusubitem_holderstart"></div>
+		   		{subdirs}
+		   		<div class="ladm_menuline">&nbsp;</div>
+		   	</div>{/insubdirs}
+			{/dirs}
+
+			{_dirs_subdirs}
+				<div class="ladm_menusubitem_l{level}" onclick="menuClick('{id}','{chields}','{link}','{level}');">{title}</div>
+		   		{_insubdirs}<div id="menu{id}" style="display:none">{subdirs}</div>{/insubdirs}
+			{/dirs_subdirs}
+
+			{_can_something}
+			
+			{_has_stats}
+				<div class="ladm_menuitem" onclick="menuClick('','0','stats_analytics.html');">
+					<div class="ladm_menuitem_stat">{framedstatistics}</div>
+					<img src="{SKIN_PATH}notification/ico_stats.png" alt=""/>{_t}stats{/t}
+	
+				</div>
+			{/has_stats}
+
+			{_can_fm}
+			<div class="ladm_menuitem" onclick="menuClick('','0','fmanager.html');">
+				<img src="{SKIN_PATH}notification/ico_fm.png" alt=""/>{_t}fmanager{/t}
+			</div>
+			{/can_fm}
+
+			<div class="ladm_menuitem" onclick="menuClick('opcoes','1','','0');">
+				<img src="{SKIN_PATH}notification/ico_options.png" alt=""/>{_t}geral{/t}
+			</div>
+			<div class="ladm_menusubitem_holder" id="menuopcoes" style="display:none">
+		   		<div class="ladm_menusubitem_holderstart"></div>
+		   		{_can_monitor}
+		   		<div class="ladm_menusubitem_l1" onclick="menuClick('','0','monitor.html');">{_t}monitoring_central{/t}</div>
+		   		{/can_monitor}
+		   		{_hasUndo}{_can_undo}
+		   		<div class="ladm_menusubitem_l1" onclick="menuClick('','0','historymain.html');">{_t}undo_central{/t}</div>
+		   		{/can_undo}{/hasUndo}
+		   		{_can_options}
+		   		<div class="ladm_menusubitem_l1" onclick="menuClick('','0','options.html');">{_t}options{/t}</div>
+		   		{/can_options}
+
+		   		<div class="ladm_menusubitem_holderend"></div>
+		   	</div>
+
+		   	<div class="ladm_menuitem" onclick="menuClick('avc','1','','0');">
+				<img src="{SKIN_PATH}notification/ico_advanced.png" alt=""/>{_t}adv_options{/t}
+			</div>
+			<div class="ladm_menusubitem_holder" id="menuavc" style="display:none">
+		   		<div class="ladm_menusubitem_holderstart"></div>
+		   		{_can_importex}
+		   		<div class="ladm_menusubitem_l1" onclick="menuClick('','0','import.html');">{_t}import{/t}</div>
+		   		<div class="ladm_menusubitem_l1" onclick="menuClick('','0','export.html');">{_t}export{/t}</div>
+		   		{/can_importex}
+		   		{_can_logs}
+		   		<div class="ladm_menusubitem_l1" onclick="menuClick('','0','logs.html');">{_t}logs{/t}</div>
+		   		{/can_logs}
+		   		{_masterdomain}
+		   		<div class="ladm_menusubitem_l1" onclick="menuClick('','0','master.html');">{_t}master_control{/t}</div>
+		   		{/masterdomain}
+		   		<div class="ladm_menusubitem_holderend"></div>
+		   	</div>
+		   	{/can_something}
+
+			<div class="ladm_menuitem" onclick="menuClick('','0','../');">
+				<img src="{SKIN_PATH}notification/ico_exit.png" alt=""/>{_t}back_to_site{/t}
+			</div>
+
+
+	</div>
+	<div class="ladm_stitch" id="admslider_btn" onclick="adminslider();">
+		<div style="text-align:center;cursor:pointer;z-index:375;position:absolute;top:10px;left:-1px;height:8px;width:10px;background:url({SKIN_PATH}admslider.png) no-repeat"></div>
+	</div>
+
+
+	<div class="ladm_content" id="affbi_adm_content">
+		{/LOGGED}
+		{ADMCONTENT}
+		{_LOGGED}
+	</div>
+	<div style="clear:both"></div>
+	{/LOGGED}
+</div>
+{_LOGGED}
+	{_removemob}
+	<div id="div_wait" style="display:none;background:#000000;width:100%;height:100%;position:fixed;z-index:5000;top:0px;left:0px;">
+	</div>
+	<div id="div_wait_middleme" style="width:200px;height:50px;background:#eeeeee;position:fixed;z-index:5001;color:#111111;text-align:center;display:none">
+		<img src="{SKIN_PATH}loading.gif" alt="{_t}wait{/t}" width="32" height="32"/><br/>
+		{_t}wait{/t}...
+	</div>
+	{/removemob}
+{/LOGGED}
+<script type="text/javascript">
+	Element.setOpacity($('admslider_btn'), 0.9);
+	adminslider_position = 150;
+	var curFont = 12;
+	function fontSize(mode,forceThis) {
+		if (forceThis) {
+			curFont = forceThis;
+		} else if (mode==1) curFont++;
+		else curFont--;
+		$('admmenubar').style.fontSize = curFont + "px";
+		$('admmenubar').style.lineHeight = (2*curFont) + "px";
+	}
+	fontSize(0,{userpref_menufont|onnull|12});
+</script>

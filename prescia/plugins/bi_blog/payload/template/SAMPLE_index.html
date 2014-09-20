@@ -1,0 +1,110 @@
+<div class="la_blog_container">
+	<div class="la_blog_main{_removeonindexajax}_full{/removeonindexajax}">
+		{_blogtitle}<h1 style="margin-left:10px">{_t}{blogtitle}{/t}</h1>{/blogtitle}
+		{_hasFilter}
+		<div class="la_blognotice">
+			{_t}filtering{/t}: {_t}{filtername}{/t} = {filter}
+		</div>
+		{/hasFilter}
+		{_blogIndex}
+		<div class="la_blogheader">
+			<div class="la_blogtitle">{_t}welcome{/t}</div>
+		</div>
+		<div class="la_blogcontainer">
+				{introduction}
+		</div>
+		{/blogIndex}
+		{_blogItem}
+		<div class="la_blogheader">
+			<div class="la_blogcat"><a href="index.{ext2use}?id_category={id_category}">{category_title}</a></div>
+			<div class="la_blogtitle"><a href="{urla}.{ext2use}">{title}</a></div>
+			<div class="la_blogdate"><a href="index.{ext2use}?date={date|datetime|Ym}">{date|datetime|d.m.Y}</a></div>
+		</div>
+		<div class="la_blogcontainer">
+			<div class="la_blogbody">
+				{_toggle_video}
+					<div class="la_blogthumb">{_FLASHME}{video_url}|400|225{/FLASHME}</div>
+				{/toggle_video}
+				{_toggle_image}
+					<div class="la_blogthumb"><a href="/{image_1}" rel="shadowbox">{image_2t}</a></div>
+					{_toggle_video}
+					<div style="clear:both"></div>{_}this will only show if both are visible, thus breaking a line{/}
+					{/toggle_video}
+				{/toggle_image}	
+
+			 	{content}
+			 	<div style="clear:both"></div>
+			 </div>
+			 {GALLERY}
+			<div class="la_blogtags"><b>Tags:</b>  {tags} </div>
+		</div>
+		{/blogItem}
+		{_blogAll}
+		<div class="la_blogheader">
+			<div class="la_blogcat">{_t}all{/t}</div>
+		</div>
+		<div class="la_blogcontainer">
+			{_blogAllItem}
+			<a href="{urla}.{ext2use}" style="display:block">{date|datetime|d.m.Y} - {title} - {category_title}</a><br/>
+			{/blogAllItem}
+		</div>
+		{/blogAll}
+		{_PAGING}
+			{_has_page_previous}
+			<a href="index.{ext2use}{QUERY_STRINGS|p_init}p_init={page_previous}">«</a>
+			{/has_page_previous}
+			{_pages}
+			<a href="index.{ext2use}{QUERY_STRINGS|p_init}p_init={p_init}" {current_page|map|1=style="font-size:16px"}>{p_number}</a>
+			{/pages}
+			{_t}off{/t} {p_total}
+			{_has_page_next}
+			<a href="index.{ext2use}?all=true{QUERY_STRINGS|p_init}p_init={page_next}">»</a>
+			{/has_page_next}
+		{/PAGING}
+		{_blogNone}
+		<div class="la_blognotice">
+			{_t}no_blogs_found{/t}
+		</div>
+		{/blogNone}
+	</div>
+	{_removeonindexajax}
+	<div class="la_blog_menu">
+		{_aboutarea}
+		<div class="la_blog_menuitemtitle">{_t}contents{/t}</div>
+		<div class="la_blog_menuitem">
+			{CONTENTMAN}
+		</div>
+		{/aboutarea}
+		<div class="la_blog_menuitemtitle">{_t}latest_blogs{/t}</div>
+		<div class="la_blog_menuitem">
+			{_blogList}
+			<a href="{urla}.{ext2use}" style="display:block">{#}. {title|truncate|100|...}</a>
+			{/blogList}
+			<a href="index.{ext2use}?all=true" style="display:block">[+] {_t}all{/t}</a>
+		</div>
+		<div class="la_blog_menuitemtitle">{_t}featured_blogs{/t}</div>
+		<div class="la_blog_menuitem">
+			{_featureList}
+			<a href="{urla}.{ext2use}" style="display:block">{title|truncate|105|...}</a>
+			{/featureList}
+		</div>
+		<div class="la_blog_menuitemtitle">{_t}archieves{/t}</div>
+		<div class="la_blog_menuitem">
+			{_blogArchieves}
+			<a href="index.{ext2use}?date={year}{month}" style="display:block">{_t}{monthname}{/t} {year}</a>
+			{/blogArchieves}
+		</div>
+		<div class="la_blog_menuitemtitle">{_t}categories{/t}</div>
+		<div class="la_blog_menuitem">
+			{_blogCategories}
+			<a href="index.{ext2use}?id_category={id}" style="display:block">{title}</a>
+			{/blogCategories}
+		</div>
+		<div class="la_blog_menuitemtitle">{_t}tags{/t}</div>
+		<div class="la_blog_menuitem">
+			{_blogTags}<a class="la_tagsize{tagsize}" href="index.{ext2use}?tag={tag}">{tag}</a> {/blogTags}
+		</div>
+	</div>
+	<div style="clear:both"></div>
+	{/removeonindexajax}
+</div>

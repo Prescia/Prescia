@@ -1,0 +1,50 @@
+<div class="lxmladm_box">
+
+	<div class="lxmladm_title">{_t}master_control{/t} - Estatísticas:</div>
+
+	<div class="lxmladm_box" style="position:relative;height:50px">
+		<div style="position:relative;float:left;border-bottom:1px solid #330000;width:80px;height:50px;">
+			<div style="position:absolute;top:{allhits0}px;left:10px;width:9px;height:{allhits0b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits1}px;left:20px;width:9px;height:{allhits1b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits2}px;left:30px;width:9px;height:{allhits2b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits3}px;left:40px;width:9px;height:{allhits3b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits4}px;left:50px;width:9px;height:{allhits4b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits5}px;left:60px;width:9px;height:{allhits5b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits6}px;left:70px;width:9px;height:{allhits6b}px;background:#330000;"></div>
+		</div>
+		<div style="margin-left:100px;line-height:50px">
+			Visitação total: {total} hits (semana)
+		</div>
+	</div>
+
+
+	<div class="lxmladm_box" style="position:relative">
+		<strong>Navegador - Totais por tipo (último mês)</strong>
+		<div style="margin:0px 20px 0px 20px">
+			<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+			{_browser}
+			<tr>
+			  <td style="width:200px">{browser}</td>
+		  	  <td style="width:400px;border-bottom:1px #{color} solid"><div style="float:left;background:#{color};height:10px;width:{width}px;"></div></td>
+			  <td style="padding-left:2px;">{hits} ({percent|float|2}%)</td>
+			</tr>
+			{/browser}
+			</tbody></table>
+		</div>
+	</div>
+
+	<div class="lxmladm_box" style="position:relative">
+		<strong>Navegador - Totais por versão (último mês)</strong>
+		<div style="margin:0px 20px 0px 20px">
+			<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+				{_browserEX}
+				<tr>
+				  <td style="width:200px">{browser|truncate|35}</td>
+		  		  <td style="width:400px;"><div style="background:#ccccee;float:left;height:10px;width:{width}px;"></div></td>
+				  <td style="padding-left:2px;">{hits} ({percent|float|2}%)</td>
+				</tr>
+				{/browserEX}
+			</tbody></table>
+		</div>
+	</div>
+</div>

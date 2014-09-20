@@ -1,0 +1,290 @@
+<div class="lxmladm_box">
+	<div class="lxmladm_title">Exportação de dados</div>
+	EM MANUTENÇÃO
+
+{_}
+	<form name="frmScript" method="post" action="export.php" onsubmit="return validaExport();">
+		<input type="hidden" name="gcf" value="1"/>
+		<input type="hidden" name="haveinfo" value="1"/>
+
+		<div class="lxmladm_box">
+			<b>Passo 1: O que será exportado?</b>
+			<table style="border:0px;width:100%" cellspacing="0" cellpadding="0"><tbody>
+				<tr><td class="div_lighttitlebar" style="width:24px">1</td>
+					<td style="padding-left:20px;vertical-align:top">
+						Exportar dados do módulo: <select name="module" id="module" onchange="checkModule(this);"><option value=""></option>{_modules}<option value="{module}">{_t}{module}{/t}</option>{/modules}</select>
+
+						<div id="DIVfieldsShow" style="display:none;padding:5px">
+							<strong>Campos deste módulo</strong><br/>
+							Nos passos seguintes, utilize o número do campo abaixo para representar o campo a ser importado. Campos/Números faltando são campos reservados
+							<div id="DIVfields" style="padding:10px"></div>
+							<br/>
+						</div>
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+		<br/>
+		<div id="passo2" class="lxmladm_box">
+			<b>Passo 2: Como será importado?</b>
+			<table style="border:0px;width:100%" cellspacing="0" cellpadding="0"><tbody>
+				<tr><td class="div_lighttitlebar" style="width:24px">2</td>
+					<td style="padding-left:20px;vertical-align:top">
+						<input type="radio" name="imode" value="cvs" id="imodeCVS" onclick="choosemode(0);"/><label for="imodeCVS">Organizado CSV</label><br/>
+						<input type="radio" name="imode" value="fix" id="imodeFIX" onclick="choosemode(1);"/><label for="imodeFIX">Organizado em blocos (espaços) fixos</label><br/>
+						<input type="radio" name="imode" value="sql" id="imodeSQL" onclick="choosemode(2);"/><label for="imodeSQL">mySQL</label><br/>
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+		<br/>
+		<div id="passo3" class="lxmladm_box">
+			<div id="fakepasso3">
+				<b>Passo 3: Formato dos dados</b>
+				<table style="border:0px;width:100%" cellspacing="0" cellpadding="0"><tbody>
+					<tr><td class="div_lighttitlebar" style="width:24px">3</td>
+						<td style="padding-left:20px;vertical-align:top">
+							Selecione como será importado
+						</td>
+					</tr>
+				</tbody></table>
+			</div>
+
+			<div id="passo3fix" style="display:none">
+				<b>Passo 3: Formato dos dados - Blocos fixos</b>
+				<table style="border:0px;width:100%" cellspacing="0" cellpadding="0"><tbody>
+					<tr><td class="div_lighttitlebar" style="width:24px">3</td>
+						<td style="padding-left:20px;vertical-align:top">
+
+							<strong>As informações de cada bloco são, em ordem:</strong><br/>
+							<input type="text" name="fixOrder" id="fixOrder" />
+							<div class="layout_nota" style="margin:1px">
+								Ordem dos campos por linha do arquivo, utilizando o número relacionado no passo 1. Use 0 se o campo não deve ser importado ou não tem relacionado
+							</div>
+							<strong>Digite o tamanho de cada bloco acima citado nas linhas de dados</strong><br/>
+							<input type="text" name='fixblock' id='fixblock' style='width:300px;padding-left:3px;font-weight:bold'/><br/>
+							<div class="layout_nota" style="margin:1px">
+								Cada linha do arquivo possui um número fixo de caracteres. Cada informação está sempre na mesma posição, em blocos fixos. Preencha o tamanho destes blocos separado por vírgulas, ex: 5,10,20
+							</div>
+
+							<br/>
+							<input type="button" onclick="fixDone();" value=" Confirmo formatação " />
+						</td>
+					</tr>
+				</tbody></table>
+			</div>
+
+			<div id="passo3csv" style="display:none">
+				<b>Passo 3: Formato dos dados - CSV</b>
+				<table style="border:0px;width:100%" cellspacing="0" cellpadding="0"><tbody>
+					<tr><td class="div_lighttitlebar" style="width:24px">3</td>
+						<td style="padding-left:20px;vertical-align:top">
+
+							<strong>Qual o separador de campos do .CSV?</strong><br/>
+							<input type="text" name="sepDados" id="sepDados" style='width:40px;padding-left:3px;font-weight:bold' value=";"/><br/>
+							<div class="layout_nota" style="margin:1px">
+								Cada linha do .CSV possui os dados a serem importados, separados por este separador. Por exemplo, em "a;b;c" o separador é ";"
+							</div>
+							<strong>Como os Textos ficam encapsulados no .CSV?</strong><br/>
+							<input type="text" name="sepQuote" id="sepQuote" style='width:40px;padding-left:3px;font-weight:bold' value="&quot;"/><br/>
+							<div class="layout_nota" style="margin:1px">
+								Geralmente os campos de textos estão entre aspas duplas ou simples, preencha neste campo qual for o caso, ou nenhum se os textos não possuem encapsulamento
+							</div>
+							<strong>Os dados no arquivo CSV serão exportados na seguinte ordem:</strong><br/>
+							<input type="text" name="cvsOrder" id="cvsOrder" />
+							<div class="layout_nota" style="margin:1px">
+								Ordem dos campos por linha no .CSV, utilizando o número relacionado no passo 1. Use 0 se o campo não deve ser importado ou não tem relacionado
+							</div>
+							<br/>
+							<input type="button" onclick="cvsDone();" value=" Confirmo formatação do CSV" />
+						</td>
+					</tr>
+				</tbody></table>
+			</div>
+		</div>
+
+		<br/>
+		<div id="passo4" class="lxmladm_box">
+			<b>Passo 4: Iniciar exportação</b>
+			<table style="border:0px;width:100%" cellspacing="0" cellpadding="0"><tbody>
+				<tr><td class="div_lighttitlebar" style="width:24px">4</td>
+					<td style="padding-left:20px;vertical-align:top">
+						<div style="text-align:center"><input class="ladm_buttongreen" type="submit" value="EXPORTAR! "/></div>
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+
+	</form>
+	{/}
+</div>
+{_}
+<script type="text/javascript"><!--
+
+	var isReady = false;
+	var currentMode = -1;
+	var currentModule = '';
+	var isFIXok = false;
+	var isCSVok = false;
+	function checkReadyStatus() {
+		if ($('module').selectedIndex == 0) { // no module selected
+			Element.setOpacity('passo2',0.5);
+			Element.setOpacity('passo3',0.5);
+			Element.setOpacity('passo4',0.5);
+			isReady = false;
+		} else if (currentMode == -1) { // module ok, but no form selected
+			Element.setOpacity('passo3',0.5);
+			Element.setOpacity('passo4',0.5);
+			isReady = false;
+		} else if (currentMode == 0) {
+			if (!isCSVok) {
+				Element.setOpacity('passo4',0.5);
+				isReady = false;
+			} else
+				isReady = true;
+			}
+		else if (currentMode == 1) {
+			if (!isFIXok) {
+				Element.setOpacity('passo4',0.5);
+				isReady = false;
+			} else
+				isReady = true;
+		} else {
+			Element.setOpacity('passo4',1);
+			isReady = true;
+		}
+
+	}
+	function validaExport() {
+		checkReadyStatus();
+		if (!isReady) {
+			alert("A formatação não está programada ainda!");
+			return false;
+		}
+		return true;
+	}
+
+	function checkModule(obj) {
+		novo = obj.value;
+		if (novo == currentModule) return;
+		frm = document.frmScript;
+		isCSVok = false;
+		isFIXok = false;
+		currentMode = -1;
+		$('imodeCVS').checked = false;
+		$('imodeFIX').checked = false;
+		$('fakepasso3').style.display = '';
+		$('passo3csv').style.display = 'none';
+		$('passo3fix').style.display = 'none';
+		Element.setOpacity('passo3',0.5);
+		Element.setOpacity('passo4',0.5);
+		if (novo == '' && currentModule != '') {
+			new Effect.Fade('DIVfieldsShow');
+			$('DIVfields').innerHTML  = "";
+			currentModule = "";
+			Element.setOpacity('passo2',0.5);
+			isReady = false;
+			return;
+		}
+		Element.setOpacity('passo2',1);
+		new Effect.Appear('DIVfieldsShow');
+		currentModule = novo;
+		var currentMode = -1;
+		if (novo != "") {
+			$('DIVfields').innerHTML = "...";
+			query = "{BASE_PATH}adm/import_fields.ajax?isexport=true&layout=2&module=" + novo;
+			ajax = new Ajax.Updater('DIVfields', query, {asynchronous:true
+ 	                                                     });
+		}
+	}
+	function choosemode(mode) {
+		if ($('module').selectedIndex == 0) {
+			alert("Selecione o que exportar primeiro");
+			$('imodeCVS').checked = false;
+			$('imodeFIX').checked = false;
+			return;
+		}
+		if (mode == 0) {
+			$('passo3csv').style.display = '';
+			$('passo3fix').style.display = 'none';
+			$('fakepasso3').style.display = 'none';
+			Element.setOpacity('passo4',0.5);
+		} else if (mode == 1) {
+			$('passo3csv').style.display = 'none';
+			$('passo3fix').style.display = '';
+			$('fakepasso3').style.display = 'none';
+			Element.setOpacity('passo4',0.5);
+		} else {
+			$('passo3csv').style.display = 'none';
+			$('passo3fix').style.display = 'none';
+			$('fakepasso3').style.display = 'none';
+			Element.setOpacity('passo4',1);
+		}
+		Element.setOpacity('passo3',1);
+		currentMode = mode;
+	}
+
+	function fixDone() {
+		if ($('module').selectedIndex == 0) {
+			alert("Selecione o que importar primeiro");
+			$('imodeCVS').checked = false;
+			$('imodeFIX').checked = false;
+			return;
+		}
+		frm = document.frmScript;
+		relate = frm.fixOrder.value;
+		relate = str_replace(" ","",relate,100);
+		MyRegExp = new RegExp("^([0-9]+,)*([0-9]+)$");
+		ok = MyRegExp.test(relate);
+		if (ok) {
+			relate = frm.fixblock.value;
+			relate = str_replace(" ","",relate,100);
+			MyRegExp = new RegExp("^([0-9]+,)*([0-9]+)$");
+			ok = MyRegExp.test(relate);
+			if (ok) {
+				blocks = str_count(",",frm.fixblock.value)+1;
+				valores = str_count(",",frm.fixOrder.value)+1;
+				if (blocks != valores ) {
+					isFIXok = false;
+					Element.setOpacity('passo4',0.5);
+					alert("O número de blocos, e as informações contidas em cada bloco, diferem: Você especificou "+blocks+" blocos, mas "+valores+" valores");
+				} else {
+					isFIXok = true;
+					Element.setOpacity('passo4',1);
+				}
+			} else {
+				isFIXok = false;
+				Element.setOpacity('passo4',0.5);
+				alert("Erro, o tamanho dos blocos devem ser números separados por vírgula. Ex: 5,20,12,1");
+			}
+		} else {
+			isFIXok = false;
+			Element.setOpacity('passo4',0.5);
+			alert("Erro, a ordem dos blocos devem ser números separados por vírgula. Os números são os apresentados no primeiro passo para cada campo. Ex: 2,5,3,1");
+		}
+	}
+	function cvsDone() {
+		if ($('module').selectedIndex == 0) {
+			alert("Selecione o que importar primeiro");
+			$('imodeCVS').checked = false;
+			$('imodeFIX').checked = false;
+			return;
+		}
+		frm = document.frmScript;
+		relate = frm.cvsOrder.value;
+		relate = str_replace(" ","",relate,100);
+		MyRegExp = new RegExp("^([0-9]+,)*([0-9]+)$");
+		ok = MyRegExp.test(relate);
+		if (ok) {
+			isCSVok = true;
+			Element.setOpacity('passo4',1);
+		} else {
+			isCSVok = false;
+			Element.setOpacity('passo4',0.5);
+			alert("Erro, a ordem dos campos no .CSV devem ser números separados por vírgula. Os números são os apresentados no primeiro passo para cada campo. Ex: 2,5,3,1");
+	 	}
+	}
+
+	checkReadyStatus();
+//--></script>
+{/}

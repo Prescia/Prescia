@@ -1,0 +1,11 @@
+<a href="javascript:nop();" class="lxmladm_folders" onclick="showFolder('/');">&nbsp;&nbsp;/</a><br/>
+{_dirs}
+  <div style="cursor:pointer;"><a href="javascript:colapptible('{nid}','{fulldir}',{branchs},{issafe});" class="lxmladm_folders"><img id="dirsign{nid}" src="{SKIN_PATH}{issafe|map|true=s}folder_{branchs|map|0=bullet|plus}.gif" border="0" alt=""/> {id}</a><br/>
+   {_insubdirs}<div id="dir{nid}" style="cursor:pointer;padding:0px 0px 0px 10px;display:{checked|map|1=|none}">{subdirs}</div>{/insubdirs}
+  </div>
+{/dirs}
+{_subdirs}
+  <a href="javascript:colapptible('{nid}','{fulldir}',{branchs},{issafe});" class="lxmladm_folders"><img id="dirsign{nid}" src="{SKIN_PATH}{issafe|map|true=s}folder_{branchs|map|0=bullet|plus}.gif" border="0" alt=""/> {id}</a><br/>
+  {_insubdirs}<div id="dir{nid}" style="cursor:pointer;padding:0px 0px 0px 10px;display:{checked|map|1=|none}">{subdirs}</div>{/insubdirs}
+{/subdirs}
+{script}

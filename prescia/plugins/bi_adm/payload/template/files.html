@@ -1,0 +1,43 @@
+{_warning}
+<div class="lxmladm_aviso" style="margin-bottom:16px">
+	{_i18n_pt-br}
+	Esta pasta é controlada pelo sistema e não pode ser alterada. Os uploads do módulo "{_t}{modulo}{/t}" que mantém estes arquivos
+	<br/><br/>
+	Você pode usar o link para estes arquivos normalmente, só não é possível alterar tais arquivos pelo gerenciador de arquivos ou FTP
+	{/i18n_pt-br}
+	{_i18n_en}
+	This folder is system controled and cannot be changed. The uploads for module "{_t}{modulo}{/t}" hold these files
+	<br/><br/>
+	You are free to link these files normally, but you cannot change them neither here nor using FTP
+	{/i18n_en}
+</div>
+{/warning}
+{_perm}
+	<div class="lxmladm_aviso" style="margin-bottom:16px">
+	Os arquivos nesta pasta são protegidos pelo sistema, somente grupos ou usuários permitidos (por arquivo) podem vê-los.
+	</div>
+{/perm}
+{_root}
+<div class="lxmladm_aviso" style="margin-bottom:16px">
+	{_t}fmanager_root{/t}
+{/i18n_en}
+</div>
+{/root}
+{_file}
+<div style="border-bottom:1px solid #808080" onmouseover="$('selectedFile').innerHTML = 'http://{domain}{absurl}';">
+	<a style="width:20px;float:left;display:inline;" target="_blank" {_isImage}rel="shadowbox" title="Preview" {/isImage}href="{absurl}">
+		<img src="{SKIN_PATH}ft/{ico}_ico.gif"/>
+	</a>
+	{_editable}
+	<div style="width:48px;float:right">
+		{_perm}<img onclick="new Effect.Pulsate(this);permissions('{file}','{id_allowed_group}','{expiration_date}',[{allowed_users}]);" src="{SKIN_PATH}padlock.png" width="16" height="16" alt="{_t}permissions{/t}" title="{_t}permissions{/t}" border="0" style="cursor:pointer" />{/perm}
+		<img onclick="new Effect.Pulsate(this);deleteme('{file}');" src="{SKIN_PATH}delete.png" width="16" height="16" alt="{_t}delete{/t}" title="{_t}delete{/t}" border="0" style="cursor:pointer" />
+	</div>
+	{/editable}
+	<div style="width:100px;float:right">{size}</div>
+	<span class="simulatedA" onclick="clickfile('{absurl}');" onmouseover="$('selectedFile').innerHTML = 'http://{domain}{absurl}';">{file}</span>
+	<div style="clear:both"></div>
+</div>
+{/file}
+
+{script}

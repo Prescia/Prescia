@@ -1,0 +1,37 @@
+<div class="lxmladm_box">
+
+<div class="lxmladm_title">Histórico - {_t}{modulo}{/t}</div>
+
+<div class="ladm_info">
+	Data do histórico: <strong>{data|datetime}</strong><br/>
+	Autor da alteração: <strong>{author_name}{author_name|map|=SYSTEM}</strong><br/>
+	Tipo da alteração: <strong>{_t}{event|map|delete=deletion,update=update_undo}{/t}</strong><br/>
+</div>
+
+{_fault}
+<div class="ladm_erro">
+    AVISO: Alguns dados deste histórico não podem ser recuperados corretamente (marcados em vermelho). Se possível, tente recuperá-los antes.
+</div>
+<br/>
+{/fault}
+
+{_field}
+<table width="100%"><tbody>
+	<tr>
+		<td class="lgrifo_inferior" style="vertical-align:top;width:150px;text-align:left">
+			{_t}{name}{/t}:
+		</td>
+		<td class="lgrifo_inferior" style="text-align:left">
+			<strong>{conteudo|truncate|500|...}</strong>
+		</td>
+	</tr>
+</tbody></table>
+{/field}
+</div>
+
+<div class="lxmladm_box" style="text-align:right;padding-right:20px">
+	{_readytorestore}<input type="button" value="Restaurar" class="ladm_buttonblue" onclick="document.location='undo.php?id={id}';" />{/readytorestore}
+	{_fault}Não é possível restaurar este item antes de restaurar os itens vinculados{/fault}
+</div>
+
+

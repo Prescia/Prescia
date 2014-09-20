@@ -1,0 +1,20 @@
+<CONTENTMAN dbname="app_content"
+			title="title"
+			plugins="bi_cms"
+			parent="id_parent"
+			listing="parent_title,page,title,lang"
+			order="id_parent+,ordem+,title+"
+			>
+	<ID_PARENT default='0'>CONTENTMAN</ID_PARENT>
+	<CODE mandatory="true" default="1">TINYINT</CODE>
+	<PAGE special="path" mandatory="true">VC</PAGE>
+	<LANG ignorenedit="true" mandatory="true" size="5" meta="vc and not enum so this works for ALL languages and not just the ones listed">VC</LANG>
+	<TITLE mandatory="true" meta="Menu title/reference title">VC</TITLE>
+	<HEADER meta="actual header title">VC</HEADER>
+	<META meta="metadesc">VC</META>
+	<METAKEYS>VC</METAKEYS>
+	<CONTENT html="true">MEDIUMTEXT</CONTENT>
+	<PUBLISH mandatory="true" default='y'>BOL</PUBLISH>
+	<ORDEM>INT</ORDEM>
+	<LOCKED mandatory="true" default='n' restrict="100">BOL</LOCKED>
+</CONTENTMAN>

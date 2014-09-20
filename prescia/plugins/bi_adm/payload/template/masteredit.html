@@ -1,0 +1,21 @@
+	<div class="lxmladm_box">
+
+	<div class="lxmladm_title">{_t}master_control{/t} {_edit}{code}{/edit}:</div>
+
+
+
+		<form name="frmbase" id="frmbase" method="post" action="masteredit.php">
+		<input type="hidden" name="gfc" value="1"/><input type="hidden" name="haveinfo" value="1"/>
+		<input type="hidden" name="prevcode" value="{code}"/>
+
+		<strong>{_t}code{/t}</strong><br/>
+		<input type="text" name="code" id="code" value="{code}" style="width:90%" /><br/><br/>
+
+		<strong>{_t}domains{/t}</strong><br/>
+		<input type="text" name="domains" id="domains" value="{domains}" style="width:90%" /><br/><br/>
+
+
+		<input style="margin-top:10px;float:right;margin-right:10px" class="ladm_buttongreen" type="submit" value=" ✔ {_t}submit{/t} "/>
+		</form>
+
+	</div>

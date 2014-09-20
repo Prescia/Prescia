@@ -1,0 +1,13 @@
+<SEO dbname="sys_seo"
+	 plugins="bi_seo"
+	 title="alias"
+	 >
+	<PAGE restricted="90" mandatory="true">VC</PAGE>
+	<ALIAS restricted="90" special="path" mandatory="true" unique="true">VC</ALIAS>
+	<LANG ignorenedit="true" mandatory="true" size="5" meta="vc and not enum so this works for ALL languages and not just the ones listed">VC</LANG>
+	<META restricted="90">VC</META>
+	<METAKEY restricted="90">VC</METAKEY>
+	<TITLE restricted="90">VC</TITLE>
+	<PUBLICAR restricted="90" default='y' mandatory="true">BOL</PUBLICAR>
+	<REDIRECTMODE restricted="90" default='normal' mandatory="true">ENUM:'normal','sr_temporary','sr_permanent'</REDIRECTMODE>
+</SEO>

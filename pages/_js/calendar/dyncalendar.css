@@ -1,0 +1,46 @@
+A { TEXT-DECORATION: none; }
+
+.dynCalendar_header{
+	font-family: Arial, Verdana, Helvetica, Sans-Serif;
+	font-size: 10pt;
+	font-weight: bold;
+	z-index:1;
+}
+.dynCalendar_dayname {
+	background-color: #eeeeee;
+	border: 1px solid #c0c0c0;
+	font-family: Arial, Verdana, Helvetica, Sans-Serif;
+	font-size: 8pt;
+	text-align: center;
+	color: #000011;
+	z-index:1;
+}
+
+.dynCalendar_day {
+	background-color: #eeeeee;
+	color: #000000;
+	font-family: Arial, Verdana, Helvetica, Sans-Serif;
+	font-size: 8pt;
+	z-index:1;
+}
+.dynCalendar_day A, .dynCalendar_day A:visited {
+	color: #000000;
+}
+.dynCalendar_today {
+	background-color: #ffffff;
+	border: 1px solid #c0c0c0;
+	font-family: Arial, Verdana, Helvetica, Sans-Serif;
+	font-size: 8pt;
+	z-index:1;
+}
+.dynCalendar_today A, .dynCalendar_today A:visited {
+	color: #000000;
+}
+.dynCalendar {
+	background-color: #c0c0c0;
+	border: 2px outset white;
+	position: absolute;
+	margin-left: 2px;
+	z-index:1;
+}
+

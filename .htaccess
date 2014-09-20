@@ -1,0 +1,21 @@
+# -- Prescia
+RewriteEngine on
+
+# Every .js file inside pages/_js are fowarded to the optimizer (which will gzip them if the browser supports it)
+RewriteRule	^pages/_js/(.+)\.js(\?.+)?	pages/_js/optimizer.php?js=$1.js$2	[L]
+
+# PHP/ASP in the pages/[code]/files can never run
+RewriteRule	^pages/([^/]+)/files/(.+)(\.php|\.asp|/)$	index.php	[L]
+
+# Safe folder
+RewriteRule	^pages/([^/]+)/files/download/(.+)$	index.php	[L]
+
+# We will redirect everything to index.php, except for:
+
+  # index.php itself to prevent apache inner loop (performance related)
+RewriteCond $1 !^index\.php$
+  # Everything in pages/_js/ because what must be redirected there, already has been
+RewriteCond $1 !^pages/_js/.*$
+  # Any file inside pages/[code]/files, since all php/asp where already redirected to index
+RewriteCond $1 !^pages/([^/]+)/files/(.+)$
+ReWriteRule ^(.*)$ index.php	[L]

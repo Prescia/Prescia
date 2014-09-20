@@ -1,0 +1,201 @@
+<div class="lxmladm_box">
+	<div class="lxmladm_title">{_t}adm_edit_thumbnails{/t} {_t}{module}{/t}:</div>
+
+
+	<form name="frmbase" id="frmbase" action="edit_thumbnails.html" method="post" enctype="multipart/form-data">
+		<input type="hidden" name="gfc" value="1" />
+	    <input type="hidden" name="haveinfo" value="1" />
+	    <input type="hidden" name="module" value="{module}" />
+	    <input type="hidden" name="field" value="{field}" />
+	    <input type="hidden" name="reduction" value="{redPro}" />
+	    {sKeys}
+
+	<script type="text/javascript"><!--
+
+		var reductionProportion = {redPro};
+		var targeting = true;
+		var posX =0;
+		var posY =0;
+		var initX = 0;
+		var initY = 0;
+		var constrain = false;
+		var targetW = 0; // used to calc constrain
+		var thumbId = -1;
+		var targetH = 0;
+		var posicao = "";
+		var dimencao = "";
+		var onMarker = false;
+
+		function startCollect(id, tW, tH, forceConstrain) {
+			targetW = tW;
+			targetH = tH;
+			thumbId = id;
+			constrain = (forceConstrain || (id>0 && $('cropme'+id).checked));
+			targeting = true;
+			$('marker').style.display = 'none';
+			$('marker').style.width = tW + "px";
+			$('marker').style.height = tH + "px";
+			if (id>0) {
+				$('stbtn' + id).style.display = 'none';
+				$('stdiv' + id).style.display = '';
+			}
+			document.location = '#imageAnchor';
+		}
+
+		function banner_scroll ( obj, event, topobj ) {
+	  	  if (dragwindows['ddEnabled']==1) return;
+		  posX = is_ie || is_op ? event.offsetX : event.layerX;
+		  posY = is_ie || is_op ? event.offsetY : event.layerY;
+		  if (topobj) {
+		  	posX += initX;
+		  	posY += initY;
+		  }
+		  if (!targeting) {
+			  if (initX < posX && initY < posY) {
+			    if ((posX - initX)<(targetW*reductionProportion)) {
+			    	posX = (targetW*reductionProportion) + initX; // cannot be smaller
+			    }
+			    if ((posY - initY)<(targetH*reductionProportion)) {
+			    	posY = (targetH*reductionProportion) + initY; // cannot be smaller
+			    }
+				$('marker').style.width = (posX - initX) + "px";
+				if ( constrain ) {
+					H = (Math.round((targetH/targetW)*(posX - initX)));
+					posY = H + initY;
+				}
+				$('marker').style.height = (posY - initY) + "px";
+				$('marker').style.display = '';
+			    $('marker').setOpacity(0.5);
+			  }
+		  }
+		}
+		function banner_click () {
+		  if (dragwindows['ddEnabled']==1 || thumbId == -1) return;
+		  if (targeting	) {
+		  	posicao = posX + "," + posY;
+		  	initX = posX;
+		  	initY = posY;
+		  	$('marker').style.display = 'none';
+		  	$('marker').style.left = posX + "px";
+		  	$('marker').style.top = posY + "px";
+		  } else {
+		  	if (initX < posX && initY < posY) {
+			    $('marker').style.width = (posX - initX) + "px";
+			    $('marker').style.height = (posY - initY) + "px";
+			    $('marker').style.display = '';
+			    dimencao = (posX - initX) + "," + (posY - initY);
+			    if (thumbId != -1) {
+			    	if (thumbId > 0) {
+						$('stbtn' + thumbId).style.display = '';
+						$('stdiv' + thumbId).style.display = 'none';
+						$('thumbChanged' + thumbId).style.display = '';
+						$('thumbImg' + thumbId).style.display = 'none';
+					} else
+						alert("Grave esta alteração antes de editar os thumbnails");
+					$('thumbchanges' + thumbId).value = posicao + ";" + dimencao;
+			    }
+			} else
+				alert('quadro inválido');
+		  }
+		  targeting = !targeting;
+		}
+
+		// DRAG script from dgw
+		var dragwindows = new Array();
+		dragwindows['offsetx'] = 0; dragwindows['offsety'] = 0; dragwindows['ddEnabled'] = 0;
+		mouseposition_x = 0;
+		mouseposition_y = 0;
+
+		function ddInit(e){
+			if(e && e.preventDefault)
+				 e.preventDefault();
+			if (!onMarker) return;
+		    dragwindows['offsetx']= Event.pointerX(e);
+	    	dragwindows['offsety']= Event.pointerY(e);
+		    dragwindows['nowX']=parseInt($('marker').style.left);
+	    	dragwindows['nowY']=parseInt($('marker').style.top);
+		    dragwindows['ddEnabled']=1;
+		}
+
+		function dd(e){
+		  if (dragwindows['ddEnabled'] == 0) return;
+		  mouseposition_x = Event.pointerX(e);
+		  mouseposition_y = Event.pointerY(e);
+
+		  if (dragwindows['ddEnabled'] == 1) {
+		    pX = (dragwindows['nowX']+mouseposition_x-dragwindows['offsetx']);
+		    pY = (dragwindows['nowY']+mouseposition_y-dragwindows['offsety']);
+		    if (pX > {imagem_wr} - parseInt($('marker').style.width)) pX = {imagem_wr} - parseInt($('marker').style.width);
+	   	    if (pY > {imagem_hr} - parseInt($('marker').style.height)) pY = {imagem_hr} - parseInt($('marker').style.height);
+		    if (pX < 0) pX = 0;
+		    if (pY < 0) pY = 0;
+
+			$('marker').style.left= pX+"px";
+			$('marker').style.top= pY+"px";
+			if (thumbId) {
+				posicao = pX+ "," + pY;
+				$('thumbchanges' + thumbId).value = posicao + ";" + dimencao;
+			}
+		  }
+		  return false;
+		}
+
+		Event.observe(document, 'mousemove', dd);
+		Event.observe(document, 'mousedown', ddInit);
+		Event.observe(document, 'mouseup', function() {
+			dragwindows['ddEnabled']=0;} );
+
+	//--></script>
+
+	<div class="lxmladm_box">
+	    <a name="imageAnchor"></a>
+		<table cellspacing="0" style="margin:0px auto"><tbody>
+			<tr class="grifo_inferior">
+				<td style="text-align:center" colspan="2">
+				<div style="width:{imagem_wr}px;height:{imagem_hr}px;position:relative;" >
+					<img src="{BASE_PATH}{imagem}?r={randomseed}" width="{imagem_wr}" height="{imagem_hr}" alt="" onclick="banner_click();" onmousemove="banner_scroll(this,event,false);" id="bannerImg" style="cursor:crosshair"/>
+					<div id="marker" onclick="if (!targeting) banner_click();" style="border:1px solid #ffffff;background:#111133;display:none;position:absolute;width:0px;height:0px;cursor:pointer" onmousemove="banner_scroll(this,event,true);onMarker=true;" onmouseout="onMarker=false;"></div>
+				</div>
+
+				</td>
+		    </tr>
+	    	<tr>
+			    <td class="grifo_inferior" style="width:17%">{_t}module{/t}o:</td>
+	   			<td class="grifo_inferior" style="width:83%"><em>{_t}{module}{/t}</em> {title} ({id})</td>
+	   		</tr>
+	    	<tr>
+			    <td class="grifo_inferior" style="width:17%">Imagem:</td>
+	   			<td class="grifo_inferior" style="width:83%">{_t}{field}{/t}</td>
+	   		</tr>
+	    	<tr>
+			    <td class="grifo_inferior" style="width:17%">Dimensões:</td>
+	   			<td class="grifo_inferior" style="width:83%">
+	   				<input type="hidden" name="thumbchanges0" id="thumbchanges0" value=""/>
+	   				{imagem_w}x{imagem_h} {_t}de{/t} no máximo {max}<br/>
+	   				<input type="button" id="stbtn0" onclick="startCollect(0,1,1,false);"  class="ladm_buttonblue" value="Cortar Imagem" />
+	   			</td>
+	   		</tr>
+	   	</tbody></table>
+	</div>
+	<div class="lxmladm_box">
+			{_thumbnails}
+		    <div class="grifo_inferior" style="margin-top:10px"><a name="thumbAnchor{#}"></a>Thumbnail {#}</div>
+		    <div class="grifo_inferior" style="text-align:center">
+				<input type="hidden" name="thumbchanges{#}" id="thumbchanges{#}" value=""/>
+				Dimensões: {_nonCrop}{imagem_w}x{imagem_h} {_t}de{/t}{/nonCrop} {max} {_crop}(Proporção obrigatória){/crop}<br/>
+				<div id="thumbImg{#}">{imagem}</div>
+				<div id="thumbChanged{#}" style="padding:12px;border:1px solid #b0b0b0;display:none;width:600px;margin:0px auto">Thumbnail alterado</div>
+				{_nonCrop}<input type="checkbox" name="cropme{#}" id="cropme{#}"/><label for="cropme{#}">Forçar proporção</label><br/>{/nonCrop}
+				<input type="button" id="stbtn{#}" onclick="startCollect({#},{max_w},{max_h},{_crop}true{/crop}{_nonCrop}false{/nonCrop});" value="Selecionar"  class="ladm_buttonblue" />
+				<div style="padding:4px;border:1px solid #b0b0b0;display:none;width:300px;margin:0px auto" id="stdiv{#}">Selecionando Thumbnail</div>
+			</div>
+		    {/thumbnails}
+	</div>
+
+	<div class="lxmladm_box" style="text-align:right">
+		<input type="submit" value=" Gravar " style="margin-left:10px;" class="ladm_buttongreen"/>
+	</div>
+
+
+	</form>
+</div>

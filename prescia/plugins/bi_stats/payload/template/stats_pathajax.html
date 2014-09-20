@@ -1,0 +1,49 @@
+<table cellspacing="0" width="99%"><tbody>
+	<tr><td style="text-align:right;border-bottom:1px solid #cccccc">Entrada -&gt;</td>
+		<td style="text-align:center;width:180px;border-bottom:1px solid #cccccc">Página -&gt;</td>
+		<td style="text-align:left;border-bottom:1px solid #cccccc">Saída</td>
+	</tr>
+	<tr><td style="vertical-align:top;text-align:right">
+			<table cellspacing="0" align="right"><tbody>
+				{_pg}
+				<tr>
+					<td style="font-size:11px;text-align:right;width:85px">{hits}<span style="font-size:9px;"> ({percent|number|1})%</span></td>
+					<td style="width:80px; text-align:right"><div class="div_progressbar" style="float:right;width:{width}px;height:10px;"></td>
+					<td style="font-size:11px;text-align:left;padding-left:2px"><a href="#path" onclick="getpage('{page}');">{page|map|INTERNET=<strong>}{_t}{page}{/t}{page|map|INTERNET=</strong>}</a></td>
+				</tr>
+				{/pg}
+			</tbody></table>
+		</td>
+		<td style="vertical-align:top;text-align:center;">
+			<strong>{_t}{page}{/t}</strong>
+			<br/>
+			<table cellspacing="0" align="center" style="width:180px;margin-top:2px;"><tbody>
+				<tr height="150">
+					<td style="height: 150px;vertical-align: top;text-align: center;border-top:1px solid #dedede;">&nbsp;</td>
+					{_day}
+					<td style="height: 150px;vertical-align: top;text-align: center;border-top:1px solid #dedede;">
+						<div class="div_progressbar" style="position:relative;top:{top}px;width:10px;height:{height}px;"></div>
+					</td>
+					{/day}
+				</tr>
+				<tr>
+					<td style="vertical-align: top;	border-top:1px solid #b0b0b0;	padding: 1px;font-size:9px;text-align: center;"><strong>Dia</strong><br/>Hits</td>
+					{_day2}
+					<td style="vertical-align: top;	border-top:1px solid #b0b0b0;	padding: 1px;font-size:9px;text-align: center;"><strong>{day}</strong><br/>{hits}</td>
+					{/day2}
+				</tr>
+			</tbody></table>
+		</td>
+		<td style="vertical-align:top;">
+			<table cellspacing="0" align="left"><tbody>
+				{_pg2}
+				<tr>
+					<td style="font-size:11px;text-align:right;padding-right:2px"><a href="#path" onclick="getpage('{pagefoward}');">{pagefoward|map|INTERNET=<strong>}{_t}{pagefoward}{/t}{pagefoward|map|INTERNET=</strong>}</a></td>
+					<td style="width:80px;text-align:left;"><div class="div_progressbar" style="float:left;width:{width}px;height:10px;"></div></td>
+					<td style="font-size:11px;width:85px">{hits}<span style="font-size:9px;"> ({percent|number|1})%</span></td>
+				</tr>
+				{/pg2}
+			</tbody></table>
+		</td>
+	</tr>
+</tbody></table>

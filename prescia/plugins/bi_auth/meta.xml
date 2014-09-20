@@ -1,0 +1,44 @@
+<USERS dbname="auth_users"
+	   title="name"
+	   order="name+"
+	   permissionOverride="CCCCCCACCC"
+	   plugins="bi_auth"
+	   listing="groups_name,name,login,email,active"
+	   >
+	<ID_GROUP hashkey="true" mandatory="true" restrict="10">GROUPS</ID_GROUP>
+	<NAME size="124" mandatory="true">VC</NAME>
+	<EMAIL special="mail" size="124">VC</EMAIL>
+	<LOGIN special="login" mandatory="true" size="40" ignorenedit="true" unique="true">VC</LOGIN>
+	<PASSWORD meta="password" special="login" restrict="50" size="50" ignorenedit="true" mandatory="true">VC</PASSWORD>
+	<ACTIVE mandatory="true" restrict="50" default="y">BOL</ACTIVE>
+	<EXPIRATION_DATE restrict="50">DATETIME</EXPIRATION_DATE>
+	<HISTORY restrict="100" custom="true" html="true">TEXT</HISTORY>
+	<USERPREFS custom='true' restrict="10">TEXT</USERPREFS>
+	<IMAGE filetypes="gif,jpg,png" filemaxsize="256000" thumbnails="600,600|28,28" tweakimages="croptofit|croptofit">UPLOAD</IMAGE>
+</USERS>
+<GROUPS dbname="auth_groups"
+		keys="id"
+		title="name"
+		order="name+"
+		plugins="bi_groups,bi_permissions"
+		listing="name,#users,level,active"
+		>
+	<NAME mandatory="true" size="64" restrict="50">VC</NAME>
+	<PERMISSIONS restrict="50" custom="true">TEXT</PERMISSIONS>
+	<LEVEL mandatory="true" default="0" special="slider(0,100)" restrict="50">SMALLINT</LEVEL>
+	<ACTIVE mandatory="true" restrict="50" default="y">BOL</ACTIVE>
+</GROUPS>
+<SESSION_MANAGER dbname="auth_session"
+				 keys="id_user"
+				 autoclean="startdate < NOW() - INTERVAL 7 DAY"
+				 systemModule="true"
+				 volatile="true"
+				 permissionOverride="AAAAAAAAAD"
+				 noadminpane="edit,list"
+				 backup="no">
+	<ID_USER mandatory="true">USERS</ID_USER>
+	<REVALIDATECODE mandatory="true" size="32">VC</REVALIDATECODE>
+	<IP size="64" mandatory="true">VC</IP>
+	<STARTDATE mandatory="true" timestamp="true">DATETIME</STARTDATE>
+	<LASTACTION updatestamp="true">DATETIME</LASTACTION>
+</SESSION_MANAGER>

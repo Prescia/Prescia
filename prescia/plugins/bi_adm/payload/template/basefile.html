@@ -1,0 +1,136 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<me{_}some retarded editors don't understand templated metas - ya YOU Eclipse{/}ta http-equiv="Content-Type" content="text/html; charset={CHARSET}" />
+	<me{_}some retarded editors don't understand templated metas - ya YOU Eclipse{/}ta http-equiv="content-language" content="{SESSION_LANG}"/>
+	{METATAGS}
+	<title>{PAGE_TITLE}</title>
+	{HEADCSSTAGS}
+	{HEADJSTAGS}
+	{HEADUSERTAGS}
+</head>
+<script type="text/javascript">
+var wwl_lock = false;
+function waitWhileLoad(notimeout) {
+	{_removemob}if (wwl_lock){/removemob} return false;
+	wD = windowDimensions();
+	if (!$('div_wait_middleme')) return;
+	$('div_wait_middleme').style.left = Math.floor(wD[0]/2 - 100) + "px";
+	$('div_wait_middleme').style.top = Math.floor(wD[1]/2 - 80) + "px";
+	wwl_lock = true;
+	$('div_wait').appear({
+			duration: 0.5, from: 0, to: 0.5
+		});
+	$('div_wait_middleme').appear({
+		duration: 0.5, from: 0, to: 0.9
+	});
+	if (!notimeout)
+		setTimeout('wwl_fail()',30000);
+	return true;
+
+}
+function wwl_fail() {
+	{_removemob}if (!wwl_lock){/removemob} return; // not loaded?
+	alert("{_t}appears_the_server_isnt_responding{/t}");
+	remove_wwl();
+
+}
+function remove_wwl() {
+	{_removemob}if (!wwl_lock){/removemob} return; // not loaded?
+	wwl_lock = false;
+	$('div_wait').fade({
+		duration: 0.5, from: 0.5, to: 0
+	});
+	$('div_wait_middleme').fade({
+		duration: 0.5, from: 0.9, to: 0
+	});
+
+}
+var lastMenu = '';
+function menuClick(id,c,link,level) {
+	//alert(id + "," + c + "," + link);
+	if (c == 0) {
+		waitWhileLoad();
+		document.location = link;
+	} else {
+		new Effect.toggle('menu'+id,"Blind");
+	}
+	if (level == 0) {
+		if (lastMenu != '' && $('menu'+lastMenu).style.display != 'none') {
+			new Effect.toggle('menu'+lastMenu,"Blind");
+		}
+		lastMenu = id;
+	}
+}
+function adminslider() {
+	isShown = $('admmenubar').style.display != 'none';
+	if (isShown) {
+		new Effect.BlindLeft('admmenubar');
+		new Effect.Move('admslider_btn',{
+			x: 0, y:60, mode:'absolute'
+		});
+		$('affbi_adm_content').style.margin = "0px 0px 0px 5px";
+	} else {
+		new Effect.BlindRight('admmenubar');
+		new Effect.Move('admslider_btn',{
+			x: 197, y:60, mode:'absolute'
+		});
+		$('affbi_adm_content').style.margin = "0px 0px 0px "+(202)+"px";
+	}
+}
+sysnotok = false;
+function checksystemok() {
+	if (sysnotok) return;
+	new Ajax.Request('checksys.ajax',{
+		onComplete: checksys_oc
+	});
+	setTimeout('checksystemok()',60000);
+}
+{_LOGGED}
+setTimeout('checksystemok()',90000);
+{/LOGGED}
+function checksys_oc(data) {
+	data = parseajax(data);
+	if (data.length == 0 || data[0] != 'y') {
+		if (!sysnotok) {
+			sysnotok = true;
+			alert("{_t}system_not_ok{/t}");
+		}
+	}
+}
+{_hasMonitor}{_can_monitor}
+
+function checkmonitor() {
+	if (sysnotok) return;
+	new Ajax.Updater('adm_monitor','ajaxmonitor.ajax',{
+		onComplete: checkmonitor_oc
+	});
+	setTimeout('checkmonitor()',75000);
+}
+function checkmonitor_oc(data) {
+	parseajax(data);
+}
+var monItems = 0;
+var firstItems = 0;
+function setMonitorItems(items) {
+	if (firstItems == 0) {
+		firstItems = items;
+		return;
+	}
+	if (items != monItems) {
+		monItems = items;
+		if (items-firstItems>0)
+			window.document.title = "("+(items-firstItems)+") {PAGE_TITLE}";
+	}
+}
+{_LOGGED}
+setTimeout('checkmonitor()',120000);
+{/LOGGED}
+
+{/can_monitor}{/hasMonitor}
+</script>
+<body>
+	{BASEFILE_CONTENT}
+	{CORE_DEBUG}
+</body>
+</html>

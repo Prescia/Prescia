@@ -1,0 +1,46 @@
+<form name="frmbase" id="frmbase" action="reorder.html" method="post" onsubmit="return validacao();">
+	<input type="hidden" name="gfc" value="0" /> <input type="hidden" name="haveinfo" value="1" />
+    <input type="hidden" name="module" value="{module}" />
+	<input type="hidden" name="new_order" id="new_order" value=""/>
+    <input type="hidden" name="min_id"  value="{min_id}"/>
+
+
+<div class="lxmladm_box" style="position:relative">
+
+	<div class="lxmladm_title">{_t}ordering itens_from{/t} {_t}{module}{/t}</div>
+
+	<div id="order_list">
+    	{_item}<div style="font:11px; padding:4px; cursor:move; border-bottom: 1px dashed #cccccc;" id="item_{id}">{title_select}</div>{/item}
+    </div>
+
+	<input type="submit" class="ladm_buttongreen" value="{_t}reorder{/t}" />
+
+</div>
+
+</form>
+
+<script type="text/javascript" language="javascript">
+
+  Sortable.create('order_list',{hoverclass:'orderlist_itemover',tag:'div',
+    onUpdate:function(sortable){
+      //alert(Sortable.serialize(sortable))
+      $('new_order').value = Sortable.serialize(sortable, {\} tag: 'div'})
+    },
+    onChange:function(element){
+      $('new_order').value = Sortable.serialize(element.parentNode, {\} tag: 'div'})
+    }
+  });
+
+
+  function validacao() {
+   	frm = document.frmbase;
+   	if (frm.new_order.value == "") {
+     	alert("{_t}no_change_detecte{/t}");
+     	return false;
+   	} else {
+   		waitWhileLoad();
+     	return true;
+   	}
+ }
+
+</script>

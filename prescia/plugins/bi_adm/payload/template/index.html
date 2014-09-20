@@ -1,0 +1,86 @@
+<div class="lxmladm_box">{_t}xmladm_indexmsg{/t} {AFF_VERSION}</div>
+
+{_master}
+<div class="ladm_aviso">{_t}you_are_logged_as_master{/t}</div>
+{/master}
+
+
+<div class="lxmladm_box">
+	<div class="lxmladm_title">{_t}adm_mural{/t}</div>
+	<textarea style="width:99%;height:200px" id="admmural" name="admmural" onkeyup="muralchange();">{admmural}</textarea>
+	<div id="admmural_saved"></div>
+	<script type="text/javascript">
+		mhc = false;
+		function muralchange() {
+			if (mhc) return;
+			$('admmural_saved').innerHTML = "{_t}mural_changes_not_saved{/t}";
+			mhc = true;
+			setTimeout(muralsave,5000);
+		}
+		function muralsave() {
+			mhc = false;
+			$('admmural_saved').innerHTML = "{_t}saving_mural_changes{/t}";
+			new Ajax.Request('admmural.ajax',{
+				method: 'post',
+				postBody: 'admmural=' + encodeURIComponent($('admmural').value),
+				onComplete: muralsaved
+			});
+		}
+		function muralsaved(data) {
+			if (!mhc)
+				$('admmural_saved').innerHTML = "{_t}mural_changes_saved{/t}";
+		}
+
+	</script>
+</div>
+
+{_removemob}
+<div class="lxmladm_box" style="width:45%;float:left;text-align:center">
+	{calendar}
+</div>
+{/removemob}
+
+{_statistics}
+<div class="lxmladm_box" {_removemob}style="width:45%;float:right;"{/removemob}>
+	<div style="border:1px solid #bbbbbb;margin: 0px auto;width:196px;height:140px;position:relative">
+		<div style="border-bottom:1px solid #bbbbbb;background:#eeeeee;text-align:center;width:100%;height:19px;line-height:19px">{_t}7_day_statistics{/t}</div>
+		<div style="position:relative;text-align:center">
+			<div style="background:#ccccee;width:28px;height:{stheight0}px;top:{sttop0}px;left:0px;position:absolute;">{sthits0}</div>
+			<div style="background:#ccccee;width:28px;height:{stheight1}px;top:{sttop1}px;left:28px;position:absolute">{sthits1}</div>
+			<div style="background:#ccccee;width:28px;height:{stheight2}px;top:{sttop2}px;left:56px;position:absolute">{sthits2}</div>
+			<div style="background:#ccccee;width:28px;height:{stheight3}px;top:{sttop3}px;left:84px;position:absolute">{sthits3}</div>
+			<div style="background:#ccccee;width:28px;height:{stheight4}px;top:{sttop4}px;left:112px;position:absolute">{sthits4}</div>
+			<div style="background:#ccccee;width:28px;height:{stheight5}px;top:{sttop5}px;left:140px;position:absolute">{sthits5}</div>
+			<div style="background:#ccccee;width:28px;height:{stheight6}px;top:{sttop6}px;left:168px;position:absolute">{sthits6}</div>
+		</div>
+	</div>
+</div>
+{/statistics}
+<div style="clear:both"></div>
+
+<div class="lxmladm_box" {_removemob}style="width:45%;float:left;"{/removemob}>
+	<div class="lxmladm_title">{_t}modules{/t}</div>
+	{_module}
+	<div style="border-bottom:1px solid #cccccc"><a href="list.php?module={module}"><b>{name}</b></a><div style="float:right;width:20px;">{n}</div></div>
+	{/module}
+</div>
+
+<div class="lxmladm_box" {_removemob}style="width:45%;float:right;"{/removemob}>
+	<div class="lxmladm_title">{_t}action_logs{/t}</div>
+	{_actions}
+	<div style="border-bottom:1px solid #cccccc">{hora} - {action} {module} ({parameters}) {_t}by{/t} {author}</div>
+	{/actions}
+</div>
+<div style="clear:both"></div>
+
+
+
+{_removemob}
+<div style="clear:both"></div>
+{/removemob}
+{_master}{_devwarning}
+<div class="lxmladm_box">
+	<div class="lxmladm_title" style="color:#facfcf;" id="divdeveloperwarn">Avisos ao desenvolvedor</div>
+	{affbi_dev|nl2br}
+</div>
+{/devwarning}{/master}

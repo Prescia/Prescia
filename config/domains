@@ -1,0 +1,7 @@
+#REMEMBER: This file is heavily CACHED, any change in this file will not be read until you run a ?debugmode=true&nocache=true query
+#code [comma delimited domain names] 
+
+#yoursitecodehere yoursitedomains,overhere.com,commadelimited,this is a sample
+
+prescia	*
+

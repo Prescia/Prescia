@@ -1,0 +1,391 @@
+<div class="lxmladm_box">
+	<div class="lxmladm_title">{_t}importer{/t}</div>
+
+	<form name="frmScript" method="post" action="import.php">
+		<input type="hidden" name="gcf" value="1"/>
+		<input type="hidden" name="haveinfo" value="1"/>
+		<input type="hidden" name="itemOrder" id="itemOrder" value="1"/>
+
+	{_hasfailed}
+	<div class="ladm_erro">
+		<b>Linhas que falharam na última importação</b>:<br/>
+		<div style="border:1px solid #000000;padding:5px">{failed}</div>
+	</div>
+	{/hasfailed}
+
+	<div class="lxmladm_box">
+		<b>1. O que será importado</b><br/>
+		<select name="module" onchange="checkModule(this);">
+			<option value=""></option>
+			{_modules}<option value="{module}">{_t}{module}{/t}</option>{/modules}
+		</select>
+	</div>
+
+	<div class="lxmladm_box" id="DIVfieldsShow" style="display:none">
+		<div class="lxmladm_help">
+			<div id="divhelpico" style="cursor:pointer" onclick="this.style.display='none';new Effect.BlindDown('divhelp');">Ajuda ?</div>
+			<div class="ladm_info" style="display:none" id="divhelp">
+				Selecione os campos que estão presentes no arquivo a ser importado, na ordem em que estão por linha.<br/>
+				Para um item desconhecido (ou que não será importado), use (?)<br/>
+				Para um item que deve ser a nova chave (id) do campo, use (id)<br/>
+				Adicione e/ou remova itens da lista de importação usando &raquo; e &laquo;<br/>
+				Importante: campos "Link com outro módulo" requerem que o texto seja exatamente o que tem cadastrado no outro módulo<br/>
+				Exemplo:<br/>
+				"Nome da pessoa";"Mail da pessoa";"algo inútil";"Data de nascimento";<br/>
+				Seria importado como:<br/>
+				<div style="border:1px solid #000000;padding:5px;background:#ffffff;width:200px">
+				Nome* - Campo Texto<br/>
+				Mail - Campo Texto<br/>
+				(Campo que não será importado)<br/>
+				Data de Nascimento - Data</div>
+				<br/><br/>
+				IMPORTANTE: campos obrigatórios que não estiverem no arquivo a ser importado, devem ser preenchidos no passo 4
+			</div>
+		</div>
+		<table style="width:100%">
+			<tr>
+				<td style="width:45%">
+					Campos disponíveis:
+					<div id="DIVfields">
+					</div>
+					(* obrigatórios durante importação, use "AUTO" para preenchimento automático)
+				</td>
+				<td style="width:10%;text-align:center">
+					<input type="button" onclick="addpassthru()" title=" Adicionar campo que não será importado " value=" (?) &raquo; "/>
+					<br/>
+					<input type="button" onclick="addoldkey()" title=" Adicionar campo que era a chave(id) antiga " value=" (id) &raquo; "/>
+					<br/>
+					<input type="button" onclick="selectField(true)" value="  &raquo;  "/>
+					<br/>
+					<input type="button" onclick="selectField(false)" value="  &laquo;  "/>
+					<br/>
+					<br/>
+					<hr/>
+					<br/>
+					<input type="button" onclick="moveItem(false)" value="  ⇑  "/>
+					<br/>
+					<input type="button" onclick="moveItem(true)" value="  ⇓  "/>
+					<br/>
+				</td>
+				<td>
+					Campos a serem importados, na ordem no arquivo fonte:
+					<select id="importFields" style="height:200px;width:100%" size="10" ondblclick="selectField(false);">
+					</select>
+				</td>
+			</tr>
+		</table>
+	</div>
+
+<script type="text/javascript">
+
+	function selectField(toRight) {
+		if (toRight) {
+			lS = $('allFields');
+			rS = $('importFields');
+		} else {
+			rS = $('allFields');
+			lS = $('importFields');
+		}
+		if (lS.selectedIndex != -1) {
+			if (!toRight && (lS.options[lS.selectedIndex].value == '?' || lS.options[lS.selectedIndex].value == '$')) {
+				if (lS.options[lS.selectedIndex].value) {
+					$('preserveKeysDiv').style.display = 'none';
+					hasOldKey = false;
+				}
+				lS.remove(lS.selectedIndex);
+			} else {
+				opt = new Option(lS.options[lS.selectedIndex].text,lS.options[lS.selectedIndex].value);
+				rS.options.add(opt);
+				lS.remove(lS.selectedIndex);
+			}
+		}
+		fixOrder();
+	}
+	function addpassthru() {
+		opt = new Option("(Campo que não será importado)","?");
+		$('importFields').options.add(opt);
+		fixOrder();
+	}
+	function addoldkey() {
+		if (hasOldKey) {
+			alert("Este sistema suporta apenas uma chave antiga");
+			return;
+		}
+		opt = new Option("(ID antigo)","$");
+		$('importFields').options.add(opt);
+		fixOrder();
+		$('preserveKeysDiv').style.display = '';
+		hasOldKey = true;
+	}
+	function moveItem(toDown) {
+		sel = $('importFields');
+		if (sel.selectedIndex == -1) return; // none selected
+		if (sel.selectedIndex == 0 && !toDown) return; // up, but the top item selected
+		if (sel.selectedIndex == sel.options.length-1 && toDown) return; // down, but bottom selected
+		curItem = sel.selectedIndex;
+		switchItem = toDown?curItem+1:curItem-1;
+		bufferValue = sel.options[curItem].value;
+		bufferText = sel.options[curItem].text;
+		sel.options[curItem].value = sel.options[switchItem].value;
+		sel.options[curItem].text = sel.options[switchItem].text;
+		sel.options[switchItem].value = bufferValue;
+		sel.options[switchItem].text = bufferText;
+		sel.selectedIndex = switchItem;
+		fixOrder();
+	}
+	function fixOrder() {
+		filter = "";
+		for (c=0;c<$('importFields').options.length;c++) {
+			filter += $('importFields').options[c].value + (c<$('importFields').options.length-1?",":"");
+		}
+		$('itemOrder').value = filter;
+		$('3_btn').style.display = '';
+	}
+
+</script>
+
+
+<div class="lxmladm_box" id="pass2" style="display:none">
+	<b>2. Modo de importação</b><br/>
+	<input type="radio" name="imode" value="cvs" id="imodeCVS" onclick="choosemode(0);"/><label for="imodeCVS">Organizado em .txt ou .csv</label><br/>
+	<input type="radio" name="imode" value="raw" id="imodeRAW" onclick="choosemode(1);"/><label for="imodeRAW">Desorganizado em .txt ou .html (utilizará expressão regular)</label><br/>
+	{_master}<input type="radio" name="imode" value="php" id="imodePHP" onclick="choosemode(2);"/><label for="imodePHP">Script PHP (não será necessário preencher a ordem dos campos acima)</label><br/>{/master}
+</div>
+
+<div class="lxmladm_box" id="DIV0" style="display:none">
+	<b>3. Formatação dos dados</b><br/>
+
+	Formato das datas (se existirem):<br/>
+	<select name="cvsData" style='width:150px;padding-left:3px;font-weight:bold' id="cvsData">
+		<option value="dmy">dia/mes/ano</option><option value="mdy">mes/dia/ano</option><option value="ymd">ano/mes/dia</option><option value="ydm">ano/dia/mes</option>
+	</select><br/>
+	Separador de campos<br/>
+	<input type="text" name="sepDados" id="sepDados" style='width:40px;padding-left:3px;font-weight:bold' value=";"/><br/>
+	Textos ficam encapsulados entre (Separados por linhas com \n)<br/>
+	<input type="text" name="sepQuote" id="sepQuote" style='width:40px;padding-left:3px;font-weight:bold' value="&quot;"/><br/>
+	<input type="button" id="3_btn" onclick="cvsDone();" class="ladm_buttonblue" value=" PRONTO! " />
+</div>
+
+<div class="lxmladm_box" id="DIV1" style="display:none">
+	<b>3.a. Detecção por Expressão Regular</b><br/>
+	Expressão Regular :<br/>
+	<input type="text" name="ereg" id="ereg" value="^(.*)$" onchange="checkEreg(this)"/><br/>
+	Áreas detectadas na expressão:<br/>
+	<div id="eregEval">1</div>
+	Campo de teste:
+	<input type="text" name="testAreaEreg" id="testAreaEreg" /><br/>
+	<div id="3a_btn"><input type="button" value=" TESTE " onclick="testEreg();"/> (Você deve fazer um teste válido para continuar)</div>
+	<input type="button" id="3b_btn" onclick="eregDone();" class="ladm_buttonblue" value=" PRONTO! " style="display:none"/>
+</div>
+
+<div class="lxmladm_box" id="DIV2" style="display:none">
+	<b>3. Selecione o script:</b><br/>
+	<select name="phpscript">
+	{_phpscript}<option value="{script}">{script}</option>{/phpscript}
+	</select>
+</div>
+
+<br/>
+
+<div style="display:none" id="DIVfinal">
+
+	<div class="lxmladm_box">
+		<b>4. Selecione/preencha dados padrão para a importação (opcional)</b><br/>
+		<p style="text-align:right"><input type="button" onclick="showfields(this);" value="Mostrar campos" /></p>
+		<div id="divdefault" style="display:none">
+
+		</div>
+	</div>
+
+	<div class="lxmladm_box">
+		<b>5. Cole os dados a serem importados</b><br/>
+		Formato desejado por linha:<br/>
+		<div id="divsample" style="padding:5px;margin:5px;border:1px solid #e0e0f0"></div>
+			Linhas em branco serão ignoradas
+			<textarea rows="30" name="importContent" style="width:99%"></textarea><br/>
+			<div style="border:1px solid #b0b0b0;background:#ffeeee;text-weight:bold"><input type="checkbox" name="isSimulation" id="isSimulation" checked="checked" /><label for="isSimulation">SIMULAR importação (não gravará no banco)</label></div>
+			<div id="preserveKeysDiv" style="display:none"><input type="checkbox" name="preserveKeys" id="preserveKeys" checked="checked" /><label for="preserveKeys">Preservar chaves antigas (podem ocorrer conflitos se já existirem dados na tabela)</label></div>
+			<input type="checkbox" name="ignoreErrors" id="ignoreErrors" checked="checked" /><label for="ignoreErrors">Ignorar linhas erradas e continuar importação sem parar</label><br/>
+			<input type="checkbox" name="utf8enforce" id="utf8enforce" /><label for="utf8enforce">Forçar padronização UTF-8 (se tem caracteres estranhos na lista, marque esta opção)</label><br/>
+			<input type="checkbox" name="exactlinkers" id="exactlinkers" /><label for="exactlinkers">Ao verificar ligação com outro módulo, fazer busca exata ("aba = a"), e não de conteúdo ("aba contém a") - resolve algumas ambiguidades</label><br/>
+			<input type="checkbox" name="failinvalidlinkers" checked="checked" id="failinvalidlinkers" /><label for="failinvalidlinkers">Não importar itens cuja ligação com outro módulo falhar</label><br/>
+			<div style="text-align:center"><input type="submit" class="ladm_buttongreen" value=" IMPORTAR! " onclick="waitWhileLoad(true);"/></div>
+		</div>
+	</div>
+
+</div>
+</form>
+
+</div>
+
+<script type="text/javascript"><!--
+	function showfields(obj) {
+		if ($('divdefault').style.display == 'none') {
+			new Effect.BlindDown('divdefault');
+			obj.value = "Ocultar campos";
+		} else {
+			new Effect.Fade('divdefault');
+			obj.value = "Mostrar campos";
+		}
+	}
+	var currentMode = -1;
+	var currentModule = '';
+	var error = "PREG inválida";
+	var hasOldKey = false;
+	function checkModule(obj) { // step 1 -> step 2
+		novo = obj.value;
+		if (novo == currentModule) return;
+		frm = document.frmScript;
+		if (novo == '' && currentModule != '') { // some module alteady selected, and selected none
+			new Effect.BlindUp('pass2');
+			$('DIVfieldsShow').style.display = 'none';
+			$('DIVfields').innerHTML  = "";
+			return;
+		}
+		if ($('pass2').style.display == 'none') {
+			new Effect.BlindDown('pass2');
+		}
+		new Effect.Appear('DIVfieldsShow');
+
+		currentModule = novo;
+		if ($('DIV0').style.display != 'none')
+			new Effect.Fade('DIV0');
+		if ($('DIV1').style.display != 'none')
+			new Effect.Fade('DIV1');
+
+		{_master}
+		if ($('DIV2').style.display != 'none')
+			new Effect.Fade('DIV2');
+		$('imodePHP').checked = false;
+		{/master}
+
+		if ($('DIVfinal').style.display != 'none')
+			new Effect.Fade('DIVfinal');
+		$('imodeCVS').checked = false;
+		$('imodeRAW').checked = false;
+
+		$('3a_btn').style.display = '';
+		$('3b_btn').style.display = 'none';
+		$('3_btn').style.display = '';
+		frm.testAreaEreg.value = "";
+		currentMode = -1;
+		for (c=$('importFields').options.length-1;c>=0;c--) {
+			$('importFields').remove(c);
+		}
+		$('preserveKeysDiv').style.display = 'none';
+		hasOldKey = false;
+		if (novo != "") {
+			$('DIVfields').innerHTML = "...";
+			query = "import_fields.php?layout=2&module=" + novo;
+			ajax = new Ajax.Updater('DIVfields', query, {asynchronous:true
+			});
+			$('divdefault').innerHTML = "...";
+			ajax = new Ajax.Updater('divdefault', 'edit.ajax?module='+novo+'&layout=2', {asynchronous: true
+			});
+		}
+	}
+
+	function choosemode(mode) { // step 2 -> step 3
+		if (mode == currentMode) return;
+		if (currentMode != -1)
+			new Effect.BlindUp('DIV' + currentMode);
+		new Effect.BlindDown('DIV' + mode);
+		currentMode = mode;
+		if ($('DIVfinal').style.display != 'none')
+			new Effect.Fade('DIVfinal');
+
+		// --- not implemented on mode 1, so hide --
+		if (currentMode != 0)
+			$('preserveKeysDiv').style.display = 'none';
+		// -------------------------------
+
+		{_master}
+		if (currentMode == 2) {
+			$('DIVfieldsShow').style.display = 'none';
+			if ($('DIVfinal').style.display == 'none')
+				new Effect.BlindDown('DIVfinal');
+		}
+		{/master}
+
+		$('3a_btn').style.display = '';
+		$('3b_btn').style.display = 'none';
+		$('3_btn').style.display = '';
+	}
+
+	function checkEreg(field) { // echoes ereg size
+		eregstr=tr = field.value;
+		try {
+			MyRegExp = new RegExp(eregstr);
+			x = MyRegExp.test('a');
+		} catch (ee) {
+			$('eregEval').innerHTML = error;
+			return;
+		}
+		$('eregEval').innerHTML = str_count("(",eregstr);
+	}
+
+	function testEreg() {  // step 3.a (PREG selected) -> step 3.b
+		eregstr = $('ereg').value;
+		teststr = $('testAreaEreg').value;
+		try {
+			MyRegExp = new RegExp(eregstr);
+			ok = MyRegExp.test(teststr);
+			if (teststr != '' && ok) {
+				alert("ok!");
+				$('3a_btn').style.display = 'none';
+				$('3b_btn').style.display = '';
+			} else
+				alert("error!");
+		} catch (ee) {
+			alert(error);
+			return;
+		}
+	}
+
+	function eregDone() { // step 3.b -> 4/5
+		frm = document.frmScript;
+		if ($('importFields').options.length>0) {
+			if ($('DIVfinal').style.display == 'none')
+					new Effect.BlindDown('DIVfinal');
+			buildSample();
+		} else {
+			alert("Selecione os campos a serem importados, conforme a ordem no arquivo fonte!");
+			if ($('DIVfinal').style.display != 'none')
+					new Effect.BlindUp('DIVfinal');
+	 	}
+	}
+
+	function cvsDone() { // step 3 (CSV) -> 4/5
+		frm = document.frmScript;
+		if ($('importFields').options.length>0) {
+			if ($('DIVfinal').style.display == 'none')
+					new Effect.BlindDown('DIVfinal');
+			buildSample();
+			$('3_btn').value = ' REVER ';
+		} else {
+			alert("Selecione os campos a serem importados, conforme a ordem no arquivo fonte!");
+			if ($('DIVfinal').style.display != 'none')
+					new Effect.BlindUp('DIVfinal');
+
+			$('3_btn').value = ' PRONTO! ';
+	 	}
+	}
+
+	function buildSample() {
+		$('divsample').innerHTML = "...";
+		filter = "";
+		for (c=0;c<$('importFields').options.length;c++) {
+			filter += $('importFields').options[c].value + (c<$('importFields').options.length-1?",":"");
+		}
+		query = "import_sample.php?layout=2&module=" + currentModule + "&filter=" + filter;
+		if (frm.sepDados.value != ";") query += "&sep=" + frm.sepDados.value;
+		if (frm.sepQuote.value != '"') query += "&quote=" + (frm.sepQuote.value==""?"NULL":frm.sepQuote.value);
+		query += "&";
+		ajax = new Ajax.Updater('divsample', query, {asynchronous:true
+	                                                     });
+	}
+
+	function checkConditions() {
+		// from edit.php, to prevent js errors. Can't really implement here though
+	}
+//--></script>

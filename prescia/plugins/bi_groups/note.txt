@@ -1,0 +1,1 @@
+This is used by bi_auth. The XML for this module is located there. Just load bi_auth to get GROUP and PERMISSIONS loaded

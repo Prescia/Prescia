@@ -1,0 +1,20 @@
+<div class="lxmladm_box">
+
+<div class="lxmladm_title">{_t}monitoring_central{/t}</div>
+
+	{_monitorLists}
+	<div class="lxmladm_subtitle"><img src="{SKIN_PATH}notification/ico_{level}.png" alt="" style="vertical-align:middle"/> {_t}{module}{/t}: {_t}{title}{/t} (<a onclick="waitWhileLoad();" href="list.php?module={module}">{_t}list_all{/t}</a>)</div>
+	<div style="margin-top:20px">
+		<div class="lxmladm_box" style="margin-top:10px" id="monitor{frommonitor}">
+			{_t}waiting_ajax_results{/t}
+		</div>
+		<script type="text/javascript">
+			new Ajax.Updater('monitor{frommonitor}','list.php?layout=2&module={module}&frommonitor={frommonitor}&embeded=1&nopaging=1');
+		</script>
+	</div>
+	{/monitorLists}
+</div>
+
+<script type="text/javascript">
+{commonscript}
+</script>

@@ -1,0 +1,29 @@
+TODO:
+	serialization="read/write/none/all" fields on text customs (auto custom) (current: none)
+		EM ANDAMENTO
+		> javascript para editar/adicionar um item de array
+	support contextual _cms (current: root or current)
+	improve code
+	add option to filenames use "-" instead of "_" on spaces
+	testar multikeys
+	procurar TODO
+	melhorar sistema de pastas seguras para não precisar de nada no core/.htaccess
+BUGS:
+	bot protect não funciona
+	ao fazer busca, barra de titulo da lista some
+	tratamento de uploads com defeito
+
+
+14.9.14 BETA 0.7 (not stable - testing new module sql handlers)
+	New module::get_base_sql handling of sql using only arrays to prevent sql_break at the end (faster)
+	New module::get_advanced_sql function to build smart SQL based on a tag of required fields instead of returning all
+	Multiple bug-fixes, including automatic maintenance no longer will delete orphan files (local version might have file backup but no sql backup)
+	(pending: array add/edit on serialized fields)
+14.9.12 BETA 0.6
+	New serialized field support
+	Better multi-key handing at module level
+	Multiple bug-fixes
+	BUG REPORT: bot protection not working, upload treatment with "issues", bi_adm title bar is vanishing on search
+14.9.1 ALPHA 1
+	Prescia is created from the base files of a new implementation of my framework based of Version 3 "Nekoi" (a.k.a. Aff), which was based from Version 2 "Sora", based on Version 1 "Akari"
+	Most of the core was heavily changed not only in function but also form to make it more readable for an open source, thus bugs were certainly introduced

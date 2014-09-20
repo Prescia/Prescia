@@ -1,0 +1,37 @@
+
+<div class="lxmladm_box">
+	<div class="lxmladm_title">{_t}logs{/t}:</div>
+	<a href="#errors">[errors]</a> | <a href="#404">[404]</a> | <a href="#pm">[performance]</a>
+</div>
+
+<div class="lxmladm_box" style="font-size:10px">
+	<div class="lxmladm_title">{_t}action_logs{/t}:</div>
+	{_actions}
+	<div class="lxmladm_error0">
+	{hora} {module} - {action} ({parameters}) {_t}by{/t} {author}
+	</div>{/actions}
+</div>
+
+
+<a name="errors"></a>
+<div class="lxmladm_box" style="font-size:10px">
+	<div class="lxmladm_title" >{_t}error_logs{/t}:</div>
+	{_error}
+	<div class="lxmladm_error{level}">
+	{date} (x{errCode}) {_t}e{errCode}{/t} {module} {parameters} {extended} @ {uri}
+	</div>{/error}
+</div>
+
+<a name="404"></a>
+<div class="lxmladm_box" style="font-size:10px">
+	<div class="lxmladm_title">{_t}404_logs{/t} (24h):</div>
+	{log404|nl2br}
+	<br/>
+	<input type="button" onclick="document.location='logs.html?clean404=true';" value=" {_t}clean{/t} "/>
+</div>
+
+<a name="pm"></a>
+<div class="lxmladm_box" style="font-size:10px">
+	<div class="lxmladm_title">{_t}performance_logs{/t} (24h):</div>
+	{logpm|nl2br}
+</div>

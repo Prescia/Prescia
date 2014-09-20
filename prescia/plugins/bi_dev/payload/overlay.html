@@ -1,0 +1,22 @@
+<div style="position:fixed;bottom:0px;left:49%;width:2%;height:{ARROWSIZE}px;font-size:{ARROWSIZE}px;background:#ffffff;color:{ARROWCOLOR};z-index:5000;text-align:center;cursor:pointer" onclick="affbidev_enable()" id="affbidev_arrow"><b>Λ</b></div>
+<div style="position:fixed;bottom:0px;left:0px;width:100%;background:#000000;color:#ffffff;padding:2px;z-index:5000;display:none" onclick="this.style.display='none';" id="affbidev_content">
+	 {AFFBIDEV_CONTENT}
+</div>
+<script type="text/javascript">
+	function getElementById(x) { // prototype? jquery? none? use our own function -_-
+		if (document.getElementById) return document.getElementById(x);
+		else if (document.all) return document.all[x];
+		else if (document.layers) return document.layers[x];
+		else return null;
+	}
+	function affbidev_enable() {
+		getElementById('affbidev_arrow').style.display = 'none';
+		try {
+			new Effect.BlindDown('affbidev_content');
+		} catch(e) {
+			// prototype/scriptaculous not found?
+			getElementById('affbidev_content').style.display = '';
+		}
+	}
+
+</script>

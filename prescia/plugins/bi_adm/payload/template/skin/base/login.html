@@ -1,0 +1,37 @@
+<form action="login.php" method="post">
+	<input type="hidden" name="gfc" value="1" /><input type="hidden" name="haveinfo" value="1" />
+	<div id="boxlog" style="position:relative;width:307px;margin:0px auto">
+		<div class="ladm_loginbox">
+			
+			<div style="position:absolute;top:26px;left:16px;color:#fff;font-size:14px;font-weight:bold">{_t}restrict_access{/t}</div>
+		
+			<input type="text" id="loginfield" name="login" value="login" onfocus="if (this.value=='login') this.value='';" style="width:220px;padding:0px;margin:0px;border:0px;font-size:10px;position:absolute;top:91px;left:47px;"/>
+		
+			<input type="password" name="password" value="xxxxx" onfocus="if (this.value=='xxxxx') this.value='';" style="width:220px;padding:0px;margin:0px;border:0px;font-size:10px;position:absolute;top:150px;left:47px;"/>
+		
+			<input type="submit" style="position:absolute;top:195px;left:19px;width:261px;margin:0px;border:0px;height:30px;color:#fff;padding:0px;background:transparent" value=" {_t}log{/t} "/>
+				
+		</div>
+		<div onclick="new Effect.toggle('extradatadiv','blind');this.style.display='none';" style="cursor:pointer;position:absolute;width:13px;height:13px;background:url({SKIN_PATH}loginbtn.png) transparent;top:240px;right:30px;"></div>
+		<div id="extradatadiv" style="margin:0px 15px 0px 5px;padding:10px;background:#d7d7d7;color:#333;display:none">
+			<b>{_t}system{/t}</b>: {system}<br/>
+			<b>{_t}browser{/t}</b>: <span title="{fullbrowser}" onclick="alert('{fullbrowser}')">{browser}</span><br/>
+			{islegacy|map|1=<span style="color:red">}<b>{_t}islegacy{/t}</b>: {_t}{islegacy|map|0=no,1=yes}{/t}{islegacy|map|1=</span>}<br/>
+			<b>{_t}ismobile{/t}</b>: {_t}{ismobile|map|0=no,1=yes}{/t}<br/>
+			<b>{_t}hasjavascript{/t}</b>: <span id="jsenabled">{_t}no{/t}</span><br/>
+			<b>{_t}yourip{/t}</b>: {ip}<br/>
+			<b>{_t}servertime{/t}</b>: {servertime}<br/>
+		</div>
+	</div>
+	
+</form>
+
+<script type="text/javascript">
+	{_removemob}
+	d = windowDimensions();
+	h = d[1]/2 - 175;
+	$('boxlog').style.top = Math.floor(h) + "px";
+	{/removemob}
+	$('jsenabled').innerHTML = '{_t}yes{/t}';
+	$('loginfield').focus();
+</script>

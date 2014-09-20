@@ -1,0 +1,13 @@
+
+<div class="lxmladm_box">
+	<div class="lxmladm_title">{_t}search{/t}: ({searchfield})</div>
+	
+	{_results}
+	<div class="ladm_line{#|each|2=even|odd}">
+	<a href="{link}"><strong>{_t}{module}{/t} - {title}</strong><div style="margin-left:25px">{description|truncate|250|…|true}</div></a>
+	</div>		 
+	{/results}
+	
+	<div style="background:#d7d7d7">{total} {_t}results{/t}</div>
+</div>
+	

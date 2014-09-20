@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+	<title>{title}</title>
+	<link>{link}</link>
+	<description>{description}</description>
+	<language>{language}</language>
+	<copyright>{ABSOLUTE_URL} {year}</copyright>
+	<lastBuildDate>{date}</lastBuildDate>
+	<pubDate>{date}</pubDate>
+	{_image}
+	<image>
+		<title>{title}</title>
+		<url>{url}</url>
+		<link>{link}</link>
+	</image>
+	{/image}
+	{_itens}
+	<item>
+		{_category}<category>{category}</category>{/category}
+		<title>{title}</title>
+		<description>{description}</description>
+		<link>{ABSOLUTE_URL}{link}</link>
+		<guid>{ABSOLUTE_URL}{link}</guid>
+		<pubDate>{date}</pubDate>
+	</item>
+	{/itens}
+</channel>
+</rss>

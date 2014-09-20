@@ -1,0 +1,162 @@
+<STATS dbname="stats_hitsd"
+	   volatile="true"
+	   title="page"
+	   keys="data,hour,page,hid,lang"
+	   autoclean="data < NOW() - INTERVAL 29 DAY"
+	   plugins="bi_stats"
+	   systemModule="true"
+	   permissionOverride="CDDCDDCDDC"
+	   backup="no"
+	   noadminpanes="edit,list"
+		>
+	<DATA timestamp="true" mandatory="true">DATE</DATA>
+	<HOUR mandatory="true">TINYINT</HOUR>
+	<PAGE hashkey="true" size="72" mandatory="true">VC</PAGE>
+	<HID mandatory="true" default="0">INT</HID>
+	<LANG size="5" mandatory="true" default="pt-br">VC</LANG>
+	<HITS default="1">SMALLINT</HITS>
+	<UHITS default="0">SMALLINT</UHITS>
+	<BHITS default="0">SMALLINT</BHITS>
+	<RHITS default="0">SMALLINT</RHITS>
+	<AHITS default="0">SMALLINT</AHITS>
+</STATS>
+<STATSDAILY dbname="stats_hitsh"
+		    volatile="true"
+		    keys="data,page,hid"
+		    title="data"
+		    systemModule="true"
+		    permissionOverride="CDDCDDCDDC"
+		    backup="no"
+		    autoclean="data < NOW() - INTERVAL 5 YEAR"
+		    noadminpanes="edit,list"
+		    >
+	<DATA mandatory="true">DATE</DATA>
+	<PAGE size="72" mandatory="true">VC</PAGE>
+	<HID mandatory="true" default="0">INT</HID>
+	<LANG size="5" mandatory="true" default="pt-br">VC</LANG>
+	<HITS default="1">SMALLINT</HITS>
+	<UHITS default="0">SMALLINT</UHITS>
+	<BHITS default="0">SMALLINT</BHITS>
+	<RHITS default="0">SMALLINT</RHITS>
+</STATSDAILY>
+<STATSREF dbname="stats_refererd"
+          volatile="true"
+          keys="data,referer,entrypage"
+          autoclean="data < NOW() - INTERVAL 2 DAY"
+          title="referer"
+          systemModule="true"
+          permissionOverride="CDDCDDCDDC"
+          backup="no"
+          noadminpanes="edit,list"
+          >
+	<DATA mandatory="true">DATE</DATA>
+	<REFERER size="72">VC</REFERER>
+	<ENTRYPAGE size="72">VC</ENTRYPAGE>
+	<HITS default="1">SMALLINT</HITS>
+	<PAGES>TEXT</PAGES>
+</STATSREF>
+<STATSREFDAILY dbname="stats_refererh"
+			   keys="data,referer,entrypage"
+			   volatile="true"
+			   systemModule="true"
+			   title="referer"
+			   permissionOverride="CDDCDDCDDC"
+			   autoclean="data < NOW() - INTERVAL 5 YEAR"
+			   backup="no"
+			   noadminpanes="edit,list"
+			   >
+	<DATA mandatory="true">DATE</DATA>
+	<REFERER size="72">VC</REFERER>
+	<ENTRYPAGE size="72">VC</ENTRYPAGE>
+	<HITS default="1">SMALLINT</HITS>
+</STATSREFDAILY>
+<STATSRT dbname="stats_rt"
+ 		 volatile="true"
+ 		 keys="ip"
+ 		 systemModule="true"
+ 		 autoclean="data < NOW() - INTERVAL 1 HOUR"
+ 		 title="data"
+ 		 permissionOverride="CDDCDDCDDC"
+ 		 backup="no"
+ 		 noadminpanes="edit,list"
+ 		 >
+	<DATA mandatory="true">DATETIME</DATA>
+	<DATA_INI timestamp="true">DATETIME</DATA_INI>
+	<IP mandatory="true" size="64">VC</IP>
+	<PAGE size="72">VC</PAGE>
+	<PAGELAST size="72">VC</PAGELAST>
+	<AGENT size="100">VC</AGENT>
+	<AGENTCODE mandatory="true" default="UN">ENUM:'IE','FF','SA','OP','CH','KO','MO','UN'</AGENTCODE>
+	<FULLPATH>TEXT</FULLPATH>
+	<REFERER>VC</REFERER>
+</STATSRT>
+<STATSPATH dbname="stats_path"
+		  keys="data,page,pagefoward"
+		  volatile="true"
+		  title="page"
+		  systemModule="true"
+		  permissionOverride="CDDCDDCDDC"
+		  autoclean="data < NOW() - INTERVAL 1 MONTH"
+		  backup="no"
+		  noadminpanes="edit,list"
+		  >
+	<DATA mandatory="true">DATE</DATA>
+	<PAGE size="72">VC</PAGE>
+	<PAGEFOWARD size="72">VC</PAGEFOWARD>
+	<COUNT default="1">SMALLINT</COUNT>
+</STATSPATH>
+<STATSQUERY dbname="stats_query"
+			keys="data,engine,query,entrypage"
+			volatile="true"
+			systemModule="true"
+			title="query"
+			permissionOverride="CDDCDDCDDC"
+			autoclean="data < NOW() - INTERVAL 6 MONTH"
+			backup="no"
+			noadminpanes="edit,list"
+			>
+	<DATA mandatory="true">DATE</DATA>
+	<ENGINE size="32">VC</ENGINE>
+	<QUERY size="64">VC</QUERY>
+	<ENTRYPAGE size="72">VC</ENTRYPAGE>
+	<COUNT default="1">SMALLINT</COUNT>
+</STATSQUERY>
+<STATSBROWSER dbname="stats_browser"
+			  keys="data,browser"
+			  volatile="true"
+			  title="browser"
+			  systemModule="true"
+			  permissionOverride="CDDCDDCDDC"
+			  backup="no"
+			  autoclean="data < NOW() - INTERVAL 5 YEAR"
+			  noadminpanes="edit,list"
+			  >
+	<DATA mandatory="true">DATE</DATA>
+	<BROWSER mandatory="true" size="100">VC</BROWSER>
+	<HITS default="1">INT</HITS>
+</STATSBROWSER>
+<STATSRES dbname="stats_resolution"
+		  keys="data,resolution"
+		  volatile="true"
+		  title="resolution"
+		  systemModule="true"
+		  permissionOverride="CDDCDDCDDC"
+		  autoclean="data < NOW() - INTERVAL 5 YEAR"
+		  backup="no"
+		  noadminpanes="edit,list"
+		  >
+	<DATA mandatory="true">DATE</DATA>
+	<RESOLUTION mandatory="true" size="10">VC</RESOLUTION>
+	<HITS default="1">INT</HITS>
+</STATSRES>
+<STATSBOTS dbname="stats_bots"
+			keys="data"
+			volatile="true"
+			systemModule="true"
+			permissionOverride="CDDCDDCDDC"
+			autoclean="data < NOW() - INTERVAL 1 MONTH"
+			noadminpanes="edit,list"
+			backup="no">
+	<DATA mandatory="true">DATE</DATA>
+	<HITS default="1">INT</HITS>
+</STATSBOTS>

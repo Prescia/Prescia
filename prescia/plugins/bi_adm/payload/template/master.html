@@ -1,0 +1,153 @@
+{_removeonpopup}
+<div class="lxmladm_box" id="mastercontroldiv">
+{/removeonpopup}
+	<div class="lxmladm_title">{_t}master_control{/t}:</div>
+
+
+	<div style="line-height:20px;border-bottom:1px solid #000000;backgroubd:#f0f0f0;color:#000000;height:20px;margin-bottom:1px;font-size:9px">
+		<div style="float:left;width:18px;text-align:center;height:20px;">!</div>
+		<div style="float:left;width:20px;height:20px;">ico</div>
+		<div style="float:left;width:100px;height:20px;text-align:center">CODE</div>
+		<div style="float:left;width:30px;height:20px;text-align:center">Debug</div>
+		<div style="float:left;width:30px;height:20px;text-align:center">Config</div>
+		<div style="float:left;width:30px;height:20px;text-align:center">Quota</div>
+		<div style="float:left;width:30px;height:20px;text-align:center">Erros</div>
+		<div style="float:left;width:30px;height:20px;text-align:center">404</div>
+		<div style="float:left;width:30px;height:20px;text-align:center">Cron</div>
+		<div style="float:left;width:30px;height:20px;text-align:center">Hits</div>
+		<div style="float:left;width:16px;height:20px"></div>
+		<div style="float:left;width:50px;height:20px"></div>
+		<div style="float:left;width:30px;height:20px;text-align:center">Bot</div>
+		<div style="float:left;width:30px;height:20px;text-align:center">Time</div>
+		<div style="float:left;width:60px;height:20px"></div>
+		<div style="float:left;width:60px;height:20px;text-align:center">Backup (dia)</div>
+		Domains
+	</div>
+	{_site}
+	<div style="line-height:20px;border-bottom:1px solid #000000;backgroubd:#f0f0f0;color:#000000;height:20px;margin-bottom:1px;overflow:hidden">
+		<div style="float:left;width:18px;height:30px;padding-top:2px"><a href="http://{onedomain}?debugmode=true&nocache=true&nosession=true" target="_blank"><img title="Reset" src="/pages/_common/files/adm/ball_start.png" width="16" height="16" alt="Reset"/></a></div>
+		<div style="float:left;width:20px;height:18px;text-align:center;padding-top:2px">{favicon}</div>
+		<div style="float:left;width:100px;height:20px">{code}</div>
+		<div style="float:left;width:30px;height:20px;text-align:center"><img title="debug {debug_str}" src="/pages/_common/files/adm/ball_{debug}.png" width="16" height="16" alt="{debug}"/></div>
+		<div style="float:left;width:30px;height:20px;text-align:center"><img title="config {config_str}" src="/pages/_common/files/adm/ball_{config}.png" width="16" height="16" alt="{config}"/></div>
+		<div style="float:left;width:30px;height:20px;text-align:center"><img title="quota {quota_str}" src="/pages/_common/files/adm/ball_{quota}.png" width="16" height="16" alt="{quota}"/></div>
+		<div style="float:left;width:30px;height:20px;text-align:center" onclick="window.open('master_logs.html?layout=1&code={code}','_errors');"><img title="errors {errors_str}" src="/pages/_common/files/adm/ball_{errors}.png" width="16" height="16" alt="{errors}"/></div>
+		<div style="float:left;width:30px;height:20px;text-align:center"><img title="404 errors: {404_str}" src="/pages/_common/files/adm/ball_{e404}.png" width="16" height="16" alt="{404_str} 404 errors"/></div>
+		<div style="float:left;width:30px;height:20px;text-align:center"><img title="cron {cron_str}" src="/pages/_common/files/adm/ball_{cron}.png" width="16" height="16" alt="{cron}"/></div>
+		<div style="float:left;width:30px;height:20px;text-align:center"><img title="hits {hits_str}" src="/pages/_common/files/adm/ball_{hitaverage}.png" width="16" height="16" alt="{hitaverage}"/></div>
+		<div style="float:left;width:14px;height:20px;position:relative;border-left:1px dotted #cccccc;border-right:1px dotted #cccccc">
+			<div style="position:absolute;top:{hits0}px;left:0px;width:2px;height:{hits0b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{hits1}px;left:2px;width:2px;height:{hits1b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{hits2}px;left:4px;width:2px;height:{hits2b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{hits3}px;left:6px;width:2px;height:{hits3b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{hits4}px;left:8px;width:2px;height:{hits4b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{hits5}px;left:10px;width:2px;height:{hits5b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{hits6}px;left:12px;width:2px;height:{hits6b}px;background:#330000;"></div>
+		</div>
+		<div style="float:left;width:50px;height:20px;text-align:center">{hits_show}</div>
+		<div style="float:left;width:30px;height:20px;text-align:center"><img title="bots {bots_str}" src="/pages/_common/files/adm/ball_{botvisit}.png" width="16" height="16" alt="{botvisit}"/></div>
+		<div style="float:left;width:30px;height:20px;text-align:center"><img title="response {scripttime}ms ({scripttimecached}ms cached)" src="/pages/_common/files/adm/ball_{scripttimei}.png" width="16" height="16" alt="{scripttimei}"/></div>
+		<div style="float:left;width:60px;height:20px">{scripttime}ms</div>
+		<div style="float:left;width:30px;height:20px;text-align:center"><img title="backups {backup_str}" src="/pages/_common/files/adm/ball_{backup}.png" width="16" height="16" alt="{backup}"/></div>
+		<div style="float:left;width:30px;height:20px;text-align:center">({scheduledCronDay})</div>
+		{_removemob}<div title="{domains}" style="font-size:8px">{domains}
+		[<a href="masteredit.php?code={code}">editar</a>]{/removemob}</div>
+	</div>
+	{/site}
+	<div style="line-height:40px;border-bottom:1px solid #000000;backgroubd:#f0f0f0;color:#000000;height:40px;margin-bottom:1px">
+		<div style="float:left;width:348px;height:38px;padding-top:2px">Geral</div>
+		<div style="float:left;width:14px;height:40px;position:relative;border-left:1px dotted #cccccc;border-right:1px dotted #cccccc">
+			<div style="position:absolute;top:{allhits0}px;left:0px;width:2px;height:{allhits0b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits1}px;left:2px;width:2px;height:{allhits1b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits2}px;left:4px;width:2px;height:{allhits2b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits3}px;left:6px;width:2px;height:{allhits3b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits4}px;left:8px;width:2px;height:{allhits4b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits5}px;left:10px;width:2px;height:{allhits5b}px;background:#330000;"></div>
+			<div style="position:absolute;top:{allhits6}px;left:12px;width:2px;height:{allhits6b}px;background:#330000;"></div>
+		</div>
+		<div style="float:left;width:320px;height:40px;text-align:center">{allvisits} visitas hoje/semana</div>
+	</div>
+{_removeonpopup}
+</div>
+
+<div class="lxmladm_box">
+	<input type="button" value=" ∿ Ver estatísticas do servidor " style="width:300px" onclick="waitWhileLoad();document.location='masterstats.php';"/>
+	<input type="button" style="margin-left:50px;width:300px" value=" ✚ Novo domínio " onclick="waitWhileLoad();document.location='masteredit.php';"/>
+</div>
+
+<div class="lxmladm_box">
+	<div class="lxmladm_linha" style="font-size:12px;font-weight:bold;margin-top:10px;margin-bottom:10px">CONSOLE</div>
+	<div style="background:#000000;border:1px solid #000000;color:#33ff33;width:100%;height:200px;line-height:10px;font-size:10px;overflow:auto" id="consoleResult">
+	Type "help" for command list<br/>
+	</div>
+	<input type="text" style="width:80%" onkeyup="if (event.keyCode == 13) submitconsole(this);" id="consoletxt" name="consoletxt"/>
+	<script type="text/javascript"><!--
+
+	function submitconsole(i) {
+		v = i.value;
+		i.value = '';
+		$('consoleResult').innerHTML += "&gt;" + v +"<br/>";
+		if (v == 'clear') {
+			$('consoleResult').innerHTML = "";
+		} else if (v == '+') {
+			h = parseInt($('consoleResult').style.height);
+			if (h<200) h =200;
+			h+= 100;
+			$('consoleResult').style.height = h + "px";
+		} else {
+			new Ajax.Request('console.ajax?q=' + v,{
+				onComplete: scComplete
+			});
+		}
+
+	}
+	function scComplete(data) {
+		data = parseajax(data);
+		$('consoleResult').innerHTML += "\n<br/>"+data+"\n<br/>";
+	}
+	//--></script>
+</div>
+
+<div class="lxmladm_box">
+	<b>Bot-protect:</b><br/>
+	{botprotect|nl2br}
+</div>
+
+<div class="lxmladm_box">
+	<div class="lxmladm_help">
+		<div id="divhelpico" style="cursor:pointer" onclick="this.style.display='none';new Effect.BlindDown('divhelp');">Ajuda ?</div>
+		<div style="display:none" id="divhelp">
+			<img title="Reset" src="/pages/_common/files/adm/ball_start.png" width="16" height="16" alt="Reset"/> - Clique no ícone de reset para limpar as caches e recarregar os XML<br/><br/>
+			CODE - O código do cliente na programação<br/><br/>
+			DEBUG - Informa se o site está rodando em modo debug. Se sim, ele carrega os dados do XML e mostra a barra de debug (o "^" no rodapé), o que deixa o site lento<br/><br/>
+			CONFIG - Informa se existem campos importantes faltando na configuração (no administrativo, em opções)<br/><br/>
+			QUOTA - Informa se o cliente está próximo ou excedeu a quota de disco<br/><br/>
+			ERROS - Informa se ocorreram erros (inclui apenas avisos) no site durante o dia atual<br/><br/>
+			404 - Informa se estão visitando páginas inexistentes (404) no site, durante o dia atual. MUITO pode ser tentativa de hack ou site com defeito<br/><br/>
+			CRON - Informa se as tarefas agendadas automáticas do sistema (CRON) já rodaram na HORA atual, é comum haver um atraso se o site não é visitado com frequência. Se continuar o alerta mesmo depois do site visitado, então algo está errado<br/><br/>
+			HITS - Informa quantos hits o site teve hoje, seguido do total nos últimos 7 dias. Se as visitas hoje forem consideradas muito acima da média, alerta para a possibilidade de ataque ou slashdot<br/><br/>
+			BOT - Informa a visitação de bots, e se ela é normal ou acima do esperado. Visitação excessiva pode indicar ataque<br/><br/>
+			TIME - Informa qual foi a página que mais demorou a ser servida HOJE.<br/><br/>
+			BACKUP - Informa o status do backup automático de banco de dados, e o dia programado para ele ocorrer (sql gravado na pasta _backup dentro da nekoi do servidor).<br/><br/>
+			<br/><br/>
+			Note que "ERROS" e "404" são relativos apenas a dados do dia atual (resetado a meia noite), e CRON relativo apenas a hora atual (pois o CRON ocorre a cada hora). Os avisos sobre estatísticas de visitação (HITS, BOTS e TIME) são relativos também ao dia atual.
+			<br/><br/>
+			Você pode clicar no ícone de erro de um site para ver o log de erros do mesmo.
+			<br/><br/>
+			O log de erros e ações é mantido pelo sistema por 3 meses (exibido no adminstrativo do site os últimos 3 dias, aqui apenas do dia atual)<br/><br/>
+			O log de 404 é mantido apenas para o dia atual e zerado a meia noite.
+			<br/><br/>
+			CONSOLE: digite "help" (enter) para ver lista de comandos.
+		</div>
+	</div>
+</div>
+
+	<script type="text/javascript"><!--
+	function reloaddata() {
+		$('mastercontroldiv').innerHTML += "<br/>ATUALIZANDO...";
+		new Ajax.Updater($('mastercontroldiv'),'master.ajax?layout=2');
+		setTimeout('reloaddata()',60000);
+	}
+	setTimeout('reloaddata()',70000);
+	//--></script>
+{/removeonpopup}

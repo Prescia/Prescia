@@ -1,0 +1,218 @@
+<div class="lxmladm_box">
+
+	<div class="lxmladm_title">{_t}options{/t}:</div>
+
+	<div class="ladm_aviso">{_t}important_options_please_be_carefull{/t}</div>
+
+	<div class="ladm_info">
+		<b>{_t}system{/t}</b>: {system}<br/>
+		<b>{_t}browser{/t}</b>: <span title="{fullbrowser}" onclick="alert('{fullbrowser}')">{browser}</span><br/>
+		{islegacy|map|1=<span style="color:red">}<b>{_t}islegacy{/t}</b>: {_t}{islegacy|map|0=no,1=yes}{/t}{islegacy|map|1=</span>}<br/>
+		<b>{_t}ismobile{/t}</b>: {_t}{ismobile|map|0=no,1=yes}{/t}<br/>
+		<b>{_t}hasjavascript{/t}</b>: <span id="jsenabled">{_t}no{/t}</span><br/>
+		<b>{_t}yourip{/t}</b>: {ip}{_stats} <input style="border:1px solid #000000;padding:1px;margin:0px;font-size:9px" type="button" onclick="addip();" value="{_t}affbi_stats_addip{/t}"/>{/stats}<br/>
+		<b>{_t}servertime{/t}</b>: {servertime}<br/>
+	</div>
+
+	{_master}{_localmaster}
+	<div class="lxmladm_box">
+		{_t}change_local_site{/t}:<br/>
+		<select name="cls" id="cls">
+			{_sites}<option value="{code}">{code}</option>{/sites}
+		</select>
+		<input type="button" value=" Go! " onclick="document.location='/index.php?aff_changelocalsite=' + $('cls').value + '&debugmode=true&nosession=true&noache=true';" />
+	</div>
+	{/localmaster}{/master}
+
+
+	<div class="lxmladm_box">
+
+		<div class="lxmladm_linha" style="font-size:12px;font-weight:bold;margin-top:10px;margin-bottom:10px">{_t}affdimconfig{/t}:</div>
+
+		<form name="frmbase" id="frmbase" method="post" action="options.php"  enctype="multipart/form-data">
+		<input type="hidden" name="gfc" value="1"/><input type="hidden" name="haveinfo" value="1"/>
+
+
+	{_upload_field}
+	  	<input type="file" size="50" width="350px" id="{field}" name="{field}" /> {maxres} {maxsize}
+	  	{_hasFile}<div class="dgw_frame" style="margin-left: 10px;padding:10px;margin-top:5px">
+		    {_downloadable}
+		    <div class="grifo_inferior" style="height:20px">
+				<div style="float:left">Download:</div>
+				<div style="margin-left:150px">
+				    <a href="{download}"><img class="img_hoverable" src="{SKIN_PATH}ft/{ico}_ico.gif" width="16" heigth="16" alt="" title="{download}"/></a>
+				</div>
+			</div>
+		    {/downloadable}
+		    {_presentable}
+		    <div class="dgw_frame" style="padding:2px">
+			    {_img}<img class="img_hoverable" src="{download}" alt="" title="{download}" width="{width}" height="{height}" />{/img}
+			    {_swf}
+			  	{_FLASHME}{download}|{width}|{height}{/FLASHME}
+			    {/swf}
+			</div>
+		    {/presentable}
+			<div class="grifo_inferior" style="height:20px;width:300px">
+				<input type="checkbox" name="{field}_delete" id="{field}_delete" /><label for="{field}_delete">{_t}delete_file{/t}</label>
+			</div>
+		    <div class="grifo_inferior" style="height:20px;width:300px">
+		    	<div style="float:left">{_t}size{/t}:</div>
+				<div style="margin-left:150px">{filesize}</div>
+			</div>
+		    {_isImage}
+				<div class="grifo_inferior" style="height:20px;width:300px">
+				    <div style="float:left">{_t}dimension{/t}:</div>
+					<div style="margin-left:150px">{dim}</div>
+				</div>
+			    {_hasThumbs}
+				<div class="grifo_inferior" style="height:35px;width:300px">
+				    <div style="float:left">{_t}thumbnails{/t}:</div>
+					<div style="margin-left:150px">
+						{_thumb}<a href="{tdownload}" rel="lightbox[arr{field}]"><img class="img_hoverable" src="{SKIN_PATH}ft/jpg_ico.gif" width="16" heigth="16" alt="" title=""/></a> {/thumb}
+					</div>
+				</div>
+			    {/hasThumbs}
+		  	{/isImage}
+		</div>{/hasFile}
+	{/upload_field}
+
+	{_selecttree_field}
+		<span id="{field}_ara">
+			<select name="{field}" style="width:99%" id="{field}">
+				{_optional}<option value=""></option>{/optional}
+
+				{_sdirs}
+					<option value="{id}" {selected|map|1=selected='selected' class='selectedoption'}>{treetitle} ({id})</option>
+				   	{_insubdirs}{subdirs}{/insubdirs}
+				{/sdirs}
+				{_ssubdirs}
+					<option value="{id}" {selected|map|1=selected='selected' class='selectedoption'}>{level|map|1=……,2=…………,3=………………,4=……………………,5=……………………}{treetitle} ({id})</option>
+			  		{_insubdirs}{subdirs}{/insubdirs}
+				{/ssubdirs}
+			</select>
+		</span>
+		{_userlevel1}<br/>{_link}<a href="list.php?module={rmodule}&affreferer={affreferer}&affrefererkeys={affrefererkeys}">[{_t}list{/t}]</a><a href="edit.php?module={rmodule}&affreferer={affreferer}&affrefererkeys={affrefererkeys}">[{_t}new{/t}]</a>{/link}{/userlevel1}
+		<br/><span style="font-size:9px">{helper}</span>
+	{/selecttree_field}
+
+	{_select_field}
+		<select name="{field}" style="width:99%" id="{field}">
+		{_optional}<option value=""></option>{/optional}{_options}<option value="{ids}" {selected|map|1=selected='selected' class='selectedoption'}>{title} ({ids})</option>{/options}</select>
+		<br/>
+	{/select_field}
+
+	{_normal_field}
+	<input type="{type}" name="{field}" style="width:{width}" id="{field}" value="{value|parse|html}" />{calendar}<br/>
+	{/normal_field}
+
+	{_slider_field}
+	<div style="height:20px":>
+		<div id="slidertrack_{field}" style="width:200px; background-color:#ccc; height:10px;margin-bottom:5px; float:left">
+			<div id="sliderhandle_{field}" style="width:20px; height:15px; background-color:#111; cursor:move;color:#eeeeee;text-align:center">{value}</div>
+		</div>
+	</div>
+	<input type="hidden" id="{field}" name="{field}" value="{value}" />
+	<script type="text/javascript">
+		new Control.Slider('sliderhandle_{field}', 'slidertrack_{field}', {
+			onSlide: function(v) {
+				v = Math.floor(v);
+				$('{field}').value =  v;
+				$('sliderhandle_{field}').innerHTML = v;
+				{_multiple}$('me_edit_{field}').checked = true;{/multiple}
+			},
+			onChange: function(v) {
+				v = Math.floor(v);
+				$('{field}').value =  v;
+				$('sliderhandle_{field}').innerHTML = v;
+				{_multiple}$('me_edit_{field}').checked = true;{/multiple}
+			},
+			range: $R({minor}, {major}),
+			sliderValue: {value}
+		});
+	</script>
+	{/slider_field}
+
+	{_textarea_field}
+	<textarea name="{field}" id="{field}" style="width:90%" rows="12">{value}</textarea>
+	{/textarea_field}
+
+	{_FORM_field}
+	<table width="100%" style="margin-bottom:5px;padding-bottom:1px"><tbody>
+		<tr>
+			<td class="lgrifo_inferior" style="vertical-align:top;width:195px;text-align:left">
+				{_t}{title}{/t}:
+			</td>
+			<td class="lgrifo_inferior" style="text-align:left">
+				{field}
+			</td>
+		</tr>
+	</tbody></table>
+	{/FORM_field}
+
+
+		{_canchange}
+		<input style="margin-top:10px;float:right;margin-right:10px" class="ladm_buttongreen" type="submit" value="{_t}save{/t} "/>
+		<br/><br/><br/>
+		{/canchange}
+		</form>
+
+	</div>
+
+	<div class="lxmladm_box">
+		<div class="lxmladm_linha" style="font-size:12px;font-weight:bold;margin-top:10px;margin-bottom:10px">{_t}affdimconfighidden{/t}:</div>
+
+		{_hiddenoptions}
+		<strong>{_t}{name}{/t}</strong>: {value}<br/><br/>
+		{/hiddenoptions}
+
+	</div>
+
+{_master}
+	<div class="lxmladm_box">
+	<div class="lxmladm_linha" style="font-size:12px;font-weight:bold;margin-top:10px;margin-bottom:10px">CONSOLE</div>
+	<div style="background:#000000;border:1px solid #000000;color:#33ff33;width:100%;height:200px;line-height:10px;font-size:10px;overflow:auto" id="consoleResult">
+	Type "help" for command list, "+" to increase space<br/>
+	</div>
+	<input type="text" style="width:80%" onkeyup="if (event.keyCode == 13) submitconsole(this);" id="consoletxt" name="consoletxt"/>
+	<script type="text/javascript">
+
+	function submitconsole(i) {
+		v = i.value;
+		i.value = '';
+		$('consoleResult').innerHTML += "&gt;" + v +"<br/>";
+		if (v == 'clear') {
+			$('consoleResult').innerHTML = "";
+		} else if (v == '+') {
+			h = parseInt($('consoleResult').style.height);
+			if (h<100) h =200;
+			h+= 200;
+			$('consoleResult').style.height = h + "px";
+		} else {
+			new Ajax.Request('console.ajax?q=' + v,{
+				onComplete: scComplete
+			});
+		}
+
+	}
+	function scComplete(data) {
+		data = parseajax(data);
+		$('consoleResult').innerHTML += "\n<br/>"+data+"\n<br/>";
+	}
+	</script>
+</div>
+{/master}
+
+</div>
+
+<script type="text/javascript">
+$('jsenabled').innerHTML = '{_t}yes{/t}';
+{_stats}
+function addip() {
+	thisip = "{ip}";
+	if (thisip.indexOf("0:0:0:0:0:ffff:")!=-1) thisip = thisip.substr(15);
+	thisip = ":" + thisip.substr(0,thisip.length-2);
+	if ($('affbi_statsignoreip').value.indexOf(thisip) == -1) $('affbi_statsignoreip').value += "," + thisip;
+}
+{/stats}
+{endscript}
+</script>

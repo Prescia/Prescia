@@ -1,0 +1,382 @@
+<script type="text/javascript"><!--
+
+  var lastFolder = "{dir}";
+  var safeFolder = "{safefolder}";
+  var lastFolderPermission = [0,[]];
+  var canChange = true;
+  var loading = false;
+  var nfs = false;
+  var nus  = false;
+  var loadingText = ""; // will load from layout later
+  var nochangemsg = "{_i18n_pt-br}Esta pasta contém arquivos mantidos pelo sistema e não suporta alterações diretas{/i18n_pt-br}{_i18n_en}This folder has system controled files and does not support direct actions{/i18n_en}";
+
+  imgoff = new Image;
+  imgoff.src = '{SKIN_PATH}folder_minus.gif';
+  imgon = new Image;
+  imgon.src = '{SKIN_PATH}folder_plus.gif';
+  simgoff = new Image;
+  simgoff.src = '{SKIN_PATH}sfolder_minus.gif';
+  simgon = new Image;
+  simgon.src = '{SKIN_PATH}sfolder_plus.gif';
+  function colapptible(dir,fulldir,chields,issafe) {
+    if (dir == "") return; // evita loop infinito em caso de erro
+	if (fulldir != lastFolder) {
+		if (!showFolder(fulldir))
+			return; // cannot change now
+	}
+    if (chields == 0) {
+      // dir is THIS item, run whatever code for a LEAF
+      return;
+    }
+    if (!$("dir"+dir)) {
+      return;
+    }
+    if ($("dir"+dir).style.display == '' || $("dir"+dir).style.display == 'block') { // is visible
+      $("dirsign"+dir).src = issafe?simgon.src:imgon.src;
+      Effect.BlindUp("dir"+dir);
+    } else {
+      $("dirsign"+dir).src = issafe?simgoff.src:imgoff.src;
+      Effect.BlindDown("dir"+dir);
+    }
+    return;
+  }
+
+  function showFolder(dir,NOTshowcontents) { /* prepares the visual effects of opening a folder and loads the folder contents */
+    // checks permissions at this folder
+    if (loading) return false;
+    btnIsShown = $('btnDel').style.display != 'none';
+	if (canChange && !btnIsShown) {
+		new Effect.Appear('btnDel');
+		new Effect.Appear('btnNew');
+		new Effect.Appear('btnUp');
+	} else if (!canChange && btnIsShown) {
+		new Effect.Fade('btnDel');
+		new Effect.Fade('btnNew');
+		new Effect.Fade('btnUp');
+		if (nfs) {
+	  		new Effect.BlindUp('DIVnewFolder');
+	  		nfs = false;
+		}
+		if (nus) {
+			nus = false;
+			new Effect.BlindUp("DIVUpload");
+		}
+	}
+  	$('folderA').innerHTML = "&nbsp;&nbsp;"+ dir;
+  	document.frmbase.dir.value = dir;
+    if (dir == lastFolder) return true;
+  	if (nfs) {
+  		new Effect.BlindUp('DIVnewFolder');
+  		nfs = false;
+  	}
+  	lastFolder = dir;
+  	if (!NOTshowcontents) { // on ajax return from selecting a folder, this function is called again to update the divs with permissions, but we don't need to show files again
+  		loading = true;
+  		loadDir(dir);
+  	}
+  	return true;
+  }
+
+  function loadDir(dir,dirTreeToo) { /* loads the files of a folder at the container*/
+    loading = true;
+    if (nus) {
+    	nus = false;
+    	new Effect.BlindUp("DIVUpload");
+   	}
+   	$('DIVfiles').innerHTML = loadingText;
+   	query = "files.ajax?type={type}&dir="+dir;
+	ajax = new Ajax.Updater('DIVfiles', query, {asynchronous:true,
+  	                                            onComplete:filesLoaded}
+  	                       );
+	if (dirTreeToo) { /* requests the folder structure to be updated too (usually on load up) */
+		if (nfs) {
+			new Effect.BlindUp("DIVnewFolder");
+			nfs = false;
+		}
+	   	$('DIVtree').innerHTML = loadingText;
+		query = "dirs.php?layout=2&dir="+dir;
+		ajax2 = new Ajax.Updater('DIVtree', query, {asynchronous:true,
+  	                                            onComplete:filesLoaded}
+  	                       );
+  	}
+  }
+
+  function filesLoaded(data) { /* AJAX return ok, parse any SCRIPT and run it */
+  	loading = false;
+  	remove_wwl();
+  	data = parseajax(data);
+  	Shadowbox.clearCache();
+	Shadowbox.setup();
+  }
+
+  function showNewFile() { /* shows "upload file" pane */
+    if (canChange) {
+  		if (!nus) {
+  			nus = true;
+			new Effect.BlindDown("DIVUpload");
+		}
+  	} else {
+  		alert(nochangemsg);
+  	}
+  }
+
+  function showNewFolder() { /* shows "new folder" pane */
+  	if (canChange) {
+  		if (!nfs) {
+  			nfs = true;
+  			$('newfoldertxt').value = '';
+			new Effect.BlindDown("DIVnewFolder");
+			setTimeout('focusFolder()',1000);
+		}
+  	} else {
+  		alert(nochangemsg);
+  	}
+  }
+  function focusFolder () { /* Timeout so it focus only when BlindDown enough */
+  	$('newfoldertxt').focus();
+  }
+  function checkfolder () { /* prevents user entering relative folders */
+    $('newfoldertxt').value = str_replace("/","",$('newfoldertxt').value );
+  }
+  function makeDir() { /* click on "new folder" button */
+    if (canChange) {
+	  	lastFolder = lastFolder + (lastFolder == '/' ? '' : '/') + $('newfoldertxt').value;
+	  	loading = true;
+  	   	$('DIVtree').innerHTML = loadingText;
+	  	query = "dirs.php?layout=2&haveinfo=1&makedir="+lastFolder;
+	  	waitWhileLoad();
+		ajax2 = new Ajax.Updater('DIVtree', query, {asynchronous:true,
+	  	                                            onComplete:filesLoaded}
+	  	                       );
+	} else
+		alert(nochangemsg);
+  }
+  function deleteFolder() {
+    if (canChange && lastFolder != '/') {
+    	if (confirm("{_i18n_pt-br}Tem certeza que deseja eliminar a pasta{/i18n_pt-br}{_i18n_en}Are you sure you want to delete the folder{/i18n_en} " + lastFolder + " ?")) {
+	    	loading = true;
+    	   	$('DIVtree').innerHTML = loadingText;
+	    	query = "dirs.php?layout=2&haveinfo=1&deldir="+lastFolder;
+	    	waitWhileLoad();
+	    	ajax2 = new Ajax.Updater('DIVtree', query, {asynchronous:true,
+		  	                                            onComplete:filesLoaded}
+		  	                       );
+		}
+    } else
+    	alert(nochangemsg);
+  }
+  function deleteme(file) {
+  	if (canChange) {
+		if (confirm("{_i18n_pt-br}Apagar o arquivo{/i18n_pt-br}{_i18n_en}Delete file{/i18n_en} " + file + "?")) {
+			loading = true;
+			$('DIVfiles').innerHTML = loadingText;
+		   	query = "files.php?layout=2&dir="+lastFolder+"&delfile="+file;
+		   	waitWhileLoad();
+			ajax = new Ajax.Updater('DIVfiles', query, {asynchronous:true,
+  	                                            onComplete:filesLoaded}
+  	                       );
+
+		}
+  	} else
+	  	alert(nochangemsg);
+  }
+  function clickfile(file,forceOpen) {
+ 	//if (ext == 'jpg' || ext == 'gif' || ext == 'png') {
+  		window.open(file,'_blank');
+  	//}
+  }
+  {_affbi_fm}
+  function selectall_ex(frm,para) {
+	  for (var i=0;i<frm.elements.length;i++) {
+		  frm.elements[i].checked = para;
+	  }
+  }
+  var curfile = "";
+  function permissions(file,idG,eD,idU) {
+  	if (!file) { // editing current FOLDER
+  		file = lastFolder.substr(safeFolder.length+2);
+  		idG = lastFolderPermission[0];
+  		idU = lastFolderPermission[1];
+  		eD = '';
+  		$('permissionexpirediv').style.display = 'none';
+  	} else
+  		$('permissionexpirediv').style.display = '';
+  	$('div_wait').appear({ // div_wait is in admframe.html
+			duration: 0.5, from: 0, to: 0.5
+		});
+	wD = windowDimensions();
+	curfile = file;
+  	$('permissiondivuserdiv').style.display = 'none';
+	$('permissiongroup').selectedIndex= 0;
+	$('permissiondivfile').innerHTML = file;
+	$('permissionexpire').checked = false;
+	$('permissionexpiredate').value = '';
+	selectall_ex($('frmpermission'),false);
+	$('permissiondiv').style.left =  Math.floor(wD[0]/2) - 175 + "px";
+	$('permissiondiv').style.top = Math.floor(wD[1]/2 - 140) + "px";
+	$('permissiondiv').style.display = '';
+	if (idG>0) {
+		for (c=0;c<$('permissiongroup').options.length;c++) {
+			if ($('permissiongroup').options[c].value == idG) {
+				$('permissiongroup').selectedIndex = c;
+				break;
+			}
+		}
+	} else if (idU.length > 0 ) {
+		$('permissiongroup').selectedIndex = 1;
+		$('permissiondivuserdiv').style.display = '';
+		for (c=0;c<idU.length;c++) {
+			$('permissionuserid' + idU[c]).checked = true;
+		}
+	}
+	if (eD != '') {
+		$('permissionexpire').checked = true;
+		$('permissionexpiredate').value = eD;
+	}
+  }
+  function saveperm() {
+
+  	if (curfile == '' || loading) return;
+  	ajaxquery = "affbi_fmset.ajax?file="+curfile+"&";
+  	if ($('permissionexpire').checked && $('permissionexpiredate').value != '')
+  		ajaxquery += "ed=" + $('permissionexpiredate').value + "&";
+  	frm = $('frmpermission');
+  	if ($('permissiongroup').options[$('permissiongroup').selectedIndex].value != ' ') {
+  		if ($('permissiongroup').options[$('permissiongroup').selectedIndex].value != '*') {
+  			g = $('permissiongroup').options[$('permissiongroup').selectedIndex].value;
+			ajaxquery += "id_allowed_group="+g;
+  		} else {
+		  	outputUsers = "";
+		  	for (var i=0;i<frm.elements.length;i++) {
+			  if (frm.elements[i].checked) {
+				  outputUsers += frm.elements[i].id.substring(16) + ",";
+			  }
+			}
+			ajaxquery += "allowed_users=" + outputUsers;
+		}
+		loading= true;
+		waitWhileLoad();
+		ajax = new Ajax.Request(ajaxquery, {asynchronous:true,
+  	                                           onComplete:permissionDone}
+  	                      );
+	} else {
+		alert("Selecione um grupo ou usuários que podem ver este arquivo")
+	}
+  }
+  function permissionDone(data) {
+  	loading = false;
+  	remove_wwl();
+  	loadDir(lastFolder);
+  }
+  {/affbi_fm}
+//--></script>
+
+<div class="lxmladm_box">
+
+	<div class="lxmladm_title" style="font-weight:bold;font-size:14px;margin-bottom:10px">{_t}filemanager{/t} - <span id="folderA">/</span></div>
+
+	<table cellspacing="0" style="margin-top:10px;width:99%"><tbody>
+
+	<tr>
+		<td style="width:20%;vertical-align:top">
+			<div class="lxmladm_box" style="height:50px;width:200px;font-size:10px">
+				<div id="btnNew" style="cursor:pointer;width:60px;text-align:center;float:left" onclick="showNewFolder()"><img src="{SKIN_PATH}btn_fm_folder.png" alt="{_t}newfolder{/t}" title="{_t}newfolder{/t}" /><br/>{_t}newfolder{/t}</div>
+				<div id="btnDel" style="margin-left:5px;cursor:pointer;width:70px;text-align:center;float:left" onclick="deleteFolder();"><img src="{SKIN_PATH}btn_fm_folderdel.png" alt="{_t}deletefolder{/t}" title="{_t}deletefolder{/t}" /><br/>{_t}deletefolder{/t}</div>
+				<div id="btnPerm" style="display:none;margin-left:5px;cursor:pointer;width:60px;text-align:center;float:left" onclick="permissions();"><img src="{SKIN_PATH}btn_fm_folderp.png" alt="Permissões da pasta" title="Permissões da pasta" /><br/>Permissões</div>
+				<div style="clear:both"></div>
+			</div>
+
+		</td><td style="width:10px">&nbsp;</td>
+		<td style="position:relative;vertical-align:top">
+			<div class="lxmladm_box" style="height:50px">
+				<div style="float:right;width:400px">
+					<div style="border:1px solid #b0b0b0;width:99%;height:12px;padding:2px">
+						<div class="lxmladm_progressbar" style="height:12px;float:left;width:{pctd}%"></div>
+					</div>
+
+					{_t}spaceused{/t}: <strong>{used}</strong> ({pct}%); &nbsp;&nbsp;&nbsp;  (Max <strong>{quota}</strong>)
+				</div>
+
+
+				<div id="btnUp" style="cursor:pointer;width:100px;text-align:center;float:left" onclick="showNewFile();"><img src="{SKIN_PATH}btn_fm_upload.png" alt="Upload" title="Upload"  /><br/>{_t}upload{/t}</div>
+				<div id="selectedFile" style="clear:both;margin:2px;padding:2px;border:dotted 1px #cccccc">&nbsp;</div>
+			</div>
+		</td>
+	</tr>
+
+	<tr>
+	<td style="width:20%;vertical-align:top;min-height:300px; text-align: left">
+		<div class="window_no_absolute" id="DIVnewFolder" style="display:none;width:99%;padding:10px">
+			<div class="grifo_inferior">{_t}newfolder{/t}</div>
+			<div style="text-align:center"><input type="text" name="newfoldertxt" id="newfoldertxt" value="" onchange="checkfolder()" onkeypress="checkfolder()" style="width:80%" />
+			<br/>
+			<input type="button" value=" {_t}newfolder{/t} " onclick="new Effect.BlindUp('DIVnewFolder');makeDir();"/>
+			<input type="button" value=" {_t}cancel{/t} " onclick="new Effect.BlindUp('DIVnewFolder');nfs=false;"/>
+			</div>
+		</div>
+		<div id="DIVtree">
+			<img src="{SKIN_PATH}loading.gif" width="32" height="32" alt=""/> {_t}wait{/t} ...
+		</div>
+	</td>
+	<td style="width:10px;border-left:1px solid #cccccc">&nbsp;</td>
+	<td style="vertical-align:top;text-align: left">
+		<div class="window_no_absolute" id="DIVUpload" style="display:none;width:99%;padding:10px">
+			<div class="grifo_inferior">{_t}upload{/t}</div>
+			<div style="text-align:center">
+			<form name="frmbase" action="fmanager.php" method="post" enctype="multipart/form-data">
+			<input type="hidden" name="gfc" value="1" /><input type="hidden" name="haveinfo" value="1" />
+			<input type="hidden" name="dir" value=""/>
+			<input type="file" name="newuploadfile" size="50" /><br/>
+			<input type="submit" value=" Upload " />
+			<input type="button" value=" {_t}cancel{/t} " onClick="new Effect.BlindUp('DIVUpload');nus=false;"/>
+			{_t}maxsize{/t}: {maxupload}b
+			</form>
+			</div>
+		</div>
+		<div id="DIVfiles">
+			<img src="{SKIN_PATH}loading.gif" width="32" height="32" alt=""/> {_t}wait{/t} ...
+		</div>
+	</td>
+</tr></tbody>
+</table>
+</div>
+
+<script type="text/javascript"><!--
+  loadingText = $('DIVfiles').innerHTML;
+  loading = true;
+  loadDir('{dir}',true);
+//--></script>
+
+{/affbi_fm}
+<div id="permissiondiv" style="width:350px;height:260px;border:1px solid #000000;padding:5px;position:fixed;display:none;z-index:5005;background:#ffffff;color:#000000">
+<form name="frmpermission" id="frmpermission">
+	<div title="Cancelar" style="position:absolute;top:1px;right:1px;width:16px;height:10px;cursor:pointer" onclick="$('permissiondiv').style.display = 'none';$('div_wait').style.display = 'none';">X</div>
+	<b>Editando permissões para:</b> "<span id="permissiondivfile"></span>"<br/>
+	Selecione quem pode ver ou baixar o arquivo:<br/>
+
+		<select id="permissiongroup" onchange="$('permissiondivuserdiv').style.display = this.value=='*'?'block':'none'">
+			<option value=" ">Selecione o grupo:</option>
+			<option value="*">- Selecionar usuários individuais -</option>
+			{_permgroup}
+			<option value="{id}">{name}</option>
+			{/permgroup}
+		</select><br/>
+
+	<div style="display:none" id="permissiondivuserdiv">
+		Selecione os usuários que tem acesso:<br/>
+		<div id="permissionuserlist" style="border:1px solid #333333;padding:5px;margin:5px;height:100px;overflow:auto">
+			{_permusers}
+			<input type="checkbox" id="permissionuserid{id}" name="permissionuserid{id}"/><label for="permissionuserid{id}"> {login} ({name})</label><br/>
+			{/permusers}
+
+		</div>
+	</div>
+	<div id="permissionexpirediv">
+	<input type="checkbox" id="permissionexpire"/><label for="permissionexpire">Auto-remover arquivo em: </label>
+		<input type="text" id="permissionexpiredate" maxlength="10" style="width:55px"/> (d/m/Y)<br/>
+	</div>
+	<input type="button" value=" Cancelar " onclick="$('permissiondiv').style.display = 'none';$('div_wait').style.display = 'none';" />
+	<input type="button" value=" Gravar " onclick="$('permissiondiv').style.display = 'none';$('div_wait').style.display = 'none';saveperm();" />
+</form>
+</div>
+{/affbi_fm}
