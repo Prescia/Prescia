@@ -52,6 +52,7 @@ define ("CONS_LOGGING_ERROR",3); // normal "warning" / error
 # -- internal parameters
 define ("CONS_XML_SQL",100); # field SQL
 define ("CONS_XML_TIPO",101); # field Type
+define ("CONS_XML_LINKTYPE",104); # if this is a link, what is the type of the variable?
 define ("CONS_XML_MODULE",102); # foreing key module (module name)
 define ("CONS_XML_SERIALIZEDMODEL",103); # list of fields inside a CONS_TIPO_SERIALIZED
 # -- basic types

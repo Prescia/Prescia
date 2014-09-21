@@ -11,7 +11,6 @@ class CintlControl {
 				'es'    => array(",",".","m/d/Y","(([0-9]{1,2})([^0-9]))(([0-9]{1,2})([^0-9]))([0-9]{2,4})",array(7,2,5),'EUR','€'),
 				'jp'    => array(".",",","Y/m/d","(([0-9]{2,4})([^0-9]))(([0-9]{1,2})([^0-9]))([0-9]{1,2})",array(2,5,7),'JPY','¥'),
 				);
-				# TODO: add month names
 	var $selectedCode = "";
 
 	function __construct(&$parent) {

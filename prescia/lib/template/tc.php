@@ -5,7 +5,7 @@
 --*/
 # REQUIRES main.php
 
-define ("CKTemplate_version","140902"); // Build version - yes this is a date
+define ("CKTemplate_version","140920"); // Build version - yes this is a date
 
 define ("EREG_TAG","/(\{)([^\n\r]+)(\})/"); // used inside parsers, but not on tbreak
 define ("START_REPLACE", "\\"); // this string inside the limiters will generate the start limiter ({\} will output {)
@@ -26,6 +26,8 @@ class CKTemplate {
   var $std_date = "d/m/Y";
   var $std_datetime = "H:i d/m/Y";
   var $str_monthlabels = array("Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro");
+  var $str_daylabels = array("Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado");
+  var $str_intervals = array("Segundos","Minutos","Horas","Dias","Meses");
   var $std_decimal = ".";
   var $std_tseparator = ",";
   var $lang_replacer = array();
@@ -44,27 +46,37 @@ class CKTemplate {
   private $iec = 0; // anti-loop device
 
   function __construct($parent = null, $mypath = "", $debugmode = false) { // parent must be a CKTemplate too
-    $this->clear();
-    $this->cache = null;
-    if ($parent == null) {
-      $this->debugmode = $debugmode;
-      $this->decimais = 2;
-      $this->path = $mypath;
-    } else {
-      $this->debugmode = $debugmode || $parent->debugmode;
-      $this->str_monthlabels = $parent->str_monthlabels;
-      $this->decimais = (int)$parent->decimais;
-      $this->std_date = $parent->std_date;
-      $this->std_datetime = $parent->std_datetime;
-      $this->std_decimal = $parent->std_decimal;
-      $this->std_tseparator = $parent->std_tseparator;
-      $this->path = $mypath == "" ? $parent->path : $mypath;
-      $this->lang_replacer = &$parent->lang_replacer;
-      $this->constants = &$parent->constants;
-      $this->cacheSeed = $parent->cacheSeed;
-      $this->externalClasses = &$parent->externalClasses;
-      $this->varToClass = $parent->varToClass;
-    }
+	$this->clear();
+	$this->cache = null;
+	if ($parent == null) {
+	  $this->debugmode = $debugmode;
+	  $this->decimais = 2;
+	  $this->path = $mypath;
+	} else {
+	  $this->debugmode = $debugmode || $parent->debugmode;
+	  $this->str_monthlabels = $parent->str_monthlabels;
+	  $this->str_intervals = $parent->str_intervals;
+	  $this->str_daylabels = $parent->str_daylabels;
+	  $this->decimais = (int)$parent->decimais;
+	  $this->std_date = $parent->std_date;
+	  $this->std_datetime = $parent->std_datetime;
+	  $this->std_decimal = $parent->std_decimal;
+	  $this->std_tseparator = $parent->std_tseparator;
+	  $this->path = $mypath == "" ? $parent->path : $mypath;
+	  $this->lang_replacer = &$parent->lang_replacer;
+	  $this->constants = &$parent->constants;
+	  $this->cacheSeed = $parent->cacheSeed;
+	  $this->externalClasses = &$parent->externalClasses;
+	  $this->varToClass = $parent->varToClass;
+	}
+  }
+
+  public function populate() { // applies tags to $str_monthlabels and $str_intervals
+  	for ($c=1;$c<=12;$c++)
+		$this->str_monthlabels[$c] = $this->lang_replacer['month'.str_pad($c,2,'0',STR_PAD_LEFT)];
+	for ($c=0;$c<7;$c++)
+		$this->str_daylabels[$c] = $this->lang_replacer['day'.$c];
+	$this->str_intervals = array( $this->lang_replacer['seconds'],  $this->lang_replacer['minutes'],  $this->lang_replacer['hours'],  $this->lang_replacer['days']);
   }
 
   public function reset() { // applies this object's settings to all it's childs
@@ -103,14 +115,14 @@ class CKTemplate {
 
   // public
   public function clear($preserve_constants = true) {
-    $this->contents = array();
-    $this->cache = "";
-    $this->internal_cache = array();
+	$this->contents = array();
+	$this->cache = "";
+	$this->internal_cache = array();
 	$this->errorsDetected = false;
-    if (!$preserve_constants) {
-    	$this->lang_replacer = array();
-    	$this->constants = array();
-    }
+	if (!$preserve_constants) {
+		$this->lang_replacer = array();
+		$this->constants = array();
+	}
   }
 
   // returns an array with all tags the current template uses set. If it is a template replacer (_t) will return an array of all keywords.
@@ -170,17 +182,17 @@ class CKTemplate {
 
   // reads a file. The encoded file will be saved at the cache
   public function fetch($arquivo) {
-    $this->contents = array(); // reset
-    $seed = $this->cacheSeed != "" ? $this->cacheSeed."/" : "";
-    if (is_file($arquivo)) {
+	$this->contents = array(); // reset
+	$seed = $this->cacheSeed != "" ? $this->cacheSeed."/" : "";
+	if (is_file($arquivo)) {
 
-      if ($this->cachepath != "" && !isset($_REQUEST['nocache'])) {
-      	  $exarquivo = explode("/",$arquivo);
-	      $cfile = array_pop($exarquivo);
-	      $cpath = substr($arquivo,0,strlen($arquivo)-strlen($cfile));
-	      makeDirs($cpath.$seed,$this->cachepath);
-	      $cfile = $this->cachepath.$cpath.$seed.$cfile;
-	      if (is_file($cfile)) { // cached?
+	  if ($this->cachepath != "" && !isset($_REQUEST['nocache'])) {
+	  	  $exarquivo = explode("/",$arquivo);
+		  $cfile = array_pop($exarquivo);
+		  $cpath = substr($arquivo,0,strlen($arquivo)-strlen($cfile));
+		  makeDirs($cpath.$seed,$this->cachepath);
+		  $cfile = $this->cachepath.$cpath.$seed.$cfile;
+		  if (is_file($cfile)) { // cached?
 			$thistime = filemtime($arquivo);
 			$thattime = filemtime($cfile);
 			if ($thistime < $thattime) {
@@ -196,40 +208,40 @@ class CKTemplate {
 					$this->errorsDetected = true;
 					@unlink($cfile); // invalid
 				}
-	      	}
-	      }
-      }
-      $fd = fopen ($arquivo, "rb");
-      $size = filesize($arquivo);
-      if ($size == 0) $this->cache = '';
-      else $this->cache = fread($fd,$size);
-      if ($size>0) removeBOM($this->cache);
-      else $this->cache = "";
-      fclose($fd);
-      $ok = $this->tbreak($this->cache);
-      if ($ok && $this->cachepath != "") {
-      	$temp = $this->cache;
-      	$this->cache = "";
-      	if (count($this->lang_replacer)>0) {
-      		$this->applyCachedLang();
-      	}
+		  	}
+		  }
+	  }
+	  $fd = fopen ($arquivo, "rb");
+	  $size = filesize($arquivo);
+	  if ($size == 0) $this->cache = '';
+	  else $this->cache = fread($fd,$size);
+	  if ($size>0) removeBOM($this->cache);
+	  else $this->cache = "";
+	  fclose($fd);
+	  $ok = $this->tbreak($this->cache);
+	  if ($ok && $this->cachepath != "") {
+	  	$temp = $this->cache;
+	  	$this->cache = "";
+	  	if (count($this->lang_replacer)>0) {
+	  		$this->applyCachedLang();
+	  	}
 		cWriteFile($cfile,serialize($this));
 		$this->cache = $temp;
-      }
-      return $ok;
-    } else {
-      if ($this->debugmode) echo "TC:fetch File not found: ".$arquivo."<br/>";
+	  }
+	  return $ok;
+	} else {
+	  if ($this->debugmode) echo "TC:fetch File not found: ".$arquivo."<br/>";
 	  $this->errorsDetected = true;
-      return false;
-    }
+	  return false;
+	}
   }
 
   protected function applyCachedLang() {
   	// applies language tags for this version ONLY their content is simple text
 	foreach ($this->contents as $idx => $ct) {
   		if (is_object($ct[2])) {
-      		$ct[2]->lang_replacer = &$this->lang_replacer;
-      		$ct[2]->applyCachedLang();
+	  		$ct[2]->lang_replacer = &$this->lang_replacer;
+	  		$ct[2]->applyCachedLang();
   		} else if (!is_object($ct[2]) && $ct[0] == "_t") {
   			if (isset($this->lang_replacer[$ct[2]])) {
 	  			$this->contents[$idx][2] = $this->lang_replacer[$ct[2]];
@@ -258,89 +270,89 @@ class CKTemplate {
   }
 
   public function addcontent($nome, $tipo, $conteudo) {
-    if (!is_object($conteudo) && $this->havetag($conteudo)) {
-      $temp = $conteudo;
-      $conteudo = new CKTemplate($this);
-      $conteudo->tbreak($temp);
-    }
-    if ($tipo != "") {
-    	$tipo = explode(PARAMSEP_TAG,$tipo);
-    	if (in_array(strtolower($nome),$this->varToClass)) {
-    		array_unshift($tipo,strtolower($nome)); # variable turned to @, so the original name is a class
-    		$nome = "@";
-    	}
-    }
-    if (is_object($conteudo))
-      $novo = array ( $nome, $tipo, &$conteudo , null);
-    else {
-      $novo = array ( $nome, $tipo, $conteudo , $conteudo);
-    }
-    array_push($this->contents, $novo);
-    return $this->contents[count($this->contents)-1];
+	if (!is_object($conteudo) && $this->havetag($conteudo)) {
+	  $temp = $conteudo;
+	  $conteudo = new CKTemplate($this);
+	  $conteudo->tbreak($temp);
+	}
+	if ($tipo != "") {
+		$tipo = explode(PARAMSEP_TAG,$tipo);
+		if (in_array(strtolower($nome),$this->varToClass)) {
+			array_unshift($tipo,strtolower($nome)); # variable turned to @, so the original name is a class
+			$nome = "@";
+		}
+	}
+	if (is_object($conteudo))
+	  $novo = array ( $nome, $tipo, &$conteudo , null);
+	else {
+	  $novo = array ( $nome, $tipo, $conteudo , $conteudo);
+	}
+	array_push($this->contents, $novo);
+	return $this->contents[count($this->contents)-1];
   }
 
   public function &get($nome, $noerror=true) {
-    $this->flushcache();
-    $this->cache = null;
-    foreach ($this->contents as $key => $conteudo) {
-      if ($conteudo[0] == $nome) {
-        if (!is_object($conteudo[2])) { // literal
-          $temp = new CKTemplate($this);
-          $temp->tbreak($conteudo[2]);
-          $this->cache = $conteudo[2];
-          return $temp;
-        } else {
-          $this->cache = $this->contents[$key][2]; // not $conteudo[2] because I might require the link if it's an object
-          return $this->cache;
-        }
-      } else if (is_object($conteudo[2])) { // search child nodes
-      	$possible_return = $conteudo[2]->get($nome,true);
-        if ($possible_return !== false) {
-          return $possible_return;
-        }
-      }
-    }
-    if (!$noerror && $this->debugmode) echo "CKTemplate.get:TAG not found: ".$nome. "<br/>";
-    $nao_me_retorne_notices_podres = false; // pointer issues
-    return $nao_me_retorne_notices_podres;
+	$this->flushcache();
+	$this->cache = null;
+	foreach ($this->contents as $key => $conteudo) {
+	  if ($conteudo[0] == $nome) {
+		if (!is_object($conteudo[2])) { // literal
+		  $temp = new CKTemplate($this);
+		  $temp->tbreak($conteudo[2]);
+		  $this->cache = $conteudo[2];
+		  return $temp;
+		} else {
+		  $this->cache = $this->contents[$key][2]; // not $conteudo[2] because I might require the link if it's an object
+		  return $this->cache;
+		}
+	  } else if (is_object($conteudo[2])) { // search child nodes
+	  	$possible_return = $conteudo[2]->get($nome,true);
+		if ($possible_return !== false) {
+		  return $possible_return;
+		}
+	  }
+	}
+	if (!$noerror && $this->debugmode) echo "CKTemplate.get:TAG not found: ".$nome. "<br/>";
+	$nao_me_retorne_notices_podres = false; // pointer issues
+	return $nao_me_retorne_notices_podres;
   }
 
   public function gettxt($nome, $noerror=false) {
-    $this->flushcache();
-    $this->cache = null;
-    foreach ($this->contents as $key => $conteudo) {
-      if ($conteudo[0] == $nome) {
-        if (is_object($conteudo[2])) { // obj
-        	return $conteudo[2]->techo();
-        } else
-        	return $conteudo[2];
-      } else if (is_object($conteudo[2])) { // procura nos filhos
-        $possible_return = $conteudo[2]->gettxt($nome,true);
-        if ($possible_return !== false) {
-          return $possible_return;
-        }
-      }
-    }
-    if (!$noerror && $this->debugmode) echo "CKTemplate.gettxt:TAG not found: ".$nome."<br/>";
-    return false;
+	$this->flushcache();
+	$this->cache = null;
+	foreach ($this->contents as $key => $conteudo) {
+	  if ($conteudo[0] == $nome) {
+		if (is_object($conteudo[2])) { // obj
+			return $conteudo[2]->techo();
+		} else
+			return $conteudo[2];
+	  } else if (is_object($conteudo[2])) { // procura nos filhos
+		$possible_return = $conteudo[2]->gettxt($nome,true);
+		if ($possible_return !== false) {
+		  return $possible_return;
+		}
+	  }
+	}
+	if (!$noerror && $this->debugmode) echo "CKTemplate.gettxt:TAG not found: ".$nome."<br/>";
+	return false;
   }
 
   public function copyfrom($outro) {
   	if (!is_object($outro)) return;
-    $outro->flushcache();
-    foreach ($outro->contents as $key => $conteudo) {
-      if (!is_object($conteudo[2])) {
-      	array_push($this->contents,$conteudo);
-      } else {
-        $x = new CKTemplate($this);
-        $x->copyfrom($conteudo[2]);
-        array_push($this->contents,array($conteudo[0],$conteudo[1],$x));
-      }
-    }
+	$outro->flushcache();
+	foreach ($outro->contents as $key => $conteudo) {
+	  if (!is_object($conteudo[2])) {
+	  	array_push($this->contents,$conteudo);
+	  } else {
+		$x = new CKTemplate($this);
+		$x->copyfrom($conteudo[2]);
+		array_push($this->contents,array($conteudo[0],$conteudo[1],$x));
+	  }
+	}
   }
 
   protected function runclasses($arrayin=false) {
-    $this->flushcache();
+	$this->flushcache();
 	foreach ($this->contents as $idx => $ct) {
 		// NOT recursive: runclasses run at the techo, and techo will call techo RECURSIVELLY
 		// if this is recursive, you have recursive on top of recursive, which will create garbage at class output
@@ -348,7 +360,7 @@ class CKTemplate {
   			$this->contents[$idx][2] = $this->runclass($ct[1],$ct[3],$arrayin);
   		}
   	}
-    return true;
+	return true;
   }
 
   protected function runclass($params, $content,$arrayin=false) {
@@ -398,21 +410,33 @@ class CKTemplate {
   		case "truncate": // truncate: (truncate[:pos[:…[:striptags[:preserveEOL]]]])
   			$default = 50;
   			$final = "…";
+			$hasn = false;
   			if (isset($params[0]))
   				$default = (int)$params[0];
 			if (isset($params[1]))
 				$final = $params[1];
 			if (isset($params[2])) {
 				$content = str_replace("\"","'",stripHTML(str_replace("\n","",$content),isset($params[3])));
-				if (isset($params[3])) $content = str_replace("<br/>","\n",$content);
+				if (isset($params[3])) {
+					$content = str_replace("<br/>","\n",$content);
+					$hasn = strpos($content,"\n")!==false;
+				}
+			}
+			// avoids amp codes being cut
+			$amp = strpos($content,'&');
+			if ($amp > 0) {
+				$ampf = strpos($content,';',$amp);
+				if ($ampf >= $default) {
+					return substr($content,0,$amp-1).($hasn?"\n":"").$final;
+				}
 			}
   			$len = strlen($content);
 			if ($len > $default) {
-				if ($len <= $default - strlen($final))
+				if ($len <= $default - strlen($final)) // barelly on the limit
 					return (isset($params[3])?str_replace("\n","<br/>",$content):$content).$final." ";
-				else
+				else // under the limit, cut utf8 to avoid issues
 					return (isset($params[3])?str_replace("\n","<br/>",utf8_truncate($content,$default-strlen($final))):utf8_truncate($content,$default-strlen($final))).$final." ";
-			} else
+			} else // not greater
 				return (isset($params[3])?str_replace("\n","<br/>",$content):$content)." ";
 		case "nl2br":
 			return nl2br($content);
@@ -496,14 +520,24 @@ class CKTemplate {
 				return fd($content,$params[0]);
 			} else
 				return fd($content,$this->std_date);
-  		case "month": // gets a date or datetime, extracts the month and show it in TEXT using $str_monthlabels
+  		case "month": // gets a date or datetime, extracts the month and show it in TEXT using $str_monthlabels and i18n
   			$m = 0;
   			if (strlen($content)>7) $m = (int)substr($content,5,2);
   			else return "";
 
   			if ($m>=1 && $m<=12) return $this->str_monthlabels[$m-1];
   			else return "";
-
+		case "day": // same as above, with day
+			$d = date('w',$content);
+			if ($d !== false) return $this->$str_daylabels[$d]; 			
+  			else return "";
+		case "past": // how long has passed, in i18n. Send "true" as a parameter to short the past time in one leter
+			$sdif = time_diff(date("Y-m-d H:i:s"),$content);
+			$short = isset($params[0]) && $params[0] != "";
+			if ($sdif < 60) return $sdif.($short?strtolower($this->str_intervals[0][0]):' '.$this->str_intervals[0]); // seconds
+			else if ($sdif < 3600) return floor($sdif/60).($short?strtolower($this->str_intervals[1][0]):' '.$this->str_intervals[1]); // minutes
+			else if ($sdif < 86400) return floor($sdif/3600).($short?strtolower($this->str_intervals[2][0]):' '.$this->str_intervals[2]); // hours
+			else return floor($sdif/86400).($short?strtolower($this->str_intervals[3][0]):' '.$this->str_intervals[3]); // days
   		case "datetime": // datetime format|remove 00:00:00 (true/false)
   			if (isset($params[0])) {
   				if ($params[0] != "")
@@ -559,7 +593,7 @@ class CKTemplate {
 					$params['p_size'] = $_REQUEST['p_size'];
 		  	  	else
 		  	  		$params['p_size'] = defined(CONS_DEFAULT_PAGESIZE)?CONS_DEFAULT_PAGESIZE:$n;
-		    }
+			}
 	  	}
 
 		## ----------------
@@ -637,11 +671,11 @@ class CKTemplate {
   }
 
   public function tbreak($entrada) {
-    $p = 0; // pointer for where the file was read so far
-    $inipos = strpos($entrada,"{"); // pointer for the next tag
-    while ($inipos !== false) {
-      if (($inipos-$p)>0) { // auto-tag
-      	$nextContent = substr($entrada,$p,($inipos-$p));
+	$p = 0; // pointer for where the file was read so far
+	$inipos = strpos($entrada,"{"); // pointer for the next tag
+	while ($inipos !== false) {
+	  if (($inipos-$p)>0) { // auto-tag
+	  	$nextContent = substr($entrada,$p,($inipos-$p));
 		$possibleBody = strpos($nextContent,"</body>");
 		if ($possibleBody !==false) { // adds {endbody} auto-tag
 			$temp = substr($nextContent,0,$possibleBody);
@@ -650,57 +684,57 @@ class CKTemplate {
 			$nextContent = substr($nextContent,$possibleBody);
 		}
 		$this->addcontent("","",$nextContent); // pega o que tem entre o lido e o tag
-      }
-      $p = $inipos+1;
-      $fimpos = strpos($entrada,"}",$p);
-      if ($fimpos !== false) { // end of }
-        $key = substr($entrada,$p,($fimpos-$inipos-1));
-        if (strpos($key,"\n")===false && strpos($key,"\r")===false) { // valid key (\n not allowed)
-          if ($key[0]=="_") { // conditional key, searches for /$key
-            $inipos = $fimpos+1;
-            $p = $fimpos;
-            $fimpos = strpos($entrada,"{/".substr($key,1)."}",$inipos);
-            if ($fimpos !== false) { // found {/
-              $content = substr($entrada,$inipos,($fimpos-$inipos));
-              if ($key != "_") {
-                $this->addcontent($key,"",$content);
-              }
-              $p = $fimpos + strlen($key)+2;
-              $inipos = strpos($entrada,"{",$fimpos+2);
-            } else { // no end? error
-              echo "CKTemplate.tbreak: ERROR, TAG with no end: ".$key. "<br/>";
+	  }
+	  $p = $inipos+1;
+	  $fimpos = strpos($entrada,"}",$p);
+	  if ($fimpos !== false) { // end of }
+		$key = substr($entrada,$p,($fimpos-$inipos-1));
+		if (strpos($key,"\n")===false && strpos($key,"\r")===false) { // valid key (\n not allowed)
+		  if ($key[0]=="_") { // conditional key, searches for /$key
+			$inipos = $fimpos+1;
+			$p = $fimpos;
+			$fimpos = strpos($entrada,"{/".substr($key,1)."}",$inipos);
+			if ($fimpos !== false) { // found {/
+			  $content = substr($entrada,$inipos,($fimpos-$inipos));
+			  if ($key != "_") {
+				$this->addcontent($key,"",$content);
+			  }
+			  $p = $fimpos + strlen($key)+2;
+			  $inipos = strpos($entrada,"{",$fimpos+2);
+			} else { // no end? error
+			  echo "CKTemplate.tbreak: ERROR, TAG with no end: ".$key. "<br/>";
 			  $this->errorsDetected = true;
-              return false;
-            }
-          } else { // key
-            if (strpos($key,CLASSSEP_TAG)>0) {
-              $rkey = substr($key,0,strpos($key,CLASSSEP_TAG));
-              $tipo = substr($key,strlen($rkey)+1);
-              $this->addcontent($rkey,$tipo,"");
-            } else if ($key == START_REPLACE) {
-              if (count($this->contents)-1>=0)
-                $this->contents[count($this->contents)-1][2] .= "{";
-              else
-                $this->addcontent("","","{");
-            } else
-              $this->addcontent($key,"","");
-            $inipos = $fimpos+1;
-            $p = $fimpos+1;
-            $inipos = strpos($entrada,"{",$inipos);
-          }
-        } else { // there is a \n in the tag, ignores it
-          $inipos = strpos($entrada,"{",$inipos+1);
-          $p--;
-        }
-      } else { // no end to the tag, and no future end tags, so read it all
-        $this->addcontent("","",substr($entrada,$inipos,(strlen($entrada)-$inipos)));
-        $p = strlen($entrada);
-        $inipos = false;
-      }
-    }
-    // some more to read
-    if ($p < strlen($entrada)) {
-      	$nextContent = substr($entrada,$p,(strlen($entrada)-$p));
+			  return false;
+			}
+		  } else { // key
+			if (strpos($key,CLASSSEP_TAG)>0) {
+			  $rkey = substr($key,0,strpos($key,CLASSSEP_TAG));
+			  $tipo = substr($key,strlen($rkey)+1);
+			  $this->addcontent($rkey,$tipo,"");
+			} else if ($key == START_REPLACE) {
+			  if (count($this->contents)-1>=0)
+				$this->contents[count($this->contents)-1][2] .= "{";
+			  else
+				$this->addcontent("","","{");
+			} else
+			  $this->addcontent($key,"","");
+			$inipos = $fimpos+1;
+			$p = $fimpos+1;
+			$inipos = strpos($entrada,"{",$inipos);
+		  }
+		} else { // there is a \n in the tag, ignores it
+		  $inipos = strpos($entrada,"{",$inipos+1);
+		  $p--;
+		}
+	  } else { // no end to the tag, and no future end tags, so read it all
+		$this->addcontent("","",substr($entrada,$inipos,(strlen($entrada)-$inipos)));
+		$p = strlen($entrada);
+		$inipos = false;
+	  }
+	}
+	// some more to read
+	if ($p < strlen($entrada)) {
+	  	$nextContent = substr($entrada,$p,(strlen($entrada)-$p));
 		$possibleBody = strpos($nextContent,"</body>");
 		if ($possibleBody !==false) { // adds {endbody} auto-tag
 			$temp = substr($nextContent,0,$possibleBody);
@@ -710,43 +744,43 @@ class CKTemplate {
 		}
 		$this->addcontent("","",$nextContent); // pega o que tem entre o lido e o tag
 	}
-    return true;
+	return true;
   }
 
   public function assign($mkey, $valor="") {
-    if (is_object($valor)) {
-      $x = new CKTemplate($valor,$valor->path, $valor->debugmode);
-      $x->copyfrom($valor);
-      $this->internal_cache[$mkey] = $x; // 100% via cache now =D
-    } else
-      $this->internal_cache[$mkey] = $valor; // 100% via cache now =D
+	if (is_object($valor)) {
+	  $x = new CKTemplate($valor,$valor->path, $valor->debugmode);
+	  $x->copyfrom($valor);
+	  $this->internal_cache[$mkey] = $x; // 100% via cache now =D
+	} else
+	  $this->internal_cache[$mkey] = $valor; // 100% via cache now =D
   }
 
 
   protected function flushcache() {
-    if (count($this->internal_cache)>0) $this->fill(array());
-    $this->cache = false;
+	if (count($this->internal_cache)>0) $this->fill(array());
+	$this->cache = false;
   }
 
   public function techo($arrayin = false,$emptyme = array(),$recursive=false) {
-    $saida = "";
-    $this->fill($this->constants);
-    $this->flushcache();
-    if ($arrayin !== false && !$recursive) $this->fill($arrayin);
-    if (!$recursive && CKAUTORESET) $this->reset();
-    $this->runclasses($arrayin,true);
-    foreach ($this->contents as $key => $content) {
-      if ( $content[0] == "" || !in_array( $content[0],$emptyme)) {
-        if (is_object($content[2])) {
-        	$retorno = $content[2]->techo($arrayin,$emptyme,true); // we must send the arrayin so it can be read on classes, but we don't need to replace, thus recursive=true
-        	if ($content[0] == "_t") {
-        		if (isset($this->lang_replacer[$retorno]))
-        			$retorno = $this->lang_replacer[$retorno];
+	$saida = "";
+	$this->fill($this->constants);
+	$this->flushcache();
+	if ($arrayin !== false && !$recursive) $this->fill($arrayin);
+	if (!$recursive && CKAUTORESET) $this->reset();
+	$this->runclasses($arrayin,true);
+	foreach ($this->contents as $key => $content) {
+	  if ( $content[0] == "" || !in_array( $content[0],$emptyme)) {
+		if (is_object($content[2])) {
+			$retorno = $content[2]->techo($arrayin,$emptyme,true); // we must send the arrayin so it can be read on classes, but we don't need to replace, thus recursive=true
+			if ($content[0] == "_t") {
+				if (isset($this->lang_replacer[$retorno]))
+					$retorno = $this->lang_replacer[$retorno];
 				else if (strlen($retorno)>0 && strpos("!?.:",$retorno[strlen($retorno)-1])!==false){
 					$trailing = $retorno[strlen($retorno)-1];
 					$retorno = substr($retorno,0,strlen($retorno)-1);
 					if (isset($this->lang_replacer[$retorno]))
-        				$retorno = $this->lang_replacer[$retorno].$trailing;
+						$retorno = $this->lang_replacer[$retorno].$trailing;
 					else
 						$retorno .= $trailing;
 				}
@@ -755,62 +789,62 @@ class CKTemplate {
   				$data = explode("|",$retorno);
   				if (count($data)>2) {
   					$retorno = str_replace("{FILE}",$data[0],
-	                   		   str_replace("{W}",$data[1],
-	                   		   str_replace("{H}",$data[2],SWF_OBJECT)));
+					   		   str_replace("{W}",$data[1],
+					   		   str_replace("{H}",$data[2],SWF_OBJECT)));
   				}
   			}
 			$saida .= $retorno;
-        } else { // content
-        	if ($content[0] == "_t" && isset($this->lang_replacer[$content[2]]))
-        		$content[2] = $this->lang_replacer[$content[2]];
-        	else if ($content[0] == "_FLASHME") {
+		} else { // content
+			if ($content[0] == "_t" && isset($this->lang_replacer[$content[2]]))
+				$content[2] = $this->lang_replacer[$content[2]];
+			else if ($content[0] == "_FLASHME") {
   				//	uses the flash templating {_FLASHME}file|width|height{/FLASHME}
   				$data = explode("|",$content[2]);
   				if (count($data)>2)
   					$content[2] = str_replace("{FILE}",$data[0],
-	                   		   str_replace("{W}",$data[1],
-	                   		   str_replace("{H}",$data[2],SWF_OBJECT)));
+					   		   str_replace("{W}",$data[1],
+					   		   str_replace("{H}",$data[2],SWF_OBJECT)));
   			}
 			$saida .= $content[2];
-        }
-      }
-    }
-    return $saida;
+		}
+	  }
+	}
+	return $saida;
   }
 
   public function fill($arrayin, $emptyme = array()) {
   	// same as assign but receives an array. This function also flushes the internal cache
   	// emptyme is an array of content tags to ignore and delete
   	if (!is_array($arrayin)) $arrayin = array();
-    if (count($this->internal_cache)>0) { // merges internal cache with arrayin
-      $arrayin = array_merge($arrayin,$this->internal_cache);
-      $this->internal_cache = array();
-    }
-    $this->cache = null;
-    foreach ($this->contents as $key => $content) { // browses this template tags
-      if ( $content[0] != "" && !in_array( $content[0],$emptyme) ) { // not a content tag
-        if (isset($arrayin[$content[0]])) { // we have this information on the arrayin, replace
-          if (!is_object($arrayin[$content[0]])) {
-            $this->contents[$key][2] = $arrayin[$content[0]];
+	if (count($this->internal_cache)>0) { // merges internal cache with arrayin
+	  $arrayin = array_merge($arrayin,$this->internal_cache);
+	  $this->internal_cache = array();
+	}
+	$this->cache = null;
+	foreach ($this->contents as $key => $content) { // browses this template tags
+	  if ( $content[0] != "" && !in_array( $content[0],$emptyme) ) { // not a content tag
+		if (isset($arrayin[$content[0]])) { // we have this information on the arrayin, replace
+		  if (!is_object($arrayin[$content[0]])) {
+			$this->contents[$key][2] = $arrayin[$content[0]];
 			$this->contents[$key][3] = $arrayin[$content[0]];
-          } else {
-          	$this->contents[$key][2] = new CKTemplate($this);
-            $this->contents[$key][2]->copyfrom($arrayin[$content[0]]);
-            $this->contents[$key][2]->fill($arrayin,$emptyme);
+		  } else {
+		  	$this->contents[$key][2] = new CKTemplate($this);
+			$this->contents[$key][2]->copyfrom($arrayin[$content[0]]);
+			$this->contents[$key][2]->fill($arrayin,$emptyme);
 			$this->contents[$key][3] = null;
-          }
-        } else if (is_object($content[2])) { // recurse on content tags
-          $this->contents[$key][2]->fill($arrayin,$emptyme);
-        }
-      }
-    }
+		  }
+		} else if (is_object($content[2])) { // recurse on content tags
+		  $this->contents[$key][2]->fill($arrayin,$emptyme);
+		}
+	  }
+	}
   }
 
   private function havetag($conteudo){
-    if (strpos($conteudo,"{")!== false)
-      return preg_match(EREG_TAG,$conteudo);
-    else
-      return false;
+	if (strpos($conteudo,"{")!== false)
+	  return preg_match(EREG_TAG,$conteudo);
+	else
+	  return false;
   }
 
   //
@@ -848,24 +882,24 @@ class CKTemplate {
   	$n = $tree->total();
   	$tempmaster = "";
   	for($c=0;$c<$n;$c++) {
-    	$branch = &$tree->getbranch($c);
-    	$tparent->clear();
-    	if ($level==0)
-      		$tparent->copyfrom($dt);
-    	else
-      		$tparent->copyfrom($sdt);
-    	$tparent->fill($branch->data);
-    	$tparent->assign("level",$level);
-    	$tparent->assign("id_parent",$parent == 0 ? $branch->data['id'] : $parent);
-    	$tparent->assign("id",$branch->data['id']);
-    	$tparent->assign("fulldir",$fulldir.$branch->data['id']);
-    	$tparent->assign("chields",$branch->total());
-	    $subs = $this->getTreeTemplate_ex($dt,$sdt,$branch,$level+1,$branch->data['id'],$fulldir.$branch->data['id']."/");
-    	if ($subs != "") {
-      		$tparent->assign("subdirs",$subs);
-    	} else {
-      		$tparent->assign("_insubdirs","");
-    	}
+		$branch = &$tree->getbranch($c);
+		$tparent->clear();
+		if ($level==0)
+	  		$tparent->copyfrom($dt);
+		else
+	  		$tparent->copyfrom($sdt);
+		$tparent->fill($branch->data);
+		$tparent->assign("level",$level);
+		$tparent->assign("id_parent",$parent == 0 ? $branch->data['id'] : $parent);
+		$tparent->assign("id",$branch->data['id']);
+		$tparent->assign("fulldir",$fulldir.$branch->data['id']);
+		$tparent->assign("chields",$branch->total());
+		$subs = $this->getTreeTemplate_ex($dt,$sdt,$branch,$level+1,$branch->data['id'],$fulldir.$branch->data['id']."/");
+		if ($subs != "") {
+	  		$tparent->assign("subdirs",$subs);
+		} else {
+	  		$tparent->assign("_insubdirs","");
+		}
    		$tparent->assign("branchs",$branch->total());
 
 	   $tempmaster .= $tparent->techo();
@@ -905,26 +939,26 @@ class CKTemplate {
   	$contentTAG->assign("page_next",$pL[4]);
   	$contentTAG->assign("p_total",$pL[0]);
   	$contentTAG->assign("last_page",$pL[1]);
-    $loopTAG = $contentTAG->get("_pages");
-    if ($loopTAG === false) return; // loop tag not found, gracefull exit
-    $pgCenter = floor($numberOfPagesToShow/2); // on 7, 3 to each side
-    $pgStart = $pL[2]-$pgCenter;
-    if ($pgStart < 1) $pgStart = 1;
-    $pgEnd = $pgStart + ($numberOfPagesToShow-1);
-    if ($pgEnd > $pL[0]) $pgEnd = $pL[0];
-    if ($pgEnd-$pgStart<$numberOfPagesToShow && $pL[0]>=$numberOfPagesToShow) {
-    	$pgStart = $pgEnd - ($numberOfPagesToShow-1);
-    }
+	$loopTAG = $contentTAG->get("_pages");
+	if ($loopTAG === false) return; // loop tag not found, gracefull exit
+	$pgCenter = floor($numberOfPagesToShow/2); // on 7, 3 to each side
+	$pgStart = $pL[2]-$pgCenter;
+	if ($pgStart < 1) $pgStart = 1;
+	$pgEnd = $pgStart + ($numberOfPagesToShow-1);
+	if ($pgEnd > $pL[0]) $pgEnd = $pL[0];
+	if ($pgEnd-$pgStart<$numberOfPagesToShow && $pL[0]>=$numberOfPagesToShow) {
+		$pgStart = $pgEnd - ($numberOfPagesToShow-1);
+	}
 
-    $qs = "&".arrayToString(false,array("p_init","CKFinder_Path","HTTPDSESSID","akr_returning","session_visited"));
-    $contentTAG->assign("qs",$qs);
-    $temp = "";
-    $temp .= $loopTAG->techo(array("qs" => $qs, "p_number" => $pgStart, "current_page" => $pgStart == $pL[2] ? "1": "0", "p_init" => ($pgStart-1) * ($p_size)));
-    $pgStart ++;
-    while ($pgStart <= $pgEnd) {
-    	$temp .= $loopTAG->techo(array("qs" => $qs, "p_number" => $pgStart, "current_page" => $pgStart == $pL[2] ? "1": "0", "p_init" => ($pgStart-1) * ($p_size)));
-    	$pgStart++;
-    }
+	$qs = "&".arrayToString(false,array("p_init","CKFinder_Path","HTTPDSESSID","akr_returning","session_visited"));
+	$contentTAG->assign("qs",$qs);
+	$temp = "";
+	$temp .= $loopTAG->techo(array("qs" => $qs, "p_number" => $pgStart, "current_page" => $pgStart == $pL[2] ? "1": "0", "p_init" => ($pgStart-1) * ($p_size)));
+	$pgStart ++;
+	while ($pgStart <= $pgEnd) {
+		$temp .= $loopTAG->techo(array("qs" => $qs, "p_number" => $pgStart, "current_page" => $pgStart == $pL[2] ? "1": "0", "p_init" => ($pgStart-1) * ($p_size)));
+		$pgStart++;
+	}
   	$contentTAG->assign("_pages",$temp);
   }
 

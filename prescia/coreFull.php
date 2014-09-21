@@ -369,6 +369,7 @@ class CPresciaFull extends CPrescia {
 							  		if (!isset($this->modules[$rel[0]]->fields[$field])) $this->modules[$rel[0]]->fields[$field] = array();
 									$this->modules[$rel[0]]->fields[$field][CONS_XML_SQL] = str_replace("AUTO_INCREMENT","",$this->modules[$rel[2]]->fields[$chave][CONS_XML_SQL]);
 									$this->modules[$rel[0]]->fields[$field][CONS_XML_TIPO] = CONS_TIPO_LINK;
+									$this->modules[$rel[0]]->fields[$field][CONS_XML_LINKTYPE] = $this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO] != CONS_TIPO_LINK ? $this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO] : CONS_TIPO_INT;
 									$this->modules[$rel[0]]->fields[$field][CONS_XML_MODULE] = $rel[2];
 					  				# the creation system might have added this already, that's why testing before resetting the array
 						  			if ((isset($this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN]) && $this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN] == "inner") || isset($this->modules[$rel[0]]->fields[$field][CONS_XML_MANDATORY])) {
@@ -381,9 +382,10 @@ class CPresciaFull extends CPrescia {
 										$this->modules[$rel[0]]->fields[$field][CONS_XML_SQL] = str_replace("NOT NULL","NULL",$this->modules[$rel[0]]->fields[$field][CONS_XML_SQL]);
 						  			}
 								} else {
-									if ($x == 0)
+									if ($x == 0) {
 										$nome = $field; # first key keeps the original name
-									else
+										$this->modules[$rel[0]]->fields[$field][CONS_XML_LINKTYPE] = $this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO] != CONS_TIPO_LINK ? $this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO] : CONS_TIPO_INT;
+									} else
 						  				$nome = $field."_".str_replace("id_","",$chave); # creates a composition with the model name and the foreign name
 						  			$this->modules[$rel[0]]->fields[$nome][CONS_XML_SQL] = str_replace("AUTO_INCREMENT","",$this->modules[$rel[2]]->fields[$chave][CONS_XML_SQL]);
 						  			$this->modules[$rel[0]]->fields[$nome][CONS_XML_TIPO] = $x==0?CONS_TIPO_LINK:$this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO];
@@ -402,6 +404,7 @@ class CPresciaFull extends CPrescia {
 							  		if (!isset($this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field])) $this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field] = array();
 									$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field][CONS_XML_SQL] = str_replace("AUTO_INCREMENT","",$this->modules[$rel[2]]->fields[$chave][CONS_XML_SQL]);
 									$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field][CONS_XML_TIPO] = CONS_TIPO_LINK;
+									$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field][CONS_XML_LINKTYPE] = $this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO] != CONS_TIPO_LINK ? $this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO] : CONS_TIPO_INT;
 									$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field][CONS_XML_MODULE] = $rel[2];
 					  				# serialized links cannot be "inner"
 					  				$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field][CONS_XML_JOIN] = "left";
@@ -411,9 +414,10 @@ class CPresciaFull extends CPrescia {
 										$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field][CONS_XML_SQL] = str_replace("NOT NULL","NULL",$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field][CONS_XML_SQL]);
 						  			}
 								} else {
-									if ($x == 0)
+									if ($x == 0) {
 										$nome = $field; # first key keeps the original name
-									else
+										$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$field][CONS_XML_LINKTYPE] = $this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO] != CONS_TIPO_LINK ? $this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO] : CONS_TIPO_INT;
+									} else
 						  				$nome = $field."_".str_replace("id_","",$chave); # creates a composition with the model name and the foreign name
 						  			$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$nome][CONS_XML_SQL] = str_replace("AUTO_INCREMENT","",$this->modules[$rel[2]]->fields[$chave][CONS_XML_SQL]);
 						  			$this->modules[$rel[0]]->fields[$sfield][CONS_XML_SERIALIZEDMODEL][$nome][CONS_XML_TIPO] = $x==0?CONS_TIPO_LINK:$this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO];
@@ -915,6 +919,7 @@ class CPresciaFull extends CPrescia {
 						break;
 					case "urlaformat":
 					case "furlformat": // used for special:furl
+						$fields[$namefield][CONS_XML_SPECIAL] = "urla";
 						$fields[$namefield][CONS_XML_SOURCE] = strtolower(trim($content));
 						break;
 					case "autoprune":
@@ -1096,6 +1101,7 @@ class CPresciaFull extends CPrescia {
 			default:
 				if ($module != '') $this->modules[$module]->options[CONS_MODULE_VOLATILE] = false;
 				$fields[$namefield][CONS_XML_TIPO] = CONS_TIPO_LINK; # will be a link type
+				$fields[$namefield][CONS_XML_LINKTYPE] = CONS_TIPO_INT; # standard
 				$fields[$namefield][CONS_XML_MODULE] = $tipo;
 				if (isset($fields[$namefield][CONS_XML_ISOWNER]) && $tipo != CONS_AUTH_USERMODULE)
 					unset($fields[$namefield][CONS_XML_ISOWNER]);

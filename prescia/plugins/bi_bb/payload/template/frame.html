@@ -1,0 +1,49 @@
+<body>
+
+	<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+				<span class="sr-only">{_t}toggle_navigation{/t}</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="{vdir|/}{BBROOT_PATH}index.html">{_t}forums{/t}</a>
+			</div>
+			<div class="navbar-collapse collapse">
+				 <ul class="nav navbar-nav">
+					<li class="active"><a href="{vdir|/}index.html">Home</a></li>
+					<li><a title="{_t}forums{/t}" href="{vdir|/}{BBROOT_PATH}index.html">{_t}forums{/t}</a></li>
+					
+				</ul>
+				
+				<ul class="nav navbar-nav" style="float: right !important">
+					<li><a title="{_t}messages{/t}" href="{vdir|/}{BBROOT_PATH}messages.html"><span class="glyphicon glyphicon-envelope"></span> {_t}messages{/t}</a></li>
+					<li><a title="{_t}profile{/t}" href="{vdir|/}{BBROOT_PATH}messages.html"><span class="glyphicon glyphicon-user"></span> {_t}profile{/t}</a></li>
+				</ul>
+			</div><!--/.navbar-collapse -->
+		</div>
+	</div>
+
+	<div style="padding-top:70px">
+
+		{CORE_DEBUG}
+		{BBCONTENT}
+		
+	</div>
+
+	<div class="container">
+		
+		<hr/>
+	
+		<footer>
+			<p class="small">{_i18n_pt-br}<a href="?lang=en">English Version</a>{/i18n_pt-br}{_i18n_en}<a href="?lang=pt-br">Versão em Português</a>{/i18n_en}{_mobonly} - <a href="?desktopversion=1">Desktop version</a>{/mobonly}</p>
+			<p>ɔ <strong>PresciaBB</strong> 2014</p>
+		</footer>
+		
+	</div>
+
+	
+
+</body>

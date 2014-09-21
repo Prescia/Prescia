@@ -958,9 +958,12 @@ class CModule {
 					$output = $field[CONS_XML_DEFAULT];
 				break;
 			case CONS_TIPO_LINK:
+				if ($field[CONS_XML_LINKTYPE] == CONS_TIPO_INT || $field[CONS_XML_LINKTYPE] == CONS_TIPO_FLOAT) $encapsulation = '';  
 				if (isset($data[$name]) && (($data[$name] !== '' && $data[$name] !== 0) || !isset($field[CONS_XML_MANDATORY]))) {
 					# non-mandatory links accept 0 values, otherwise 0 is not acceptable
-					if (!$isADD && isset($field[CONS_XML_IGNORENEDIT]) && ($data[$name] === 0 || $data[$name] === '')) break;
+					if (((!$isADD && isset($field[CONS_XML_IGNORENEDIT])) || $isADD) && ($data[$name] === 0 || $data[$name] === '')) break;
+					else if (($field[CONS_XML_LINKTYPE] == CONS_TIPO_INT || $field[CONS_XML_LINKTYPE] == CONS_TIPO_FLOAT) && $data[$name] === '') $data[$name]=0;
+					
 					# if this is a parent, check if this won't create a cyclic parenting
 					if ($data[$name] !== 0 && $data[$name] !== '' && $field[CONS_XML_MODULE] == $this->name && $this->options[CONS_MODULE_PARENT] == $name) {
 						if (!$isADD && $data[$name] == $data[$this->keys[0]]) {
@@ -1004,20 +1007,23 @@ class CModule {
 				break;
 			case CONS_TIPO_VC:
 				if (isset($data[$name])) {
-					if (!isset($field[CONS_XML_CUSTOM]))
-						$data[$name] = cleanString($data[$name],isset($field[CONS_XML_HTML]),$_SESSION[CONS_SESSION_ACCESS_LEVEL]==100);
-					else if (!$isSerialized)
-						$data[$name] = addslashes_EX($data[$name],true);
+					if (!isset($field[CONS_XML_SPECIAL]) || $field[CONS_XML_SPECIAL] != "urla") {
+						if (!isset($field[CONS_XML_CUSTOM]))
+							$data[$name] = cleanString($data[$name],isset($field[CONS_XML_HTML]),$_SESSION[CONS_SESSION_ACCESS_LEVEL]==100);
+						else if (!$isSerialized)
+							$data[$name] = addslashes_EX($data[$name],true);
+					}
 					if (isset($field[CONS_XML_SPECIAL])) {
 						if ($field[CONS_XML_SPECIAL] == "urla") {
-							if (!$isADD && (!isset($data[$name]) || $data[$name] == '')) {
+							if ((!isset($data[$name]) || $data[$name] == '')) {
 								$source = isset($field[CONS_XML_SOURCE])?$field[CONS_XML_SOURCE]:"{".$this->title."}";
 								$tp = new CKTemplate($this->parent->template);
 								$tp->tbreak($source);
 								$data[$name] = $tp->techo($data);
 								unset($tp);
 							}
-							$data[$name] = removeSimbols($data[$name],true,false);
+							$data[$name] = str_replace("&gt;","",str_replace("&lt;","",str_replace("&quot;","",$data[$name])));
+							$data[$name] = removeSimbols($data[$name],true,false,CONS_FLATTENURL);
 						}
 						if ($field[CONS_XML_SPECIAL] == "login" && $data[$name] != "") {
 							if (!preg_match('/^([A-Za-z0-9_\-\.@]){4,20}$/',$data[$name])) {
@@ -1094,13 +1100,18 @@ class CModule {
 				break;
 			case CONS_TIPO_DATETIME:
 			case CONS_TIPO_DATE:
-				if (!$isADD && isset($field[CONS_XML_UPDATESTAMP])) {
-					$output = "NOW()";
-					$data[$name] = date("Y-m-d").($field[CONS_XML_TIPO]==CONS_TIPO_DATETIME?" ".date("H:i:s"):""); // might be used by friendly url or such
-				} else if ($isADD && (isset($field[CONS_XML_TIMESTAMP]) || isset($field[CONS_XML_UPDATESTAMP]))) {
-				 	$output = "NOW()";
-				 	$data[$name] = date("Y-m-d").($field[CONS_XML_TIPO]==CONS_TIPO_DATETIME?" ".date("H:i:s"):""); // might be used by friendly url or such
-				} else if (!isset($data[$name]) && isset($data[$name."_day"])) {
+				if (!isset($data[$name]) || $data[$name] == '') {
+					if (!$isADD && isset($field[CONS_XML_UPDATESTAMP])) {
+						$output = "NOW()";
+						$data[$name] = date("Y-m-d").($field[CONS_XML_TIPO]==CONS_TIPO_DATETIME?" ".date("H:i:s"):""); // might be used by friendly url or such
+						break;
+					} else if ($isADD && (isset($field[CONS_XML_TIMESTAMP]) || isset($field[CONS_XML_UPDATESTAMP]))) {
+					 	$output = "NOW()";
+					 	$data[$name] = date("Y-m-d").($field[CONS_XML_TIPO]==CONS_TIPO_DATETIME?" ".date("H:i:s"):""); // might be used by friendly url or such
+					 	break;
+					}
+				} 
+				if (!isset($data[$name]) && isset($data[$name."_day"])) {
 				 	# date came into separated fields, merge them
 				 	$theDate = $this->parent->intlControl->mergeDate($data,$name."_");
 					if (!$theDate == false || (($theDate == "0000-00-00" || $theDate == "0000-00-00 00:00:00") && isset($field[CONS_XML_IGNORENEDIT])))
@@ -1117,8 +1128,10 @@ class CModule {
 				 				$data[$name] = date("Y-m-d").($field[CONS_XML_TIPO]==CONS_TIPO_DATETIME?" ".date("H:i:s"):""); // might be used by friendly url or such
 							} else
 				 				$this->parent->errorControl->raise(134,$name,$this->name);
-						} else
+						} else {
 							$output = $encapsulation.$theDate.$encapsulation;
+							$data[$name] = $theDate; // other fields might need it
+						}
 				 	} else if (isset($data[$name])) { // blank
 				 		if (!$isADD && isset($field[CONS_XML_IGNORENEDIT])) break;
 				 		$output = (isset($field[CONS_XML_MANDATORY]) && $field[CONS_XML_MANDATORY]?$encapsulation."0000-00-00".($field[CONS_XML_TIPO]==CONS_TIPO_DATETIME?" 00:00:00":"").$encapsulation:'NULL');
@@ -1273,8 +1286,6 @@ class CModule {
 			}
 		}
 
-
-
 		if (!$mfo) {
 	  		$missing = $this->check_mandatory($data,$action); # returns a list of mandatory fields missing or invalid
 			if (count($missing)>0) {
@@ -1382,6 +1393,7 @@ class CModule {
 				$output = "";
 				$hasAuto = "";
 				$outfield = false;
+				
 				foreach ($this->fields as $name => $field) {
 					if ($this->parent->safety && isset($field[CONS_XML_RESTRICT]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < $field[CONS_XML_RESTRICT]) {
 						# safety is on and this is a restricted field, while the user trying to change it does not have enough level
@@ -1391,7 +1403,7 @@ class CModule {
 					}
 					if (strpos(strtolower($field[CONS_XML_SQL]),"auto_increment") === false && !($this->keys[0] == "id" && $name == $this->keys[0] && count($this->options[CONS_MODULE_MULTIKEYS])>0 )) { # cannot change auto_increment or main key fields
 
-						$outfield = $this->sqlParameter(true,$data,$name,$field,$EnumPrunecache);
+						$outfield = $this->sqlParameter(true,$data,$name,$field,$EnumPrunecache);				
 						if ($outfield !== false) $output .= $name."=".$outfield.",";
 
 						if ((!$outfield || !isset($data[$name]) || $data[$name] == '') && isset($field[CONS_XML_AUTOFILL]) && !isset($field[CONS_XML_DEFAULT])) {
@@ -1411,7 +1423,6 @@ class CModule {
 				} #foreach
 				$id = 0;
 				unset($outfield);
-
 				if ($output != "") {
 					# removes end ,
 					$output = substr($output,0,strlen($output)-1);

@@ -5,7 +5,8 @@
 	define("CONS_AFF_DATABASECONNECTOR"		,"mysqli"); // Options: mysql or mysqli
 	define("CONS_AFF_ERRORHANDLER"			,true); // false will echo php errors/exceptions normally, otherwise will log
 	define("CONS_AFF_ERRORHANDLER_NOWARNING",false); // either to ignore or not simple notice/warnings
-	define ("CONS_FMANAGER_SAFE"			,"download"); // folder used by bi_fm, with permissions. If no entry (or module), nobody have permission to read the file outside of the admin pane
+	define("CONS_FMANAGER_SAFE"				,"download"); // folder used by bi_fm, with permissions. If no entry (or module), nobody have permission to read the file outside of the admin pane
+	define("CONS_FLATTENURL"				,"-"); // spaces will turn into this for filenames
 													 // IMPORTANT: if you change the safe folder, be sure to change it on the .htaccess
 	# -- CACHE and PERFORMANCE --
 	define("CONS_DEFAULT_MIN_OBJECTCACHETIME",15); // (s) time for default object time caches (they are always common-to-all-users caches)

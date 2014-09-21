@@ -133,7 +133,7 @@ class mod_bi_adm extends CscriptedModule  {
 		// check for default/action on this page
 		if (in_array($this->parent->context_str,$this->contextfriendlyfolderlist)) { // are we on the admin?
 			$this->isAdminPage = true; // we are on the admin
-			$this->parent->virtualFolder = false; // or we will 404
+			$this->parent->virtualFolder = false; // or we will 404 or serve root data
 			$this->parent->cachetime = 1;
 			$this->parent->cachetimeObj = 1;
 			########## SAFETY - IT'S HERE ##############

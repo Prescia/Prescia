@@ -273,22 +273,24 @@ class CPrescia extends CPresciaVar {
 					$this->context_str = substr($this->context_str,strlen($temp)+1);
 				}
 			}
-
+			
 			# loads main locale settings for this language
 			$this->intlControl->loadLangFile($_SESSION[CONS_SESSION_LANG],true);
+			
+			# loads site locale settings for this language
+			if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/_config/locale/".$_SESSION[CONS_SESSION_LANG].".php"))
+				$this->intlControl->loadLangFile($_SESSION[CONS_SESSION_LANG],false);
+
+			# loads plugin locale settings for this language
+			foreach ($this->loadedPlugins as $pname => &$pObj) { // plugins loaded directly (loaded in config.php, not related to a module)
+				$this->intlControl->loadLangFile($_SESSION[CONS_SESSION_LANG],true,$pname);
+			}
+			
 			$this->template->std_date = $this->intlControl->getDate();
 		    $this->template->std_datetime = "H:i ".$this->intlControl->getDate();
 		    $this->template->std_decimal = $this->intlControl->getDec();
 		    $this->template->std_tseparator = $this->intlControl->getTSep();
-
-		    # loads site locale settings for this language
-		    if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/_config/locale/".$_SESSION[CONS_SESSION_LANG].".php"))
-				$this->intlControl->loadLangFile($_SESSION[CONS_SESSION_LANG],false);
-
-		    # loads plugin locale settings for this language
-			foreach ($this->loadedPlugins as $pname => &$pObj) { // plugins loaded directly (loaded in config.php, not related to a module)
-				$this->intlControl->loadLangFile($_SESSION[CONS_SESSION_LANG],true,$pname);
-			}
+			$this->template->populate();		
 		}
 	}
 #-

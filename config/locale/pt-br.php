@@ -8,6 +8,7 @@
 "urla" => "URL amigável",
 "new"=>"Novo",
 "add"=>"Adicionar",
+"by" => "Por",
 "insert" => "Inserir",
 "register" => "Cadastrar",
 "include"=>"Incluir",
@@ -43,6 +44,7 @@
 'locked' => 'Trancado',
 'sendmail_sent_from' => "Enviado a partir de",
 "fmanager" => "Gerenciador de arquivos",
+"filemanager" => "Gerenciador de arquivos",
 
 "xmltype200" => "Número Inteiro",
 "xmltype201" => "Numero Decimal",
@@ -57,6 +59,7 @@
 "xmltype0" => "Link(s) com outro módulo",
 
 "month" => "Mês",
+"monthes" => "Meses",
 "month01"=>"Janeiro",
 "month02"=>"Fevereiro",
 "month03"=>"Março",
@@ -69,7 +72,6 @@
 "month10"=>"Outubro",
 "month11"=>"Novembro",
 "month12"=>"Dezembro",
-
 "day" => "dia",
 "days" => "dias",
 "day0" => "Domingo",
@@ -79,14 +81,21 @@
 "day4" => "Quinta",
 "day5" => "Sexta",
 "day6" => "Sábado",
+"day0s" => "D",
+"day1s" => "S",
+"day2s" => "T",
+"day3s" => "Q",
+"day4s" => "Q",
+"day5s" => "S",
+"day6s" => "S",
+"hours" => "Horas",
+"minutes" => "Minutos",
+"seconds" => "Segundos",
+"ago" => "atrás",
 
-"day0sm" => "D",
-"day1sm" => "S",
-"day2sm" => "T",
-"day3sm" => "Q",
-"day4sm" => "Q",
-"day5sm" => "S",
-"day6sm" => "S",
+"waiting_ajax_results"=>"Consultando, aguarde ...",
+"floodcontrol" => "Controle de fluxo",
+"floodcontrol_pleasewait" => "Por favor aguarde um pouco antes de tentar a ação novamente, para não sobrecarregar o servidor",
 
 //error codes
 "e1"=>"Erro no loadMetadata ou loadPageSettings (inicialização)",
@@ -204,13 +213,5 @@
 		"e407"=>"Automato shares não tem o tag preenchido",
 		"e498"=>"Erro genérico FATAL - automatos",
 		"e499"=>"Erro genérico NÃO FATAL - automatos",
-
-
-
-"waiting_ajax_results"=>"Consultando, aguarde ...",
-"floodcontrol" => "Controle de fluxo",
-"floodcontrol_pleasewait" => "Por favor aguarde um pouco antes de tentar a ação novamente, para não sobrecarregar o servidor"
-
-
 
 );
