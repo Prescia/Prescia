@@ -129,7 +129,7 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 		}
 
 	}
-	
+
 	return $data;
 }
 
@@ -275,7 +275,7 @@ class CModule {
 			$sql = $this->parent->cacheControl->getCachedContent($cacheTAG,86400); # 1 day ... could be infinite actually
 		}
 		if (!$sql) {
-			$sql = array("SELECT" => array(), "FROM" => array(), "LEFT" => array(), "WHERE" => array(), "GROUP" => array(), "ORDER" => array(), "LIMIT" => array(), "HAVING" => array());		
+			$sql = array("SELECT" => array(), "FROM" => array(), "LEFT" => array(), "WHERE" => array(), "GROUP" => array(), "ORDER" => array(), "LIMIT" => array(), "HAVING" => array());
 			$sql['FROM'][] = $this->dbname." as ".$this->name;
 			$pos = 0;
 			foreach($this->fields as $nome => $campo) {
@@ -391,7 +391,7 @@ class CModule {
 				  } # multiple ifs
 				} # haveitem
 				if ($haveItem) $sql['SELECT'][] = (strpos($nome,".")===false?$this->name.".".$nome." as $nome":$nome);
-					
+
 			} # for
 			if (count($sql['SELECT'])==0) $sql['SELECT'][] = $this->name.".*";
 			if ($cacheTAG !== false) { # store cache
@@ -420,7 +420,7 @@ class CModule {
 			}
 		}
 		if ($embedOrder != "") $sql['ORDER'][] = $embedOrder;
-		if ($embedLimit != "") $sql['LIMIT'] = (is_array($embedLimit)?$embedLimit:array($embedLimit));		
+		if ($embedLimit != "") $sql['LIMIT'] = (is_array($embedLimit)?$embedLimit:array($embedLimit));
 		return $sql;
 	}
 #-
@@ -428,9 +428,9 @@ class CModule {
 	  $sql = false;
 	  if (!$this->parent->debugmode && !$noJoin && is_file(CONS_PATH_CACHE.$_SESSION['CODE']."/".$this->dbname."_list.cache") && !isset($_REQUEST['nocache'])) {
 		$sql = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/".$this->dbname."_list.cache"));
-	  } 
+	  }
 	  if (!$sql) {
-	  	$sql = array("SELECT" => array(), "FROM" => array(), "LEFT" => array(), "WHERE" => array(), "GROUP" => array(), "ORDER" => array(), "LIMIT" => array(), "HAVING" => array());		
+	  	$sql = array("SELECT" => array(), "FROM" => array(), "LEFT" => array(), "WHERE" => array(), "GROUP" => array(), "ORDER" => array(), "LIMIT" => array(), "HAVING" => array());
 		$sql['FROM'][] = $this->dbname." as ".$this->name;
 		$pos = 0;
 		foreach($this->fields as $nome => $campo) {
@@ -450,7 +450,7 @@ class CModule {
 					$rmod_nome = $trmod_nome;
 					$trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
 				  }
-				  
+
 				  $sql['SELECT'][] = $tablecast.".".$cremote_nome." as ".$rmod_nome."_".$cremote_nome;
 				}
 				if ($remote_campo[CONS_XML_TIPO] == CONS_TIPO_LINK) {
@@ -508,9 +508,9 @@ class CModule {
 		if (!$noJoin && $this->parent->debugmode && !(is_file(CONS_PATH_CACHE.$_SESSION['CODE']."/".$this->dbname."_list.cache")) && !isset($_REQUEST['nocache'])) // save simple cache
 			cWriteFile(CONS_PATH_CACHE.$_SESSION['CODE']."/".$this->dbname."_list.cache",serialize($sql));
 	  } # !$sql
-	  
+
 	  // embeds:
-	  
+
 	  if ($embedWhere != "") array_unshift($sql['WHERE'],$embedWhere);
 	  if ($this->order != "" && $embedOrder == "") {
 	  	$ord = explode(",",$this->order);
@@ -958,12 +958,12 @@ class CModule {
 					$output = $field[CONS_XML_DEFAULT];
 				break;
 			case CONS_TIPO_LINK:
-				if ($field[CONS_XML_LINKTYPE] == CONS_TIPO_INT || $field[CONS_XML_LINKTYPE] == CONS_TIPO_FLOAT) $encapsulation = '';  
+				if ($field[CONS_XML_LINKTYPE] == CONS_TIPO_INT || $field[CONS_XML_LINKTYPE] == CONS_TIPO_FLOAT) $encapsulation = '';
 				if (isset($data[$name]) && (($data[$name] !== '' && $data[$name] !== 0) || !isset($field[CONS_XML_MANDATORY]))) {
 					# non-mandatory links accept 0 values, otherwise 0 is not acceptable
 					if (((!$isADD && isset($field[CONS_XML_IGNORENEDIT])) || $isADD) && ($data[$name] === 0 || $data[$name] === '')) break;
 					else if (($field[CONS_XML_LINKTYPE] == CONS_TIPO_INT || $field[CONS_XML_LINKTYPE] == CONS_TIPO_FLOAT) && $data[$name] === '') $data[$name]=0;
-					
+
 					# if this is a parent, check if this won't create a cyclic parenting
 					if ($data[$name] !== 0 && $data[$name] !== '' && $field[CONS_XML_MODULE] == $this->name && $this->options[CONS_MODULE_PARENT] == $name) {
 						if (!$isADD && $data[$name] == $data[$this->keys[0]]) {
@@ -1110,7 +1110,7 @@ class CModule {
 					 	$data[$name] = date("Y-m-d").($field[CONS_XML_TIPO]==CONS_TIPO_DATETIME?" ".date("H:i:s"):""); // might be used by friendly url or such
 					 	break;
 					}
-				} 
+				}
 				if (!isset($data[$name]) && isset($data[$name."_day"])) {
 				 	# date came into separated fields, merge them
 				 	$theDate = $this->parent->intlControl->mergeDate($data,$name."_");
@@ -1193,10 +1193,10 @@ class CModule {
 					}
 					$upOk = $this->prepareUpload($name,$kA,$data);
 					$upvalue = $upOk == '0'?'y':'n';
-					if ($upOk != 0 && $upOk != 4) { # error in the upload (4 = nothing sent, 0 = sent and ok)
+					if ($upOk != 0 && $upOk != 4) { # notification for the upload (4 = nothing sent, 0 = sent and ok)
 						$this->parent->errorControl->raise(200+$upOk,$upOk,$this->name,$name);
 					}
-					if ($upOk != 4) $output .= $name."=\"$upvalue\","; // we CHANGED the file, set if it is ok
+					if ($upOk != 4) $output = $encapsulation.$upvalue.$encapsulation; // we CHANGED the file, set if it is ok
 					else { // no change, but take this oportunity and check if the file exists!
 						$upvalue = 'n';
 						$path = CONS_FMANAGER.$this->name."/";
@@ -1298,7 +1298,9 @@ class CModule {
 		}
 		$EnumPrunecache = array();
 		switch ($action) {
-			case CONS_ACTION_UPDATE:
+			
+			case CONS_ACTION_UPDATE: ###################################################### UPDATE ############################################
+				
 				$wS = ""; # whereStruct
 				$kA = array(); # keyArray
 				$haveAllKeys = $this->getKeys($wS,$kA,$data); // is it ok not to have all keys?
@@ -1341,7 +1343,6 @@ class CModule {
 						return false;
 					} else
 						$this->parent->notifyEvent($this,CONS_ACTION_UPDATE,$data,$startedAt); # later notify
-
 				} else {
 					$this->parent->errorState = true;
 					if (!$silent) $this->parent->errorControl->raise(138,"",$this->name);
@@ -1351,7 +1352,8 @@ class CModule {
 				return true;
 				break;
 
-			case CONS_ACTION_INCLUDE:
+			case CONS_ACTION_INCLUDE: ###################################################### INCLUDE ############################################
+				
 				if ($this->parent->safety) { # checkPermission has this test but this is faster
 					if ($this->parent->safety && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < 100) {
 						$this->parent->lockPermissions();
@@ -1393,7 +1395,7 @@ class CModule {
 				$output = "";
 				$hasAuto = "";
 				$outfield = false;
-				
+
 				foreach ($this->fields as $name => $field) {
 					if ($this->parent->safety && isset($field[CONS_XML_RESTRICT]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < $field[CONS_XML_RESTRICT]) {
 						# safety is on and this is a restricted field, while the user trying to change it does not have enough level
@@ -1403,7 +1405,7 @@ class CModule {
 					}
 					if (strpos(strtolower($field[CONS_XML_SQL]),"auto_increment") === false && !($this->keys[0] == "id" && $name == $this->keys[0] && count($this->options[CONS_MODULE_MULTIKEYS])>0 )) { # cannot change auto_increment or main key fields
 
-						$outfield = $this->sqlParameter(true,$data,$name,$field,$EnumPrunecache);				
+						$outfield = $this->sqlParameter(true,$data,$name,$field,$EnumPrunecache);
 						if ($outfield !== false) $output .= $name."=".$outfield.",";
 
 						if ((!$outfield || !isset($data[$name]) || $data[$name] == '') && isset($field[CONS_XML_AUTOFILL]) && !isset($field[CONS_XML_DEFAULT])) {
@@ -1502,8 +1504,9 @@ class CModule {
 				return true;
 				break;
 
-			case CONS_ACTION_DELETE:
+			case CONS_ACTION_DELETE: ###################################################### DELETE ############################################
 				$wS = ""; $kA = array();
+			
 				$haveallKeys = $this->getKeys($wS,$kA,$data);
 				# security
 				$Owner = $this->parent->authControl->checkOwner($this,$kA); // array with isOwner and isSameGroup

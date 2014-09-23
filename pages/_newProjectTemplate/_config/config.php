@@ -24,7 +24,6 @@
 
 		// You should have this enabled to help you while creating/debbuging the site, then disable it for performance, or keep only on production
 		//$dev = $this->addPlugin('bi_dev');
-		//$dev->administrativePage = "/adm/";
 
 	} else { // <------------- settings for your local production machine
 		define("CONS_INSTALL_ROOT","/"); // if AFF is installed in other than the ROOT folder, fill this (must end and start with /)
@@ -39,7 +38,6 @@
 
 		// you should have this enabled to help you while creating the site, then disable it for performance, or keep only on production (a.k.a. right here =p)
 		$dev = $this->addPlugin('bi_dev');
-		$dev->administrativePage = "/adm/";
 	}
 
 	// which is the front page of this site (usefull when frames change it or an error wants to foward to the front page, or this site is inside a frameset)
@@ -50,13 +48,16 @@
 	$this->addPlugin('bi_auth'); // user/auth system
 	#$this->addPlugin('bi_seo'); // SEO system
 	#$this->addPlugin('bi_undo'); // history/UNDO system
-
 	$advadm = $this->addPlugin('bi_adm'); // Administrative pane
-	$advadm->admFolder = "adm";
-
-	#$this->addPlugin("bi_fm"); // Safe folder on file manager
+		$advadm->admFolder = "adm";
+		$advadm->admRestrictionLevel = 10; // minimum level to access admin
+		
 	#$this->addPlugin('bi_cms'); // suggest to leave later so it's also the last to handle 404
-	#$this->addPlugin('bi_stats'); // statistics (must be always the last)
+	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
+		$stats->admFolder = "adm";
+		$stats->admRestrictionLevel = 10; // what we consider an admin level
+		$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
+		$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this
 
 	// Uncomment and change as needed
 	#$this->languageTL = array("en" => "en", "pt" => "pt-br"); # url/PATH/[subdir/] => url/[subdir/]?lang=PATH

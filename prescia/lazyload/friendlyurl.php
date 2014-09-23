@@ -2,6 +2,7 @@
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
   | Translates a URL to another URL using friendly url rules
+  | If found, fills $this->storage['friendlyurldata'] and $this->storage['friendlyurlmodule'] with the data from the hit
   | Parameters: module = which module to look for the friendly url
   |				keys = comma separated fields on the module to try and compare the URL
   |				page = which page to foward if we successfully get a match

@@ -1,4 +1,4 @@
-<STATS dbname="stats_hitsd"
+<STATS dbname="stats_hitsd" meta="Visits on the last MONTH"
 	   volatile="true"
 	   title="page"
 	   keys="data,hour,page,hid,lang"
@@ -14,13 +14,13 @@
 	<PAGE hashkey="true" size="72" mandatory="true">VC</PAGE>
 	<HID mandatory="true" default="0">INT</HID>
 	<LANG size="5" mandatory="true" default="pt-br">VC</LANG>
-	<HITS default="1">SMALLINT</HITS>
-	<UHITS default="0">SMALLINT</UHITS>
-	<BHITS default="0">SMALLINT</BHITS>
-	<RHITS default="0">SMALLINT</RHITS>
-	<AHITS default="0">SMALLINT</AHITS>
+	<HITS default="1" meta="every hit">SMALLINT</HITS>
+	<UHITS default="0" meta="unique visitor hit">SMALLINT</UHITS>
+	<BHITS default="0" meta="Browsing hits (people who stayed in the site after the first hit)">SMALLINT</BHITS>
+	<RHITS default="0" meta="Recurring hits (UNIQUE visits/people who visited the site in the last 24h hours">SMALLINT</RHITS>
+	<AHITS default="0" meta="Administrative user hits">SMALLINT</AHITS>
 </STATS>
-<STATSDAILY dbname="stats_hitsh"
+<STATSDAILY dbname="stats_hitsh" meta="Full history of visits (5 years). Last data OVERLAPS with stats_hitsd, but is less complete because misses HOUR"
 		    volatile="true"
 		    keys="data,page,hid"
 		    title="data"
@@ -39,7 +39,7 @@
 	<BHITS default="0">SMALLINT</BHITS>
 	<RHITS default="0">SMALLINT</RHITS>
 </STATSDAILY>
-<STATSREF dbname="stats_refererd"
+<STATSREF dbname="stats_refererd" meta="Most recent entry referers"
           volatile="true"
           keys="data,referer,entrypage"
           autoclean="data < NOW() - INTERVAL 2 DAY"
@@ -55,7 +55,7 @@
 	<HITS default="1">SMALLINT</HITS>
 	<PAGES>TEXT</PAGES>
 </STATSREF>
-<STATSREFDAILY dbname="stats_refererh"
+<STATSREFDAILY dbname="stats_refererh" Meta="Full history of entry referers, OVERLAPS with statsref, but is less complete because it does not have the path (pages)"
 			   keys="data,referer,entrypage"
 			   volatile="true"
 			   systemModule="true"
@@ -70,7 +70,7 @@
 	<ENTRYPAGE size="72">VC</ENTRYPAGE>
 	<HITS default="1">SMALLINT</HITS>
 </STATSREFDAILY>
-<STATSRT dbname="stats_rt"
+<STATSRT dbname="stats_rt" meta="real time hits"
  		 volatile="true"
  		 keys="ip"
  		 systemModule="true"
@@ -90,7 +90,7 @@
 	<FULLPATH>TEXT</FULLPATH>
 	<REFERER>VC</REFERER>
 </STATSRT>
-<STATSPATH dbname="stats_path"
+<STATSPATH dbname="stats_path" meta="Path users too inside the site during the last month"
 		  keys="data,page,pagefoward"
 		  volatile="true"
 		  title="page"

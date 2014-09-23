@@ -1,0 +1,34 @@
+<USERS icon="list" listing="groups_name,name,login,email,active">
+	<new>edit.php?module=users</new>
+	<list>list.php?module=users</list>
+	<GROUPS icon="list" listing="name,#users,level,active">
+		<new>edit.php?module=groups</new>
+		<list>list.php?module=groups</list>
+	</GROUPS>
+</USERS>
+<CONTENTMAN icon="list" listing="parent_title,page,title,lang">
+	<new>edit.php?module=contentman</new>
+	<list>list.php?module=contentman</list>
+	<SEO icon="list" listing="page,alias,meta,metakey,title,publicar,redirectmode">
+		<new>edit.php?module=seo</new>
+		<list>list.php?module=seo</list>
+	</SEO>
+</CONTENTMAN>
+<FUNCTIONS icon="list" listing="holder,name,parameters,autocallorder">
+	<new>edit.php?module=functions</new>
+	<list>list.php?module=functions</list>
+</FUNCTIONS>
+<FORUM icon="list" listing="title,lang,ordem">
+	<new>edit.php?module=forum</new>
+	<list>list.php?module=forum</list>
+	<FORUMTHREAD icon="list" listing="forum_title,title,date,lastupdate,urla,flagged">
+		<new>edit.php?module=forumthread</new>
+		<list>list.php?module=forumthread</list>
+		<FORUMPOST icon="list" listing="forum_title,forumthread_title,author_login,date,propsup,propsdown,flagged">
+			<new>edit.php?module=forumpost</new>
+			<list>list.php?module=forumpost</list>
+		</FORUMPOST>
+	</FORUMTHREAD>
+
+
+</FORUM>

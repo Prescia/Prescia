@@ -12,7 +12,7 @@
 		return;
 	}
 
-	if (isset($_REQUEST['haveinfo']) && isset($_REQUEST['vaction'])) {
+	if (isset($_POST['haveinfo']) && isset($_REQUEST['vaction'])) {
 		$module = $core->loaded($_REQUEST['module']);
 		$kS = "";
 		$ok = false;

@@ -56,7 +56,7 @@ class mod_bi_bb extends CscriptedModule  {
 			//$this->parent->template->constants['SKIN_PATH'] = CONS_INSTALL_ROOT.CONS_PATH_PAGES."_common/files/bb/skin/".$this->skin."/";
 			$this->parent->template->constants['IMG_BBPATH'] = CONS_INSTALL_ROOT.CONS_PATH_PAGES."_common/files/bb/";
 			$this->parent->template->constants['BBROOT_PATH'] = substr($this->contextfriendlyfolderlist[0],1);
-				
+
 			if (is_file(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/default.php")) { // default?
 				include_once CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/default.php"; // will load template
 			}
@@ -78,8 +78,8 @@ class mod_bi_bb extends CscriptedModule  {
 		if ($this->isBBPage) {
 			// we are at a forum page
 			$core = &$this->parent;
-			$sname = $this->name; 
-			
+			$sname = $this->name;
+
 			if ($this->parent->layout != 2) { // cannot use core::frame because we want the full path to avoid loading default files
 				if (is_file(CONS_PATH_SYSTEM."plugins/$sname/payload/template/basefile.html")) {
 					$frame = CONS_PATH_SYSTEM."plugins/$sname/payload/template/basefile.html";
@@ -88,14 +88,14 @@ class mod_bi_bb extends CscriptedModule  {
 				} else {
 					$frame = CONS_PATH_SETTINGS."defaults/basefile.html";
 				}
-				
+
 				if (!is_object($this->parent->template)) $this->parent->template = new CKTemplate();
 				$this->parent->template->fetch($frame);
 				$this->parent->nextContainer = "BASEFILE_CONTENT";
 			}
-			
+
 			$this->parent->addScript('bootstrap');
-			
+
 			if (($this->parent->layout == 0 || $this->parent->layout == 3) && $this->parent->nextContainer != '') {
 
 				if (is_file(CONS_PATH_SYSTEM."plugins/$sname/payload/template/frame.html")) {
@@ -107,7 +107,7 @@ class mod_bi_bb extends CscriptedModule  {
 				$this->parent->template->assignFile($this->parent->nextContainer,$frame);
 				$this->parent->nextContainer = "BBCONTENT";
 			}
-			
+
 			if (!is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->parent->context_str."default.php") && is_file(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/default.php")) {
 				// default?
 				include CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/default.php";
@@ -117,6 +117,23 @@ class mod_bi_bb extends CscriptedModule  {
 				include CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/".$this->parent->action.".php";
 			}
 		}
+	}
+
+	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNofity =false) {
+		if (!$earlyNofity &&
+			$module->name == "forumpost" &&
+			$startedAt != "forumpost" &&
+			isset($data['id_forumthread']) &&
+			$action != CONS_ACTION_UPDATE) {
+
+			// a post changed in a certain thread
+			$this->parent->safety = false;
+			$updateData = array("lastupdate" => "NOW()",
+								"id" => $data['id_forumthread']);
+			$this->parent->runAction('FORUMTHREAD',CONS_ACTION_UPDATE,$updateData,true,'forumpost');
+			$this->parent->safety = true;
+		}
+
 	}
 }
 

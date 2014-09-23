@@ -1,18 +1,7 @@
-TODO:
-	serialization="read/write/none/all" fields on text customs (auto custom) (current: none)
-		EM ANDAMENTO
-		> javascript para editar/adicionar um item de array
-	support contextual _cms (current: root or current)
-	improve code
-	add option to filenames use "-" instead of "_" on spaces
-	testar multikeys
-	procurar TODO
-	melhorar sistema de pastas seguras para não precisar de nada no core/.htaccess
-BUGS:
-	bot protect não funciona
-	ao fazer busca, barra de titulo da lista some
-	tratamento de uploads com defeito
+TODO/BUGS: see site
 
+14.9.23 BETA 0.7 (stable, but missing bb module)
+	Too much done
 
 14.9.14 BETA 0.7 (not stable - testing new module sql handlers)
 	New module::get_base_sql handling of sql using only arrays to prevent sql_break at the end (faster)

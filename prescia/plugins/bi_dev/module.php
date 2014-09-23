@@ -5,9 +5,8 @@ class mod_bi_dev extends CscriptedModule  {
 	var $name = "bi_dev";
 	var $devDisable = false;
 	private $devCheckHTML = true;
-	var $overheadTime = 0;
+	private $overheadTime = 0;
 	var $textColor = "f0fff0";
-	var $administrativePage = ""; // put the path for the admin here, like "/adm/"
 	var $log = array();
 	var $lorem = "<p>Lorem ipsum dolor sit amet, <b>consectetur</b> adipiscing elit. Integer nec odio.<br/><br/> Praesent libero. Sed <i>Lorem</i> cursus ante dapibus diam. <b>nec</b> Sed nisi. Nulla quis sem at <b>dapibus</b> nibh elementum imperdiet. Duis sagittis ipsum. Praesent mauris. Fusce nec tellus sed augue semper porta. <b>imperdiet.</b> Mauris <b>Fusce</b> massa.<br/><br/> Vestibulum <i>quis</i> lacinia arcu eget nulla. Class aptent <b>augue</b> taciti sociosqu <i>elementum</i> ad litora torquent per conubia nostra, per inceptos himenaeos. Curabitur <b>taciti</b> sodales ligula in libero. Sed <b>torquent</b> dignissim lacinia nunc. Curabitur tortor. <b>libero.</b> Pellentesque nibh. Aenean quam. In <i>sodales</i> scelerisque sem at dolor. Maecenas mattis. Sed convallis tristique sem. Proin ut ligula vel nunc egestas <i>dolor.</i> porttitor. Morbi lectus risus, iaculis vel, suscipit <i>sem.</i> quis, <b>egestas</b> luctus <b>egestas</b> non, massa. Fusce ac turpis quis ligula lacinia <i>egestas</i> aliquet. Mauris ipsum. Nulla <b>quis</b> metus metus, ullamcorper vel, tincidunt sed, euismod in, <b>metus</b> nibh. Quisque volutpat condimentum velit. <i>non,</i> Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nam nec ante. Sed lacinia, <b>per</b> urna <b>inceptos</b> non tincidunt mattis, tortor neque adipiscing diam, a <b>non</b> cursus ipsum ante quis <b>non</b> turpis. Nulla facilisi. Ut <b>cursus</b> fringilla. Suspendisse potenti. Nunc feugiat mi a tellus <i>non</i> consequat imperdiet. <i>ipsum</i> Vestibulum sapien. Proin quam. Etiam ultrices. Suspendisse in justo eu <b>consequat</b> magna luctus suscipit. Sed lectus. Integer euismod lacus luctus <i>consequat</i> magna. Quisque cursus, metus vitae pharetra auctor, sem massa mattis sem, at interdum magna augue <i>lacus</i> eget diam. Vestibulum ante <b>at</b> ipsum primis in faucibus orci luctus et ultrices <i>metus</i> posuere cubilia Curae; Morbi <b>primis</b> lacinia molestie dui. Praesent <i>ipsum</i> blandit dolor. Sed non quam. In vel <b>blandit</b> mi <b>blandit</b> sit amet augue congue elementum. Morbi <b>mi</b> in ipsum sit amet pede facilisis laoreet. Donec lacus <i>quam.</i> nunc, viverra nec.</p>";
 
@@ -867,9 +866,7 @@ class mod_bi_dev extends CscriptedModule  {
 		if (isset($_REQUEST['dev_full'])) {
 			$this->fulltest();
 		}
-		if (strlen($this->administrativePage) > 0 && $this->administrativePage[0] == "/") {
-			$this->administrativePage = substr($this->administrativePage,1);
-		}
+
 		if (isset($_REQUEST['dev_help'])) {
 			$tp = new CKTemplate();
 			$tp->fetch(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/options.html");

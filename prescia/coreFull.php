@@ -109,7 +109,6 @@ class CPresciaFull extends CPrescia {
 			 copy(CONS_PATH_SETTINGS."defaults/index.html",CONS_PATH_PAGES.$_SESSION['CODE']."/template/index.html");
 		}
 		if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/mail/")) safe_mkdir(CONS_PATH_PAGES.$_SESSION['CODE']."/mail");
-		if (!is_dir(CONS_FMANAGER)) safe_mkdir(CONS_FMANAGER);
 
 		# Dimconfig
 		if (is_file(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/din.dat"))
@@ -187,6 +186,7 @@ class CPresciaFull extends CPrescia {
 				foreach ($param as $pkey => $pcontent) {
 					$pkey = strtolower($pkey);
 					switch ($pkey) {
+						case "key":
 						case "keys":
 							# will use default auto_increment "id" if none specified. If you specify more than one, none will be auto_increment and the system will use auto-numbering
 					   		$this->modules[$module]->keys = explode(",",$pcontent);
@@ -210,6 +210,7 @@ class CPresciaFull extends CPrescia {
 			  				$this->modules[$module]->options[CONS_MODULE_PARENT] = strtolower($pcontent); // field which denotes parenthood
 			  			break;
 			  			case "plugins":
+						case "plugin":
 			  		   		$this->modules[$module]->plugins = explode(",",strtolower($pcontent));
 			  		   	break;
 			  			case "order":
@@ -480,7 +481,7 @@ class CPresciaFull extends CPrescia {
 				if (!isset($this->loadedPlugins[$sname])) {
 					$this->addPlugin($sname,$name);
 				} else
-				$this->loadedPlugins[$sname]->moduleRelation = $name;
+					$this->loadedPlugins[$sname]->moduleRelation = $name;
 			}
 		}
 
@@ -819,6 +820,7 @@ class CPresciaFull extends CPrescia {
 						else
 							unset($fields[$namefield][CONS_XML_MANDATORY]);
 						break;
+					case "merge":
 					case "join":
 						if (!$isSerialized) {
 							$fields[$namefield][CONS_XML_JOIN] = strtolower($content)=="inner"?"inner":"left";
@@ -837,6 +839,14 @@ class CPresciaFull extends CPrescia {
 								}
 								$this->modules[$module]->unique = $newunique;
 							}
+						}
+						break;
+					case "restricted":
+						if ($content == 'false')
+							unset($fields[$namefield][CONS_XML_RESTRICT]);
+						else {
+							if (!is_numeric($content)) $content = 10;
+							$fields[$namefield][CONS_XML_RESTRICT] = $content;
 						}
 						break;
 					case "hashkey":
@@ -931,6 +941,7 @@ class CPresciaFull extends CPrescia {
 							}
 						}
 						break;
+					case "owner":
 					case "isowner":
 						if (!$isSerialized) {
 							if (isset($fields[$namefield][CONS_XML_JOIN]) && $fields[$namefield][CONS_XML_JOIN] == "left")
@@ -970,6 +981,7 @@ class CPresciaFull extends CPrescia {
 						break;
 					default:
 						$fields[$namefield][strtolower($name)] = $content;
+						$this->warning[] = "Unknown parameter at $namefield: $name";
 						break;
 				} # switch
 			} # ended browsing FIELD parameters

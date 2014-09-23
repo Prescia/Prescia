@@ -1,3 +1,39 @@
 <div class="container">
-	FORUM
+	<div class="panel panel-info">
+		<div class="panel-heading"><spam class="glyphicon glyphicon-th-list"></spam> {title}</div>
+		<div class="panel-body">
+			{introduction}
+		</div>
+	</div>
+
+	{_paginacao}
+	<div class="text-center">
+		<ul class="pagination">
+			{_has_page_previous}<li><a href="{vdir|/}{BBROOT_PATH}forum.html?id={id}&p_init={page_previous}">&laquo;</a></li>{/has_page_previous}
+			{_pages}<li {current_page|map|1=class="active"}><a href="{vdir|/}{BBROOT_PATH}forum.html?id={id}&p_init={p_init}">{p_number}</a></li>{/pages}
+			{_has_page_next}<li><a href="{vdir|/}{BBROOT_PATH}forum.html?id={id}&p_init={page_next}">&raquo;</a></li>{/has_page_next}
+		</ul>
+	</div>
+	{/paginacao}
+
+	{_thread}
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<a href="{vdir|/}{BBROOT_PATH}{urla}.html"><spam class="glyphicon glyphicon-comment"></spam> {title}</a>
+		</div>
+		<div class="panel-body">
+			<div class="row">
+				<div class="col-sm-9">{_t}last_post{/t} {login} {pdate|past|true} {_t}ago{/t}</div>
+				<div class="col-sm-3">{totalposts} <small>{_t}posts{/t}</small></div>
+			</div>
+		</div>
+	</div>
+	{/thread}
+
+	<div class="text-center">
+		{pg_2}
+	</div>
+
+
+
 </div>

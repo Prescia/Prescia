@@ -7,7 +7,7 @@ class CscriptedModule {
 	var $parent = null; // framework object
 	var $name = ""; // SET THIS TO THE SCRIPT NAME either here (inherited module) or the construct!
 	var $moduleRelation = ""; // which database module is related to this (set by "plugins" on XML)
-	var $admFolder = "/adm/"; // Virtual folder where eventual administrative/reports are located. Match it with your administrative plugin/page
+	var $admFolder = "adm"; // Virtual folder where eventual administrative/reports are located. Match it with your administrative plugin/page
 	var $admOptions = array(); // pages that this script will add on the admin (add just the page name, not the folder, since it will use the above)
 							   // each entry comes as "page" => "term"
 	var $admRestrictionLevel = 0; // minimum required level to access pages above. It's the PLUGIN'S IMPLEMENTATION that will check this. Here just for convenience

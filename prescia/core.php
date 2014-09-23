@@ -62,7 +62,7 @@ class CPrescia extends CPresciaVar {
 		# Loads the selected domain/site configuration file
 		require CONS_PATH_PAGES.$_SESSION['CODE']."/_config/config.php";
 		if (CONS_USE_I18N) { # Checks which language we will serve control (IF ENABLED)
-			if (isset($_REQUEST['lang']) && !isset($_REQUEST['haveinfo']) && strpos(CONS_POSSIBLE_LANGS.",",$_REQUEST['lang'].",") !== false) {
+			if (isset($_REQUEST['lang']) && !isset($_POST['haveinfo']) && strpos(CONS_POSSIBLE_LANGS.",",$_REQUEST['lang'].",") !== false) {
 				$_SESSION[CONS_SESSION_LANG] = $_REQUEST['lang'];
 			}
 			$_SESSION[CONS_SESSION_LANG] = $this->intlControl->loadLocale(isset($_SESSION[CONS_SESSION_LANG])?$_SESSION[CONS_SESSION_LANG]:CONS_DEFAULT_LANG);
@@ -273,10 +273,10 @@ class CPrescia extends CPresciaVar {
 					$this->context_str = substr($this->context_str,strlen($temp)+1);
 				}
 			}
-			
+
 			# loads main locale settings for this language
 			$this->intlControl->loadLangFile($_SESSION[CONS_SESSION_LANG],true);
-			
+
 			# loads site locale settings for this language
 			if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/_config/locale/".$_SESSION[CONS_SESSION_LANG].".php"))
 				$this->intlControl->loadLangFile($_SESSION[CONS_SESSION_LANG],false);
@@ -285,12 +285,12 @@ class CPrescia extends CPresciaVar {
 			foreach ($this->loadedPlugins as $pname => &$pObj) { // plugins loaded directly (loaded in config.php, not related to a module)
 				$this->intlControl->loadLangFile($_SESSION[CONS_SESSION_LANG],true,$pname);
 			}
-			
+
 			$this->template->std_date = $this->intlControl->getDate();
 		    $this->template->std_datetime = "H:i ".$this->intlControl->getDate();
 		    $this->template->std_decimal = $this->intlControl->getDec();
 		    $this->template->std_tseparator = $this->intlControl->getTSep();
-			$this->template->populate();		
+			$this->template->populate();
 		}
 	}
 #-
@@ -352,7 +352,6 @@ class CPrescia extends CPresciaVar {
 	 * Plugins can be inside /pages/[site]/_config/plugins/
 	 */
 	function addPlugin($script,$relateToModule="",$renamePluginTo="",$noRaise=false) {
-
 		if ($renamePluginTo != "") {
 			if ($relateToModule=="") {
 				$this->errorControl->raise(5,'Related Module required',$script,"Renamed to: $renamePluginTo");
@@ -435,7 +434,7 @@ class CPrescia extends CPresciaVar {
 	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage -> showTemplate
 	 * Once everything is in order to render the page, checks if there are pending actions to be performed, such as handling a $_POST
 	 *
-	 * IMPORTANT: For actions to work properly, send haveinfo=true or whatever (value doesn't matter) in the query.
+	 * IMPORTANT: For actions to work properly, send haveinfo=true ON POST or whatever (value doesn't matter) in the query.
 	 * 			  DO NOT send it always as it will degrade performance, send ONLY when an action is expected (DB include/edit, upload handling, etc)
 	 */
 	function checkActions() {
@@ -552,7 +551,7 @@ class CPrescia extends CPresciaVar {
 			$module = $this->loaded($module);
 			if ($module === false) $this->errorControl->raise(158,"runContent",$tmp);
 		}
-		if ($callback !== false || (is_array($sql) && count($sql)>3) || (is_string($sql) && $sql != '')) {
+		if ($tag == '' || $callback !== false || (is_array($sql) && count($sql)>3) || (is_string($sql) && $sql != '')) {
 			if (is_array($sql) && count($sql) == 3 && !isset($sql['SELECT'])) {
 				$sql = $module->get_base_sql($sql[0],$sql[1],$sql[2]);
 			}
@@ -611,6 +610,7 @@ class CPrescia extends CPresciaVar {
     		if ($name != $mname)
       			$this->modules[$name]->notifyEvent($module,$action,$data,$startedAt,$early);
     	}
+
 	} # notifyEvent
 # -
 	/* deleteAllFrom
@@ -732,7 +732,6 @@ class CPrescia extends CPresciaVar {
 	function loadAllmodules() {
 		# loads ALL modules (does the same as loaded, except cicle trhu all)
 		if ($this->allModulesLoaded) return;
-		$this->allModulesLoaded = true;
 		foreach($this->modules as $mod) {
 			if (!$mod->loaded) { # this does the same as core::loaded, but optimized for all
 				$moduleName = $mod->name;
@@ -761,6 +760,7 @@ class CPrescia extends CPresciaVar {
 				$m->loadPlugins();
 			}
 		}
+		$this->allModulesLoaded = true;
 	} # loadAllmodules
 #-
 	/* loaded

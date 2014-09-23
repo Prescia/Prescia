@@ -1,0 +1,63 @@
+<body>
+
+	<div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+				<span class="sr-only">{_t}toggle_navigation{/t}</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="{vdir|/}index.html">Prescia</a>
+			</div>
+			<div class="navbar-collapse collapse">
+				 <ul class="nav navbar-nav">
+					<li class="active"><a href="{vdir|/}index.html">Home</a></li>
+					<li><a title="{_t}about{/t}" href="{vdir|/}{seo|about}">{_t}about{/t}</a></li>
+					<li><a title="{_t}download{/t}" href="{vdir|/}{seo|download}">{_t}download{/t}</a></li>
+					<li><a title="{_t}differential{/t}" href="{vdir|/}{seo|differential}">{_t}differential{/t}</a></li>
+					<li><a title="{_t}contact{/t}" href="{vdir|/}{seo|contact}">{_t}contact{/t}</a></li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{_t}resources{/t} <span class="caret"></span></a>
+						<ul class="dropdown-menu" role="menu">
+						<li><a href="{vdir|resources/}{seo|index}">{_t}getting-started{/t}</a></li>
+						<li><a href="{vdir|resources/}{seo|sample}">{_t}sample{/t}</a></li>
+						<li><a href="{vdir|resources/}{seo|reference}">{_t}framework_reference{/t}</a></li>
+						<li class="divider"></li>
+						<li class="dropdown-header">{_t}documentation{/t}</li>
+						<li><a href="{vdir|resources/}">{_t}toc{/t}</a></li>
+						<li><a href="{vdir|resources/}{seo|quick_reference}">{_t}quick_reference{/t}</a></li>
+						</ul>
+					</li>
+					<li class="dropdown">
+						<a href="#" class="dropdown-toggle" data-toggle="dropdown">{_t}community{/t} <span class="caret"></span></a>
+						<ul class="dropdown-menu" role="menu">
+							<li><a href="{vdir|bb/}">{_t}forums{/t}</a></li>
+							<li><a href="https://www.facebook.com/PresciaFramework">Facebook</a></li>
+							<li><a href="https://twitter.com/PresciaPHP">Twitter</a></li>
+							<li><a href="https://github.com/Prescia">GitHub</a></li>
+						</ul>
+					</li>
+					</ul>
+			</div><!--/.navbar-collapse -->
+		</div>
+	</div>
+
+	{CORE_DEBUG}
+	{FRAME_CONTENT}
+
+	<div class="container">
+		
+		<hr/>
+	
+		<footer>
+			<p class="small">{_i18n_pt-br}<a href="?lang=en">English Version</a>{/i18n_pt-br}{_i18n_en}<a href="?lang=pt-br">Versão em Português</a>{/i18n_en}{_mobonly} - <a href="?desktopversion=1">Desktop version</a>{/mobonly}</p>
+			<p>ɔ <strong>Prescia</strong> 2014</p>
+		</footer>
+		
+	</div>
+
+	
+
+</body>

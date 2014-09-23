@@ -1,7 +1,8 @@
-<FORUM dbname="bb_forum" title="title" order="ordem+" plugin="bi_bb">
+<FORUM dbname="bb_forum" title="title" order="ordem+" plugins="bi_bb">
 	<TITLE mandatory="true">VC</TITLE>
 	<LANG mandatory="true">ENUM:'en','pt-br'</LANG>
 	<INTRODUCTION html="true">TEXT</INTRODUCTION>
+	<URLA special="urla">VC</URLA>
 	<ORDEM default="0">int</ORDEM>
 </FORUM>
 <FORUMTHREAD dbname="bb_thread" title="title" order="date+">
@@ -9,18 +10,15 @@
 	<TITLE mandatory="true">VC</TITLE>
 	<DATE timestamp="true">DATETIME</DATE>
 	<URLA special="urla" urlaformat="{id_forum}-{date|date|Ymd}-{title}">VC</URLA>
-	<LANG mandatory="true">ENUM:'en','pt-br'</LANG>
-	<FLAGGED default="n">BOL</FLAGGED>
-	<ID_WHOFLAGGED merge="left">USERS</ID_WHOFLAGGED>
+	<LASTUPDATE updatestamp="true">DATETIME</LASTUPDATE>
 </FORUMTHREAD>
 <FORUMPOST dbname="bb_post" title="content" order="date+">
 	<ID_FORUM mandatory="true">FORUM</ID_FORUM>
 	<ID_FORUMTHREAD filteredBy="id_forum" mandatory="true">FORUMTHREAD</ID_FORUMTHREAD>
 	<ID_AUTHOR mandatory="true">USERS</ID_AUTHOR>
-	<CONTENT bb="simple">MEDIUMTEXT</CONTENT>
+	<CONTENT html="true">MEDIUMTEXT</CONTENT>
 	<DATE mandatory="true" timestamp="true">DATETIME</DATE>
-	<PROPSUP default="0">int</PROPSUP>
-	<PROPSDOWN default="0">int</PROPSDOWN>
 	<FLAGGED default="n">BOL</FLAGGED>
 	<ID_WHOFLAGGED merge="left">USERS</ID_WHOFLAGGED>
+	<PROPS custom="true" readonly="true" meta="serialized array with user ids wht TRUE for prop up, FALSE for prop down, not in list if not proped">MEDIUMTEXT</PROPS>
 </FORUMPOST>

@@ -1,0 +1,50 @@
+<div class="container">
+	<article>
+		<header>
+			<h1>{_t}reference{/t}</h1>
+		</header>
+	
+	<div>{CONTENTMAN}</div>
+	
+	</article>
+	<div class="text-right">
+		<a href="#" style="margin-right:30px">
+		  <span class="glyphicon glyphicon-arrow-up"></span> Top
+		</a>
+		
+		<a href="{vdir}index.html">
+		  <span class="glyphicon glyphicon-home"></span> Home
+		</a>
+	</div>
+	<div>
+		<div>
+		{_functiontitle}
+		</div>
+		<div style="cursor:pointer" class="jqbtn panel panel-info" onclick="$(this).next('.jqslider').slideToggle('slow') ; ">
+			<div class="panel-body">{holder|onnull|root}</div>
+		</div>
+		<div class="jqslider" style="display:none">
+		{/functiontitle}
+		{_function}
+		<a name="{holder}_{name}"></a>
+		<div style="margin:20px 0px 0px 20px;padding:10px;border-bottom: dotted #ccc 1px">
+			<div><span class="glyphicon glyphicon-cog"></span> {internals|map|y=<spam style="color:#e00">Internal</spam>,n=Public} {quickref|map|y=<span style="color:#0a0">common</span>} {holder}::{name} (<code>{parameters}</code>)</div>
+			<div style="border-top: solid #ccc 1px;margin-top:10px">{description}</div>
+			{_toggle_autocallorder}
+			<div style="font-size:9px">{autocallorder}</div>
+			{/toggle_autocallorder}
+		</div>
+		{/function}
+		</div>
+	</div>
+	<div class="text-right">
+		<a href="#" style="margin-right:30px">
+		  <span class="glyphicon glyphicon-arrow-up"></span> Top
+		</a>
+		
+		<a href="{vdir}index.html">
+		  <span class="glyphicon glyphicon-home"></span> Home
+		</a>
+	</div>
+
+</div>

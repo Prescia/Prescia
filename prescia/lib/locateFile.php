@@ -11,7 +11,6 @@
 	    $exts = explode(",",$extensionsToSearch);
 	    $total = count($exts);
 	    for ($c=0;$c<$total;$c++) {
-
 	      if (is_file($arquivo.".".$exts[$c])) {
 	        $arquivo .= ".".$exts[$c];
 	        $ext = $exts[$c];

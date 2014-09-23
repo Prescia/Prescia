@@ -101,8 +101,8 @@ if (CONS_AFF_ERRORHANDLER) { // override PHP error messaging? (if true, will not
 # ab -n50 total mean: 19ms 16ms
 
 $core->domainLoad(); // locks domain, load config and start i18n
+define("CONS_FMANAGER",CONS_PATH_PAGES.$_SESSION['CODE']."/files/");
 if (CONS_CACHE) $core->cacheControl->startCaches(); // detects which cache to use from auto-throttle system
-define ("CONS_FMANAGER",CONS_PATH_FILES.$_SESSION['CODE']."/files/"); // new on nekoi 1.11, centralized FM controller
 
 # -- database and metadata load
 if (!$core->dbconnect()) $core->offlineMode = true;

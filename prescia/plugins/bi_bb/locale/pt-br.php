@@ -5,5 +5,6 @@
 	"last_thread" => "Último Tópico",
 	"last_post" => "Último Post",
 	"threads" => "Tópicos",
-	"posts" => "Posts"
+	"posts" => "Posts",
+	"created_by" => "Criado por"
 );

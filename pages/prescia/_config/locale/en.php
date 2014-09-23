@@ -1,0 +1,23 @@
+<? return array(
+# "TERM" => "TRANSLATION",
+"toggle_navigation" => "Toggle Navigation",
+"about" => "About",
+"differential" => "Differential",
+"contact" => "Contact",
+"resources" => "Resources",
+"getting-started" => "Getting started",
+"sample" => "Sample Tutorial",
+"framework_reference" => "Framework Reference",
+"documentation" => "Documentation",
+"toc" => "Table of Contents",
+"quick_reference" => "Quick Reference",
+"welcome_to_prescia" => "Welcome to Prescia",
+"learn_more" => "Learn more",
+"mvc" => "MVC",
+"simplicity" => "Simplicity",
+"automatic_admin" => "Automatic Administration",
+"download" => "Download",
+"reference" => "Reference",
+"quick_reference" => "Quick Reference Guide",
+"community" => "Community"
+);

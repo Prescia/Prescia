@@ -1,0 +1,10 @@
+<FUNCTIONS dbname="appfunctions" title="name" order="holder+,name+">
+	<HOLDER>vc</HOLDER>
+	<NAME mandatory="true">vc</NAME>
+	<PARAMETERS>vc</PARAMETERS>
+	<DESCRIPTION html="true">text</DESCRIPTION>
+	<DESCRIPTIONpt html="true">text</DESCRIPTIONpt>
+	<AUTOCALLORDER>vc</AUTOCALLORDER>
+	<INTERNALS default="y">BOL</INTERNALS>
+	<QUICKREF default="n">BOL</QUICKREF>
+</FUNCTIONS>

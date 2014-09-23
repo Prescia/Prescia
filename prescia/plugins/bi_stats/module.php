@@ -8,6 +8,7 @@ class mod_bi_stats extends CscriptedModule  {
 	var $logBOTS = false; // if a BOT is detected, dumps the agent into CONS_PATH_LOGS.$_SESSION['CODE']."/bots".date("Ymd").".log", "a" VERY RESOURCE INTENSIVE, USE ONLY FOR DEBUG
 	var $doNotLogMe = false; // any plugin, page or automato that is aware of this plugin can set this to TRUE to prevent logging this page
 	var $forceLogMe = false; // oposite of the above
+	var $doNotLogAdmins = false; // if true, if you are looged with an account of a higher level of admRestrictionLevel, you won't be logged
 
 	function loadSettings() {
 
@@ -19,13 +20,13 @@ class mod_bi_stats extends CscriptedModule  {
 		$this->parent->onShow[] = $this->name;
 		$this->parent->onEcho[] = $this->name;
 		$this->parent->onCron[] = $this->name;
-		$this->admRestrictionLevel = 10;
-		$this->admOptions = array( ); // menu added manually (nekoi 2.0)
+		$this->admRestrictionLevel = 10; 
+		$this->admOptions = array( ); 
 	}
 
 
 	function on404($action, $context = "") {
-		if ($this->parent->context_str == $this->admFolder) {
+		if (str_replace("/","",$this->parent->context_str) == $this->admFolder) {
 			$this->doNotLogMe = true; // we don't want admin being logged
 			if (is_file(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/template/$action.html"))
 				return CONS_PATH_SYSTEM."plugins/".$this->name."/payload/template/$action.html";
@@ -35,7 +36,7 @@ class mod_bi_stats extends CscriptedModule  {
 
 	function onCheckActions() {
 		if ($this->parent->layout == 2 && $this->parent->context_str == "/" && $this->parent->action == "setres") {
-			$this->doNotLogMe = true;
+			$this->doNotLogMe = true; // no point loging this
 			if (isset($_REQUEST['res']) && strlen($_REQUEST['res'])>6) {
 				echo "ok";
 				$_SESSION[CONS_USER_RESOLUTION] = $_REQUEST['res'];
@@ -49,6 +50,7 @@ class mod_bi_stats extends CscriptedModule  {
 				echo "err";
 			$this->parent->close(true);
 		}
+		
 	}
 
 	function onShow(){
@@ -61,6 +63,23 @@ class mod_bi_stats extends CscriptedModule  {
 		$action = $this->parent->action;
 		if (is_file(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/$action.php"))
 			include_once CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/$action.php";
+	}
+
+	function getCounter($filterPage,$filterLang='') {
+		// let's play caching?	
+		$sum = $this->parent->cacheControl->getCachedContent('getCounter'.$filterPage."_".$filterLang);
+		// if there is no cache ...
+		if ($sum === false) {
+			// sum all hits in the page specified. Language is conditional
+			$sql = "SELECT sum(hits) FROM stats_hitsh WHERE page=\"$filterPage\"".($filterLang!=''?" AND lang=\"$filterLang\"":"")." GROUP BY page";
+			$sum = $this->parent->dbo->fetch($sql);
+			// remember, TODAY's hits are only in statsdaily
+			$sql = "SELECT sum(hits) FROM stats_hitsd WHERE page=\"$filterPage\"".($filterLang!=''?" AND lang=\"$filterLang\"":"")." GROUP BY page";
+			$more = $this->parent->dbo->fetch($sql);
+			if ($more>0) $sum+=$more;
+			$this->parent->cacheControl->addCachedContent('getCounter'.$filterPage."_".$filterLang,$sum,true);
+		}
+		return $sum;
 	}
 
 	function getHits($days=1,$groupDays=1,$filterPage='',$filterLang='') {
@@ -128,12 +147,13 @@ class mod_bi_stats extends CscriptedModule  {
 			$this->doNotLogMe = true;
 		}
 		if ($core->action == '404' || $core->action == '403') $this->doNotLogMe = true;
+			
+		
 
 		if (!$this->doNotLogMe || $this->forceLogMe) {
 
  			# what page are we logging (original call always)
-			$pageToBelogged = $core->original_context_str;
-			if ($pageToBelogged[0] == "/") $pageToBelogged = substr($pageToBelogged,1);
+			$pageToBelogged = substr($core->original_context_str,1);
 			if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
 			$act = $core->original_action;
 			if ($act == "") $act = "index";
@@ -168,7 +188,7 @@ class mod_bi_stats extends CscriptedModule  {
 				} else {
 					$core->dbo->simpleQuery("UPDATE ".$core->modules['stats']->dbname." SET ahits=ahits+1 WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 				}
-				return;
+				if ($this->doNotLogAdmins) return;
 			}
 
 			# -- BOT STATS (if it's a bot, leave after this part) --
@@ -289,7 +309,8 @@ class mod_bi_stats extends CscriptedModule  {
 			# -- HIT/UHIT/BHIT/AHITS stats --
 			$id = (isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))?$_REQUEST['id']:0;
 			$isReturning = isset($_COOKIE['akr_returning']);
-			$isAdm = $this->parent->context_str == $this->admFolder;
+			$isAdm = str_replace("/","",$this->parent->context_str) == $this->admFolder;
+			
 			$x = $core->dbo->fetch("SELECT hits FROM ".$core->modules['stats']->dbname." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 			if ($x===false) {
 				# FIRST hit here today

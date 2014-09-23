@@ -4,7 +4,7 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","14.9.16 beta"); // (Y.m.d) ~ last stable: n/a
+define ("AFF_BUILD","14.9.22 beta"); // (Y.m.d) ~ last stable: n/a
 define ("AFF_VERSION",0.6);  // 1.0 conditioned to intrade release
 // Original numbering before ɔ: 1 = Akari, 2 = Sora, 3 = Aff(ɔ)/Nekoi, 4 = Prescia(ɔ)
 
@@ -19,7 +19,7 @@ define ("CONS_XML_FILEMAXSIZE",6); # file size an upload field accepts
 define ("CONS_XML_THUMBNAILS",7); # thumbnail sizes (including original dimensions) an image upload accepts
 define ("CONS_XML_CONDTHUMBNAILS",20); # conditional thumbnails
 define ("CONS_XML_FILEPATH",8); # path to save files (other than default)
-define ("CONS_XML_RESTRICT",9); # field is restrict only for high level users (this is the level from which can edit)
+define ("CONS_XML_RESTRICT",9); # field is restrict only for high level users (set this as the minimum level)
 define ("CONS_XML_DEFAULT",10); # default value the field received if none defined in include
 define ("CONS_XML_FIELDLIMIT",11); # size limit for field
 define ("CONS_XML_IGNORENEDIT",12); # ignores when a mandatory field comes empty on EDIT (do not raise mandatory error, and do not change field to empty)
