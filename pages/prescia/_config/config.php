@@ -56,7 +56,8 @@
 
 	$this->addPlugin('bi_cms'); // suggest to leave later so it's also the last to handle 404
 	$bb = $this->addPlugin('bi_bb'); // Bulleting Board
-		$bb->bbfolder = "/bb/";
+		$bb->bbfolder = "/bb/,/profile/";
+		$bb->registrationGroup = 4;
 
 	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
 	    $stats->admFolder = "adm";

@@ -18,7 +18,7 @@
 	<new>edit.php?module=forum</new>
 	<list>list.php?module=forum</list>
 </FORUM>
-<FORUMTHREAD icon="list" listing="forum_title,title,date,urla,lastupdate">
+<FORUMTHREAD icon="list" listing="forum_title,title,date,urla,lastupdate,author_name">
 	<new>edit.php?module=forumthread</new>
 	<list>list.php?module=forumthread</list>
 </FORUMTHREAD>

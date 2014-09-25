@@ -1,12 +1,15 @@
-function isMail( email ) {
+// requires common.js
+function isMail( email ) {	
 	return ereg( email,"^[A-Za-z0-9]+(([_\.\-]?[a-zA-Z0-9]+(_)?)*)@([A-Za-z0-9]+)(([\.\-]?[a-zA-Z0-9]+)*)\.([A-Za-z]{2,})$");
 }
 function isLogin(value,allowSpace) {
-	return ereg(value,allowSpace?"^([ A-Za-z0-9_\-\.@]){4,30}$":"^([A-Za-z0-9_\-\.@]){4,30}$");
+	return ereg(value,allowSpace?"^([ A-Za-z0-9_\.@\-]){4,30}$":"^([A-Za-z0-9_\.@\-]){4,30}$");
 }
 function isnumber( value, accept_commas ) {
-	MyRegExp = new RegExp(accept_commas?"^(\-)?([0-9]*)(([,\.])([0-9]{3}))*(([,\.]{1})([0-9]*))?$":"^(\-)?([0-9]*)$");
-	return MyRegExp.test(value);;
+	return ereg(value,accept_commas?"^(\-)?([0-9]+)(([,\.])([0-9]{3}))*(([,\.]{1})([0-9]*))?$":"^(\-)?([0-9]+)$");
+}
+function validhtmlpost(data) { // detects malicious/invalid HTML content. Return TRUE if you are ok
+	return !ereg(data,"(<( \t\n\r)*(form|input|button|layer|object|embed|frame|ifarme|textarea|select|option|optgroup|fieldset|label|applet|!doctype|audio|video|canvas|script|style|meta|header|title))",'i');
 }
 function isDate (value, canDate, canTime, datePattern) { // supports d/m/Y and m/d/Y. Hour (second optional) should come before the date
 	if (!datePattern) datePattern = "(([0-9]{1,2})([^0-9])){2}([0-9]{2,4})";

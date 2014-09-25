@@ -5,7 +5,7 @@
 --*/
 # REQUIRES main.php
 
-define ("CKTemplate_version","140920"); // Build version - yes this is a date
+define ("CKTemplate_version","140924"); // Build version - yes this is a date
 
 define ("EREG_TAG","/(\{)([^\n\r]+)(\})/"); // used inside parsers, but not on tbreak
 define ("START_REPLACE", "\\"); // this string inside the limiters will generate the start limiter ({\} will output {)
@@ -689,7 +689,7 @@ class CKTemplate {
 	  $fimpos = strpos($entrada,"}",$p);
 	  if ($fimpos !== false) { // end of }
 		$key = substr($entrada,$p,($fimpos-$inipos-1));
-		if (strpos($key,"\n")===false && strpos($key,"\r")===false) { // valid key (\n not allowed)
+		if (strpos($key,"\n")===false && strpos($key,"\r")===false && strpos($key,"{")===false) { // valid key (\n, \r and another { not allowed)
 		  if ($key[0]=="_") { // conditional key, searches for /$key
 			$inipos = $fimpos+1;
 			$p = $fimpos;

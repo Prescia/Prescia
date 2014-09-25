@@ -1,14 +1,20 @@
 <?
 
-	$p = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])?$_REQUEST['p_init']:0; // item starting this page
-	$ipp = 30; // itens per page
-
+	$ipp = 2; // itens per page
+	
 	if (!isset($core->storage['friendlyurldata']) ||
 	    !isset($core->storage['friendlyurlmodule'])) $core->fastClose(404);
 
 	$core->template->fill($core->storage['friendlyurldata']);
 	$idf = $core->storage['friendlyurldata']['id_forum'];
 	$idt = $core->storage['friendlyurldata']['id'];
+	
+	$totalPost = $core->dbo->fetch("SELECT count(id) FROM bb_post WHERE id_forum=$idf AND id_forumthread=$idt");
+	if (isset($_REQUEST['lastpage'])) {
+		$_REQUEST['p_init'] = floor($totalPost/$ipp)*$ipp; 
+	}
+	$p = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])?$_REQUEST['p_init']:0; // item starting this page
+	$core->template->assign("pg",ceil($totalPost/$ipp));
 	
 	// views
 	$pageToBelogged = substr($core->original_context_str,1);
@@ -20,7 +26,8 @@
 		$act = implode(".",$act);
 	}
 	$pageToBelogged .= $act;	
-	$core->template->assign("v",$core->loadedPlugins['bi_stats']->getCounter($pageToBelogged));
+	$v = $core->loadedPlugins['bi_stats']->getCounter($pageToBelogged);
+	$core->template->assign("v",$v>0?$v:1);
 	
 	// posts (count)
 	$core->template->assign("p",$core->dbo->fetch("SELECT count(distinct id) FROM bb_post WHERE id_forum=$idf AND id_forumthread=$idt GROUP BY id_forumthread"));
@@ -52,3 +59,6 @@
 		}
 		return $data;
 	}
+	
+	$core->addLink("ckeditor/ckeditor.js",true);
+	$core->addLink("validators.js");

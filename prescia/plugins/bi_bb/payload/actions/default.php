@@ -5,6 +5,8 @@
 		return;
 	}
 
+	// this is a very active area, so we have to keep output cache to a minimum
+
 	$ok = $this->parent->friendlyurl(array("module" => "forumthread",
 							"page" => "thread",
 							"keys" => "urla",

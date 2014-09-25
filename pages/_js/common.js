@@ -78,8 +78,11 @@ function str_replace(what,to,into,maxreplaces) { // prototype/jQuery compatible
 	}
 	return into;
 }
-function ereg(text,mask) { // prototype/jQuery compatible
-	MyRegExp = new RegExp(mask);
+function ereg(text,mask,param) { // prototype/jQuery compatible
+	if (param)
+		MyRegExp = new RegExp(mask,param);
+	else
+		MyRegExp = new RegExp(mask);
 	return MyRegExp.test(text);
 }
 function setCookie(c_name,value,exdays) { // prototype/jQuery compatible

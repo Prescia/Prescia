@@ -7,6 +7,7 @@ class mod_bi_bb extends CscriptedModule  {
 
 	var $bbfolder = "/bb/"; # add / on both sides. If the forum works at the root, just leave "". Supports multiple folders, for that separate them by a comma (ex "/prescia/,/blog/")
 	var $folderfilters = ""; # maps one of the above folders to a forum id (ex.: "1,5" maps the first folder to forum 1, and second to forum 5
+	var $registrationGroup = 4; # when a new user register, he is put into this group
 	// --
 	var $customPermissions = array('can_flag' => 'can_flag'
 									);

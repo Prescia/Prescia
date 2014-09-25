@@ -41,7 +41,6 @@ class mod_bi_auth extends CscriptedModule  {
 	function onMeta() {
 		# replace auth object with new one
 
-
 		foreach ($this->parent->modules as $mname => &$module) {
 			$this->parent->modules[$mname]->freeModule = ($mname != CONS_AUTH_USERMODULE && $mname != CONS_AUTH_GROUPMODULE);
 		}
@@ -157,6 +156,7 @@ class mod_bi_auth extends CscriptedModule  {
 			$up['sf'] = isset($data['user_prefs_sf'])?'1':'0';
 			$up['floating'] = isset($data['user_prefs_floating'])?'1':'0';
 			$up['menufont'] = $data['user_prefs_menufont'];
+			$up['lang'] = $data['user_prefs_lang'];
 			if ($up['menufont']<8 || $up['menufont']>16) $up['menufont'] = 12;
 			$data['userprefs'] = serialize($up);
 			if ($data['id'] == $_SESSION[CONS_SESSION_ACCESS_USER]['id'])
@@ -193,8 +193,16 @@ class mod_bi_auth extends CscriptedModule  {
 			if (!isset($up['menufont'])) $up['menufont'] = 12;
 			if (!isset($up['sf'])) $up['sf'] = '1';
 			if (!isset($up['floating'])) $up['floating'] = '0';
+			if (!isset($up['lang'])) $up['lang'] = CONS_DEFAULT_LANG;
+			// prefered language
+			$output = "<div style='height:32px'><div style='width:100px;float:left;height:20px'>".$this->parent->langOut('language')."</div><div style='height:20px'><select name='user_prefs_lang' style='margin:0px'>";
+			foreach (explode(",",CONS_POSSIBLE_LANGS) as $lang) {
+				$output .= "<option value='$lang'".($lang==$up['lang']?' selected="selected"':"").">$lang</option>";
+			}
+			$output .= "</select></div></div>";
+			
 			// skin
-			$output = "<div style='height:32px'><div style='width:100px;float:left;height:20px'>".$this->parent->langOut('skin')."</div><div style='height:20px'><select name='user_prefs_skin' style='margin:0px'>";
+			$output .= "<div style='height:32px'><div style='width:100px;float:left;height:20px'>".$this->parent->langOut('skin')."</div><div style='height:20px'><select name='user_prefs_skin' style='margin:0px'>";
 			if (defined('CONS_ADM_ACTIVESKINGS'))
 				$skins = explode(",",CONS_ADM_ACTIVESKINGS);
 			else
@@ -241,15 +249,22 @@ class mod_bi_auth extends CscriptedModule  {
 
 	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNotify =false) {
 		if ($module === false) return;
-		if ($module->name == $this->name && $action == CONS_ACTION_UPDATE && $earlyNotify) { // change in this module, did NOT happen yet (earlyNotify)
-			# Send an e-mail to the user to tell him that his registration is approved by now
-			if (isset($data['active']) && $data['active'] == 'y') { // changed (or set) active
-				$oldactive = $this->parent->dbo->fetch("SELECT active FROM auth_users WHERE id=".$data['id']); //was already active? (this is why we have to run at earlyNotify)
-				if ($oldactive != 'y') { // no, was not active
-					$email = isset($_REQUEST['email']) && ismail($_REQUEST['email']) ? $_REQUEST['email'] : $this->parent->dbo->fetch("SELECT email FROM auth_users WHERE id=".$data['id']);
-					$html = $this->parent->langOut('registration_approved_msg');
-					sendMail($email,$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut('registration_approved'),$html);
+		if ($module->name == $this->moduleRelation && $action == CONS_ACTION_UPDATE) { // change in this module, did NOT happen yet (earlyNotify)
+		
+			if ($earlyNotify) {
+				# Send an e-mail to the user to tell him that his registration is approved by now
+				if (isset($data['active']) && $data['active'] == 'y') { // changed (or set) active
+					$oldactive = $this->parent->dbo->fetch("SELECT active FROM auth_users WHERE id=".$data['id']); //was already active? (this is why we have to run at earlyNotify)
+					if ($oldactive != 'y') { // no, was not active
+						$email = isset($_REQUEST['email']) && ismail($_REQUEST['email']) ? $_REQUEST['email'] : $this->parent->dbo->fetch("SELECT email FROM auth_users WHERE id=".$data['id']);
+						$html = $this->parent->langOut('registration_approved_msg');
+						sendMail($email,$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut('registration_approved'),$html);
+					}
 				}
+			} else {
+				# Also, reset logged data
+				$this->parent->authControl->logsGuest();
+				$this->parent->authControl->logUser($data['id'],CONS_AUTH_SESSION_KEEP);
 			}
 		}
 	}

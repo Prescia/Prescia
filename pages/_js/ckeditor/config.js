@@ -58,7 +58,6 @@ CKEDITOR.editorConfig = function( config )
         ['Styles','Font','FontSize','TextColor'],
         ['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'],
         ['Bold','Italic','Subscript','Superscript'],
-
         ['Source']
     ];
     config.toolbar_MiniToolbar =
@@ -66,6 +65,14 @@ CKEDITOR.editorConfig = function( config )
             ['Maximize','-','Cut','Copy','Paste','PasteText','PasteFromWord','RemoveFormat'],
             ['Undo','Redo','-','Find','Replace','SelectAll'],
             ['Link','Unlink','-','Bold','Italic','Strike'],
+            ['Source'],
             ['About']
+        ];
+    config.toolbar_PubToolbar =
+        [
+            ['Maximize','-','Cut','Copy','Paste','PasteText','PasteFromWord','RemoveFormat'],
+            ['Undo','Redo','-','Find','Replace','SelectAll'],
+            ['FontSize','TextColor'],
+            ['Link','Unlink','-','Bold','Italic','Strike'],
         ];
 };

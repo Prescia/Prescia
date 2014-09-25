@@ -1,0 +1,78 @@
+<div class="container">
+	<div class="panel panel-info">
+		<div class="panel-heading"><spam class="glyphicon glyphicon-comment"></spam> {forum_title} : {ftitle} : {_t}preview{/t}</div>
+	</div>
+
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<div style="float:right"><spam class=" glyphicon glyphicon-flag" alt="{_t}flag{/t}"></spam></div>
+			{_imageyes}<img src="/{image}" alt="User Avatar" class="img-rounded"/>{/imageyes}
+			{_imageno}<spam class="glyphicon glyphicon glyphicon-user"></spam>{/imageno}
+			<b>{USER_LOGIN}</b> {date|past|true} {_t}ago{/t}
+		</div>
+		<div class="panel-body">
+			{fmessage}
+		</div>
+	</div>
+
+	<div class="panel panel-info">
+		<div class="panel-heading">
+			<spam class="glyphicon glyphicon-comment"></spam> {_t}confirm_post{/t}
+		</div>
+		<div class="panel-body">
+			<form action="bbaction.php" method="post" onsubmit="return bbv(this)">
+			<input type="hidden" name="haveinfo" value="1"/>
+			<input type="hidden" name="id_forum" value="{id_forum}"/>
+			{_previewPOST}<input type="hidden" name="id_forumthread" value="{id_forumthread}"/>
+			<input type="hidden" name="url" value="{vdir|/}{BBROOT_PATH}{urla}.html"/>{/previewPOST}
+			<input type="hidden" name="bbaction" value="{bbaction}"/>
+			<div class="row">
+				<div class="col-md-2 text-right" style="line-height:30px;">{_t}posting_as{/t} <spam class="glyphicon glyphicon-user"></spam></div>
+				<div class="col-md-10" style="line-height:30px;"> {USER_LOGIN}</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2 text-right" style="line-height:30px;">{_t}posting_on{/t} <spam class="glyphicon glyphicon-th-list"></spam></div>
+				<div class="col-md-10" style="line-height:30px;"> {forum_title} {_previewPOST}: {ftitle}{/previewPOST}</div>
+			</div>
+			{_previewTHREAD}
+			<div class="row">
+				<div class="col-md-2 text-right" style="line-height:30px;">{_t}title{/t} <spam class="glyphicon glyphicon-comment"></spam></div>
+				<div class="col-md-10" style="line-height:30px;">
+					<input type="text" class="form-control" placeholder="{_t}title{/t}" value="{ftitle|html}" name="ftitle"/>
+				</div>
+			</div>
+			{/previewTHREAD}
+			<div class="row">
+				<div class="col-md-2 text-right" style="line-height:30px;">{_t}text{/t} <spam class="glyphicon glyphicon-book"></spam></div>
+				<div class="col-md-10">
+					<textarea name="fmessage" id="fmessage" width="99%" rows="12">{fmessage}</textarea>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12 text-right" style="line-height:50px;">
+					<button type="submit" onclick="this.form.bbaction.value='{bbactionpreview}'" class="btn btn-info btn-sm">{_t}preview{/t}</button>
+					<button type="submit" onclick="this.form.bbaction.value='{bbaction}'" class="btn btn-primary btn-sm">{_t}post{/t}</button>
+				</div>
+			</div>
+			</form>
+		</div>
+	</div>
+
+</div>
+
+<script type="text/javascript"><!--
+	var CKEfmessage = CKEDITOR.replace( 'fmessage', { language : '{SESSION_LANG}',
+													   toolbar : 'PubToolbar'} );
+	function bbv(f) {
+		var m = '';
+		{_previewPOST}if (f.ftitle.value.length<10) m += '{_t}please_type_larger_title{/t} (10)\n';{/previewPOST}
+		CKEfmessage.updateElement()
+		if (f.fmessage.value.length<10) m+= '{_t}please_type_larger_content{/t} (10)\n';
+		else if (!validhtmlpost(f.fmessage.value )) m += '{_t}some_html_content_is_invalid{/t}\n';
+		if (m!='') {
+			alert('{_t}warning{/t}\n\n'+m);
+			return false;
+		}
+		return true;
+	}
+//--></script>

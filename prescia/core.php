@@ -1158,8 +1158,11 @@ class CPrescia extends CPresciaVar {
 		else
 			$this->template->assign("_mobonly");
 
-		if ($this->logged()) $this->template->assign("_GUEST");
-		else $this->template->assign("_LOGGED");
+		if ($this->logged()) {
+			$this->template->assign("_GUEST");
+			$this->template->assign("USER_ID",$_SESSION[CONS_SESSION_ACCESS_USER]['id']);
+			$this->template->assign("USER_LOGIN",$_SESSION[CONS_SESSION_ACCESS_USER]['login']);
+		} else $this->template->assign("_LOGGED");
 
 		if (CONS_USE_I18N) $this->intlControl->removeLanguageTags();
 

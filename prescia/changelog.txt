@@ -1,8 +1,10 @@
-TODO/BUGS: see site
+TODO list is on site/github
 
-14.9.23 BETA 0.7 (stable, but missing bb module)
-	Too much done
-
+14.9.25 BETA 0.7 (stable - finishing bi_bb, first release!)
+	Mostly about the new bi_bb module
+	Several weird bugs on notifyEvent scripts, including the raw system
+	Some bugs on data parsing and user creation/edit events
+	(pending: array add/edit on serialized fields)
 14.9.14 BETA 0.7 (not stable - testing new module sql handlers)
 	New module::get_base_sql handling of sql using only arrays to prevent sql_break at the end (faster)
 	New module::get_advanced_sql function to build smart SQL based on a tag of required fields instead of returning all

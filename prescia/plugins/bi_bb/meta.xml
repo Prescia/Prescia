@@ -8,9 +8,10 @@
 <FORUMTHREAD dbname="bb_thread" title="title" order="date+">
 	<ID_FORUM mandatory="true">FORUM</ID_FORUM>
 	<TITLE mandatory="true">VC</TITLE>
-	<DATE timestamp="true">DATETIME</DATE>
+	<DATE mandatory="true" timestamp="true">DATETIME</DATE>
 	<URLA special="urla" urlaformat="{id_forum}-{date|date|Ymd}-{title}">VC</URLA>
-	<LASTUPDATE updatestamp="true">DATETIME</LASTUPDATE>
+	<LASTUPDATE meta="cache for speed, is the last post's date" updatestamp="true">DATETIME</LASTUPDATE>
+	<ID_AUTHOR meta="cache for speed, is the first post" mandatory="true">USERS</ID_AUTHOR>
 </FORUMTHREAD>
 <FORUMPOST dbname="bb_post" title="content" order="date+">
 	<ID_FORUM mandatory="true">FORUM</ID_FORUM>

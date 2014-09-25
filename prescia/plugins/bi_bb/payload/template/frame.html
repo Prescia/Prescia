@@ -19,8 +19,15 @@
 				</ul>
 				
 				<ul class="nav navbar-nav" style="float: right !important">
+					{_GUEST}
+					<li><a title="{_t}login{/t}" href="{vdir|/}{BBROOT_PATH}login.html"><span class="glyphicon glyphicon-log-in"></span> {_t}login{/t}</a></li>
+					<li><a title="{_t}register{/t}" href="{vdir|/}{BBROOT_PATH}profile.html"><span class="glyphicon glyphicon-user"></span> {_t}register{/t}</a></li>
+					{/GUEST}
+					{_LOGGED}
 					<li><a title="{_t}messages{/t}" href="{vdir|/}{BBROOT_PATH}messages.html"><span class="glyphicon glyphicon-envelope"></span> {_t}messages{/t}</a></li>
 					<li><a title="{_t}profile{/t}" href="{vdir|/}{BBROOT_PATH}profile.html"><span class="glyphicon glyphicon-user"></span> {_t}profile{/t}</a></li>
+					<li><a title="{_t}logout{/t}" href="{vdir|/}{BBROOT_PATH}?logout=true"><span class="glyphicon glyphicon-off"></span> &nbsp;</a></li>
+					{/LOGGED}
 				</ul>
 			</div><!--/.navbar-collapse -->
 		</div>
