@@ -320,7 +320,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		return $sql;
 	}
 #-*/
-	function checkPermission($module, $action=true, $owner =false) { # called by modules
+	function checkPermission($module, $action=true, $owner = false) { # called by modules
 	/* check if the current logged user have permission to perform $action in $module.
 	 * $owner = false to check any permission
 	 * $owner = array( true|false if for own items, true|false if for items on same group, true|false on same "other" table linked from users, id_group )
@@ -330,6 +330,10 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		$debug = false;//is_object($module) && $module->name == "bi_pme";
 		###############################
 
+		if ($owner !== false && (!is_array($owner) || count($owner)<3)) { // allow missing group
+			$this->parent->errorControl->raise(526,vardump($owner),is_object($module)?$module->name:$module,"Action: ".$action);
+		}
+		
 		if ((isset($_SESSION[CONS_SESSION_ACCESS_LEVEL]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] == 100) || !$this->parent->safety) {
 			if ($debug) die("checkPermission: MASTER or safety off, can all");
 			return true; # security is lax, consider it can

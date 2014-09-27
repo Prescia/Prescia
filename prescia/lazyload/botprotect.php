@@ -55,9 +55,10 @@ if (isset($_POST['login'])) $thd['hits'][] = $now; // ya, we count twice the fau
 if (count($thd['hits'])>=CONS_BOTPROTECT_MAXHITS) {
 	// sorry guy, you are banned
 	$_SESSION['BOTPROTECT_BANNED'] = $now;
+	$thd['banned'] = $now;
 	$banned = true;
 } else if (count($thd['hits'])>CONS_BOTPROTECT_MAXHITS/2) {
-	// throttle requests
+	// throttle requests (guy going too fast)
 	sleep(1);
 }
 // save throttle

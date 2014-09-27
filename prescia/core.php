@@ -967,7 +967,7 @@ class CPrescia extends CPresciaVar {
 	function showTemplate() {
 
 		# Echo dimconfig if something should be outputed
-		$data = $this->cacheControl->getCachedContent('dimconfig_auto',120);
+		$data = $this->cacheControl->getCachedContent('dimconfig_auto');
 		if ($data === false && is_object($this->template)) {
 			$data = $this->dimconfig;
 			$dimconfigMD = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_dimconfig.dat"));

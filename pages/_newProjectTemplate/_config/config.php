@@ -49,15 +49,15 @@
 	#$this->addPlugin('bi_seo'); // SEO system
 	#$this->addPlugin('bi_undo'); // history/UNDO system
 	$advadm = $this->addPlugin('bi_adm'); // Administrative pane
-		$advadm->admFolder = "adm";
-		$advadm->admRestrictionLevel = 10; // minimum level to access admin
+		#$advadm->admFolder = "adm";
+		#$advadm->admRestrictionLevel = 10; // minimum level to access admin
 		
 	#$this->addPlugin('bi_cms'); // suggest to leave later so it's also the last to handle 404
 	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
-		$stats->admFolder = "adm";
-		$stats->admRestrictionLevel = 10; // what we consider an admin level
-		$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
-		$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this
+		#$stats->admFolder = "adm";
+		#$stats->admRestrictionLevel = 10; // what we consider an admin level
+		#$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
+		#$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this
 
 	// Uncomment and change as needed
 	#$this->languageTL = array("en" => "en", "pt" => "pt-br"); # url/PATH/[subdir/] => url/[subdir/]?lang=PATH

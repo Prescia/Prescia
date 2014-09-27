@@ -127,7 +127,7 @@ class CCacheControl {
 			$this->parent->cachetimeObj = 1000;
 			return;
 		}
-		// load default in case we failt to load cachecontrol.dat
+		// load default in case we fail to load cachecontrol.dat
 		$this->parent->cachetime = 1000*floor(CONS_DEFAULT_MIN_BROWSERCACHETIME+(CONS_DEFAULT_MAX_BROWSERCACHETIME - CONS_DEFAULT_MIN_BROWSERCACHETIME)/2);
 		$this->parent->cachetimeObj = 1000*floor(CONS_DEFAULT_MIN_OBJECTCACHETIME+(CONS_DEFAULT_MAX_OBJECTCACHETIME - CONS_DEFAULT_MIN_OBJECTCACHETIME)/2);
 		// loads cachecontrol

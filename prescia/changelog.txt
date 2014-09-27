@@ -1,5 +1,14 @@
 TODO list is on site/github
 
+
+
+14.9.26 BETA 0.7 (no, it was not stable)
+	Added test for proper owner parameter on checkPermission
+	Fixed several bigs on bi_bb thread/post creation process AND permission checking
+	Fixed Administrative pane showing frameset when you are logged with a low-level user
+	Fixed changing YOUR LOGGED user data when you change ANY user
+	Some locale fixing
+	integer values are now properly set on the database instead of always being "int" only with a different padding
 14.9.25 BETA 0.7 (stable - finishing bi_bb, first release!)
 	Mostly about the new bi_bb module
 	Several weird bugs on notifyEvent scripts, including the raw system

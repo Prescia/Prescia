@@ -25,7 +25,7 @@
 	define("CONS_SINGLEDOMAIN"				,""); // set the name of the folder inside /pages/ that will ALWAYS result this install, thus disabling domain handling (faster)
 	define("CONS_SITESELECTOR"				,true); // on first access, will ask which site to serve. Works only on production
 # CHANGE THIS OR MASTER USERS CAN'T LOG:
-	define("CONS_MASTERPASS"				,""); // if not "", this will override $masterOverride in ALL sites, accepts {CODE} {YEAR} {MONTH} {DAY} {DOMAIN}
+	define("CONS_MASTERPASS"				,"admin{CODE}"); // if not "", this will override $masterOverride in ALL sites, accepts {CODE} {YEAR} {MONTH} {DAY} {DOMAIN}
 # FILL THIS:
 	define("CONS_MASTERMAIL"				,""); // for fatal errors
 	define("CONS_ACCEPT_DIRECTLINK"			,true); // will accept direct link to the files/ folder with domain/files/..., redirecting to /pages/[code]/files/ by PHP (dangerous if serving large files)
@@ -52,7 +52,7 @@
 		define ("CONS_SLOWQUERY_TH"		, 2); # queries that take longer than this will trigger an internal (log) warning
 		define ("CONS_MAXRUNCONTENTSIZE",50000); // lists larger then this will result a fatal error due to overflow of the TC system (paging should prevent this altogether, so this catches infinite loops)
 
-		define("CONS_BOTPROTECT"		,false); // monitors calls from same IP and prevent too many in a short time (see CONS_BOTPROTECT_MAXHITS)
+		define("CONS_BOTPROTECT"		,true); // monitors calls from same IP and prevent too many in a short time (see CONS_BOTPROTECT_MAXHITS)
 		define("CONS_BOTPROTECT_MAXHITS",35); // how many hits one IP can perform per MINUTE. More than that will trigger a temporary IP ban
 											  // KEEP IN MIND this also count ajax and other hits. So be conservative
 		define("CONS_BOTPROTECT_BANTIME",5); // how long, in minutes, someone caught by BOTPROTECT should be banned from the system

@@ -1,0 +1,69 @@
+Add this to your pages.xml on the FOLDER of the Blog. Replace [folder] at the automato definition with the blog folder. 
+
+Note that if no index.html is present for that folder, it will use the default one inside the payload
+
+Don't forget to add any links you need at the LINK automato. You can also personalize the FRIENDLYURL as you wish
+
+<[folder]>
+	<LINK>....,affbiblog.css</LINK>
+	<FRIENDLYURL>
+			<MODULE>blog</MODULE>
+			<PAGE>index</PAGE>
+			<KEYS>urla,id</KEYS>
+			<TITLE>{title} - BLOG</TITLE>
+	</FRIENDLYURL>
+	<SHADOWBOX>handleOversize:"resize"</SHADOWBOX>
+</[folder]>
+
+Also, feel free to use "<div class="la_quote"> some important text </div>" on the body of your blog post for a fancy effect (you can add more changing the css)
+
+You can add a _blogcustom.html in your base dir to add a custom area in the menu, you can name this with customareaname variable. This will most likelly be a permanent options menu. Note that at the INDEX, you will get a CONTENTMAN and CONTENTMAN2 for the main content and menu area "about"
+
+--- MULTIPLE BLOGS:
+
+You can have multiple blogs by adding fields on the meta data to separate them. Consider two blogs on folders blog1/ and blog2/
+
+First, you must define which blog (folder) a certain blog (entry) is part of, for that, redeclare the blog metadata in YOUR meta.xml as follows:
+
+<BLOG>
+	<AREA mandatory="true">ENUM:'blog1','blog2'</AREA>
+</BLOG>
+
+Note that BLOG is already defined from the momment you enabled the affbi_blog, so by adding this to your meta.xml you are adding/changing fields. We added AREA so we can tag a given blog post as from blog1 or blog2
+
+Second, when calling the blog at your config.php, you will require to specify there are two blogs. Just add the following lines:
+
+$blog = $this->addPlugin('affbi_blog'); // loads the affbi_blog plugin, as usual
+$blog->blogfolder = "blog1,blog2"; // change where the blog is located. Yes, it accepts multiple folders comma delimited
+
+Now, on your pages.xml, you need to filter the friendlyURL to get blogs only from that folder. The pages.xml specified would look like (note we only added FILTER)
+
+For the blog1 folder (only chante is at <FILTER>):
+
+<BLOG1>
+	<LINK>....,affbiblog.css</LINK>
+	<FRIENDLYURL>
+			<MODULE>blog</MODULE>
+			<PAGE>index</PAGE>
+			<KEYS>urla,id</KEYS>
+			<TITLE>{title} - BLOG</TITLE>
+			<FILTER>blog.area='blog1'</FILTER>
+	</FRIENDLYURL>
+	<SHADOWBOX>handleOversize:"resize"</SHADOWBOX>
+</BLOG1>
+	
+For the blog2 folder (only change is at <FILTER>):
+
+<BLOG2>
+	<LINK>....,affbiblog.css</LINK>
+	<FRIENDLYURL>
+			<MODULE>blog</MODULE>
+			<PAGE>index</PAGE>
+			<KEYS>urla,id</KEYS>
+			<TITLE>{title} - BLOG</TITLE>
+			<FILTER>blog.area='blog2'</FILTER>
+	</FRIENDLYURL>
+	<SHADOWBOX>handleOversize:"resize"</SHADOWBOX>
+</BLOG2>
+
+And you are done

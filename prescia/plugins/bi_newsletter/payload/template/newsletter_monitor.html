@@ -1,0 +1,71 @@
+
+<div style="text-align:right;float:right;font-size:10px;height:17px;margin:4px">
+	<input type="button" onclick="waitWhileLoad(); document.location='newsletter_send.php';" value=" ✚  {_t}new{/t} " style="font-size:9px"/>
+</div>
+
+<div class="lxmladm_title">{_t}nlmonitor{/t}</div>
+
+<script type="text/javascript">
+function deleteme(skeys) {
+	if (confirm("{_t}delete{/t} ({_t}affbi_newsletter_send{/t})?")) {
+		waitWhileLoad();
+  		document.location = 'delete.html?module=affbi_newsletter_send&'+skeys;
+  	}
+}	
+</script>
+
+
+	
+	<div class="lxmladm_box">
+		{total} {_t}{total|map|1=item|itens}{/t}
+	</div>
+
+	<div class="lxmladm_box" style="margin-top:10px">
+		<div class="lxmladm_paging">{PAGING_copy}</div>
+
+		<table width="100%" cellspacing="0">
+		 	<tbody>
+		 	
+			 	<tr style="height:17px;overflow:hidden">
+			 		<td class="lxmladm_linetitle"></td>
+					<td class="lxmladm_linetitle">Nome</td>
+					<td class="lxmladm_linetitle">Título do E-mail</td>
+					<td class="lxmladm_linetitle">Destinatários</td>
+					<td class="lxmladm_linetitle">Recebidos</td>
+					<td class="lxmladm_linetitle">Progresso</td>
+					<td class="lxmladm_linetitle">Último envio</td>
+					<td class="lxmladm_linetitle"></td>
+				</tr>
+				
+				{_line}				
+				<tr style="height:17px">
+					<td style="width:30px;text-align:center" class="lxmladm_line{CLASS}"><a href="newsletter_stats.html?id={id}" title="{_t}stats{/t}">∿</a> <a href="newsletter_go.html?id={id}" title="{_t}submit{/t}" style="font-size:14px">✉</a></td>
+					<td class="lxmladm_line{CLASS}"><div style="height:17px;overflow:hidden"><a href="newsletter_stats.html?id={id}" title="{_t}stats{/t}"><b>{title}</b></a></div></td>
+					<td class="lxmladm_line{CLASS}"><div style="height:17px;overflow:hidden">{newsletter_mail_title}</div></td>
+					<td class="lxmladm_line{CLASS}"><div style="height:17px;overflow:hidden">{recipients_c}</div></td>
+					<td class="lxmladm_line{CLASS}"><div style="height:17px;overflow:hidden"><a href="newsletter_stats.html?id={id}" title="{_t}stats{/t}"><b>{received_c}</b></a></div></td>
+					<td class="lxmladm_line{CLASS}"><div style="height:17px;overflow:hidden"><div style="width:{progress}%;height:15px;background:#5555cc;float:left;color:#ffffff">{progress}%</div></div></td>
+					<td class="lxmladm_line{CLASS}"><div style="height:17px;overflow:hidden">{data_inicio|date|H:i d/m/Y}</div></td>
+					<td style="width:30px;text-align:center" class="lxmladm_line{CLASS}"><img onclick="deleteme('id={id}');" src="{SKIN_PATH}smdel.png" alt="{_t}delete{/t}" title="{_t}delete{/t}"/></td>
+				</tr>
+				{/line}
+			</tbody>
+		</table>
+
+
+		<div class="lxmladm_paging">
+		{_paginacao}
+			{_has_page_previous}
+			<a onclick="waitWhileLoad();" href="{QUERY_STRINGS|p_init}p_init={page_previous}">«</a>
+			{/has_page_previous}
+			{_t}page{/t}{_pages}
+			<a onclick="waitWhileLoad();" href="{QUERY_STRINGS|p_init}p_init={p_init}" {current_page|map|1=style="font-size:16px"}>{p_number}</a>
+			{/pages}
+			de {p_total}
+			{_has_page_next}
+			<a onclick="waitWhileLoad();" href="{QUERY_STRINGS|p_init}p_init={page_next}">»</a>
+			{/has_page_next}
+		{/paginacao}
+		</div>
+	</div>
+	

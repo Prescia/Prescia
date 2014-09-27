@@ -1,0 +1,27 @@
+<BLOG_CATEGORY dbname="bi_blog_cat" title="title" order="title+">
+	<TITLE mandatory="true">VC</TITLE>
+	<LANG mandatory="true">ENUM:'en','pt-br'</LANG>
+	<INTRODUCTION html="true">TEXT</INTRODUCTION>
+</BLOG_CATEGORY>
+<BLOG dbname="bi_blog" title="title" order="date-">
+	<ID_CATEGORY mandatory="true">BLOG_CATEGORY</ID_CATEGORY>
+	<IS_FEATURED default='n' mandatory="true">BOL</IS_FEATURED>
+	<TITLE mandatory="true">VC</TITLE>
+	<VIDEO special="onlinevideo">VC</VIDEO>
+	<IMAGE thumbnails="1920,1680|400,225" filemaxsize="512000" filetypes="jpg,gif,png,jpeg" tweakimages="|croptofit">UPLOAD</IMAGE>
+	<CONTENT html="true">MEDIUMTEXT</CONTENT>
+	<TAGS>VC</TAGS>
+	<DATE timestamp="true">DATETIME</DATE>
+	<URLA special="urla">VC</URLA>
+	<LANG mandatory="true">ENUM:'en','pt-br'</LANG>
+	<PUBLISH_AFTER timestamp="true" default="0000-00-00 00:00:00">DATETIME</PUBLISH_AFTER>
+</BLOG>
+<BLOG_COMMENT dbname="bi_blogc" title="name" order="date-">
+	<ID_BLOG mandatory="true">BLOG</ID_BLOG>
+	<NAME mandatory="true">VC</NAME>
+	<MAIL special="mail">VC</MAIL>
+	<IP size="39">VC</IP>
+	<CONTENT>TEXT</CONTENT>
+	<DATE mandatory="true" timestamp="true">DATETIME</DATE>
+	<MODERATED mandatory="true" default="n">BOL</MODERATED>
+</BLOG_COMMENT>

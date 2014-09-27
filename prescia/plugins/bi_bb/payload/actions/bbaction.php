@@ -2,12 +2,17 @@
 	
 	// safety: are we logged to perform actions? if not, kick out to 403 (unless you are registering)
 	// we test post include (self) because that's the most basic permission
-	if (!$core->authControl->checkPermission('FORUMPOST',CONS_ACTION_INCLUDE,true) && $_POST['bbaction'] != 'profile')
-		$core->fastClose(403); // no permission, bye
+	if (!$core->authControl->checkPermission('FORUMPOST',CONS_ACTION_INCLUDE,array(true,false,false)) && $_POST['bbaction'] != 'profile') {
+		$core->action = 403;
+		return;
+	}
 	
 	// yes but do we have an action to perform anyway?
-	if (!$core->queryOk(array("haveinfo","bbaction")))
-		$core->fastClose(404); // no sir
+	if (!$core->queryOk(array("haveinfo","bbaction"))) {
+		$core->action = 404;
+		return;
+	}
+
 	
 	// ok let's get to work
 	switch ($_POST['bbaction']) {
@@ -35,15 +40,18 @@
 			}
 			$postData = array('id_forum' => $_POST['id_forum'],
 							  'title' => $_POST['ftitle'],
+							  'id_author' => $_SESSION[CONS_SESSION_ACCESS_USER]['id']
 							  );
 			$ok = $core->runAction('forumthread',CONS_ACTION_INCLUDE,$postData);
 			if (!$ok) {
-				$this->action = "forum";
+				$core->action = "forum";
+				$_REQUEST['id'] = $_POST['id_forum'];
 				$core->log[] = "Error adding Thread";
-				break;
+				return;
 			} else {
-				$this->parent->action = $this->parent->storage['lastactiondata']['urla'];
-				$_POST['id_forumthread'] = $this->parent->lastReturnCode;
+				$core->action = $core->storage['lastactiondata']['urla'];
+				$_POST['url'] = $core->action; 
+				$_POST['id_forumthread'] = $core->lastReturnCode;
 			}
 			// no break: continue on to add post
 		case 'post': // post a comment
@@ -52,7 +60,7 @@
 				$core->log[] = "Error on post";
 				// fail to post comment but thread created ... destroy thread
 				if ($_POST['bbaction'] =='tpost') $core->simpleQuery("DELETE FROM bb_thread WHERE id=".$_POST['id_forumthread']);
-				break;
+				return;
 			}
 			$postData = array('id_forum' => $_POST['id_forum'],
 							  'id_forumthread' => $_POST['id_forumthread'],
@@ -66,7 +74,10 @@
 				// fail to post comment but thread created ... destroy thread
 				if ($_POST['bbaction'] =='tpost') $core->simpleQuery("DELETE FROM bb_thread WHERE id=".$_POST['id_forumthread']);
 				$core->log[] = "Error adding Post";
+				$core->action = "forum";
+				$_REQUEST['id'] = $_POST["id_forum"];
 			}
+			return;
 		break;	
 		case 'edit': // edit a comment
 		break;
@@ -107,7 +118,9 @@
 				else $core->authControl->logsGuest();
 			}
 			$core->safety = true;
+			$core->action = "profile";
 			$core->headerControl->internalFoward($this->contextfriendlyfolderlist[0]."profile.html?nocache=true");
+			return;
 		break;
 	}
-		
+	$core->action = "503";

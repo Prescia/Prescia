@@ -1,0 +1,52 @@
+<AFFBI_NEWSLETTER
+	dbname="sys_newsletter"
+	title="title"
+	plugins="bi_newsletter"
+	meta="This is the actuall TEXT/TEMPLATE for the newsletter"
+	>
+	<TITLE mandatory="true">VC</TITLE>
+	<MAIL_TITLE mandatory="true">VC</MAIL_TITLE>
+	<TEXTO html="true">TEXT</TEXTO>
+</AFFBI_NEWSLETTER>
+<AFFBI_NEWSLETTER_SEND
+	dbname="sys_news_s"
+	title="title"
+	permissionOverride="AAAAAAAAA"
+	meta="This is the actual sending progress, with how the sending progress is going, who received, etc"
+	order="data_inicio+"
+	noadminpanes="edit"
+	listing="newsletter_title,title,obs,progress,data_inicio"
+	listbuttons="newsletter_stats.html?id={id},stats,stats.png|newsletter_go.html?id={id},send,email.png"
+	callback="bi_newsletter:cbsend"
+	>
+	<ID_NEWSLETTER mandatory="true">AFFBI_NEWSLETTER</ID_NEWSLETTER>
+	<TITLE mandatory="true">VC</TITLE>
+	<OBS>TEXT</OBS>
+	<RECIPIENTS readonly="true" html="true" custom="true">MEDIUMTEXT</RECIPIENTS>
+	<RECIPIENTS_RECEIVED readonly="true" html="true">MEDIUMTEXT</RECIPIENTS_RECEIVED>
+	<PROGRESS readonly="true">INT</PROGRESS>
+	<DATA_INICIO readonly="true">DATETIME</DATA_INICIO>
+</AFFBI_NEWSLETTER_SEND>
+<AFFBI_RECIPIENTS dbname="sys_news_recip" order="name+" title="name" listing="name,#affbi_newslink,mail,sexo,receber_newsletter,data_cadastro"
+	meta="Default recipient list. You can point to another base by changing the module's recipientList var"
+	>
+	<NAME mandatory="true">VC</NAME>
+	<MAIL meta="no need to be unique, the engine itself will only send one newsletter per mail" mandatory="true" special="mail">VC</MAIL>
+	<SEXO>ENUM:'feminino','masculino'</SEXO>
+	<EMPRESA>VC</EMPRESA>
+	<TELEFONE>VC</TELEFONE>
+	<RECEBER_NEWSLETTER default='y'>BOL</RECEBER_NEWSLETTER>
+	<DATA_CADASTRO timestamp="true" readonly="true">DATETIME</DATA_CADASTRO>
+</AFFBI_RECIPIENTS>
+<AFFBI_NEWSGROUP parent="id_parent" dbname="sys_news_group" title="name" order="id_parent+,name+" listing="parent_name,name,#affbi_newslink"
+	meta="Recipient groups"
+	>
+	<ID_PARENT>AFFBI_NEWSGROUP</ID_PARENT>
+	<NAME mandatory="true">VC</NAME>
+</AFFBI_NEWSGROUP>
+<AFFBI_NEWSLINK dbname="sys_news_link" title="id_recipient" keys="id_recipient,id_newsgroup" linker="true"
+	meta="Relationship between recipients and groups. If you pointed to another module the recipients at recipientList, copy/paste this module to your meta.xml and change the module in ID_RECIPIENT as well"
+	>
+	<ID_RECIPIENT mandatory="true" hashkey="true">AFFBI_RECIPIENTS</ID_RECIPIENT>
+	<ID_NEWSGROUP mandatory="true" hashkey="true">AFFBI_NEWSGROUP</ID_NEWSGROUP>
+</AFFBI_NEWSLINK>

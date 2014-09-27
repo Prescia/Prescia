@@ -138,7 +138,10 @@ class mod_bi_adm extends CscriptedModule  {
 			$this->parent->cachetimeObj = 1;
 			########## SAFETY - IT'S HERE ##############
 			// if we do not have enough level (not logged, logged with low-level user), force to login page
-			if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<$this->admRestrictionLevel) $this->parent->action = "login";
+			if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<$this->admRestrictionLevel) {
+				$this->parent->authControl->logsGuest();
+				$this->parent->action = "login";
+			}
 			############################################
 
 			$this->parent->debugFile = CONS_PATH_SYSTEM."plugins/".$this->name."/payload/template/_debugarea.html"; // this is our debug area

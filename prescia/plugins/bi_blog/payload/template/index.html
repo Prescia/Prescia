@@ -1,0 +1,149 @@
+<div class="la_blog_container" id="blogcontainer">
+	
+	<div class="la_blog_main{_removeonindexajax}_full{/removeonindexajax}">
+		{_blogtitle}<a href="index.html"><h1 style="margin-left:10px">{_t}{blogtitle}{/t}</h1></a>{/blogtitle}
+		{_hasFilter}
+		<div class="la_blognotice">
+			{_t}filtering{/t}: {_t}{filtername}{/t} = {filter}
+		</div>
+		{/hasFilter}
+		{_blogIndexMsg}
+		<div class="la_blogheader">
+			<div class="la_blogtitle">{_t}welcome{/t}</div>
+		</div>
+		<div class="la_blogcontainer">
+				{introduction}
+				{_mainIndex}{CONTENTMAN}{/mainIndex}
+		</div>
+		{/blogIndexMsg}
+		{_blogItem}
+		<div class="la_blogheader">
+			<div class="la_blogdate"><a href="index.{ext2use}?date={date|datetime|Ym}">{date|datetime|d.m.Y}</a></div>
+			<div class="la_blogcat"><a href="index.{ext2use}?id_category={id_category}">{category_title}</a></div>
+			<div class="la_blogtitle"><a href="{urla}.{ext2use}">{title}</a></div>
+			
+		</div>
+		<div class="la_blogcontainer">
+			<div class="la_blogbody">
+				{_toggle_video}
+					<div class="la_blogthumb">{_FLASHME}{video_url}|400|225{/FLASHME}</div>
+				{/toggle_video}
+				{_toggle_image}
+					<div class="la_blogthumb"><a href="/{image_1}" rel="shadowbox">{image_2t}</a></div>
+					{_toggle_video}
+					<div style="clear:both"></div>{_}this will only show if both are visible, thus breaking a line{/}
+					{/toggle_video}
+				{/toggle_image}	
+
+			 	{content}
+			 	<div style="clear:both"></div>
+			 </div>
+			 {GALLERY}
+			<div class="la_blogtags"><b>Tags:</b>  {tags} </div>
+		</div>
+		{/blogItem}
+		{_blogAll}
+		<div class="la_blogheader">
+			<div class="la_blogcat">{_t}all{/t}</div>
+		</div>
+		<div class="la_blogcontainer">
+			{_blogAllItem}
+			<a href="{urla}.{ext2use}" style="display:block">{date|datetime|d.m.Y} - {title} - {category_title}</a><br/>
+			{/blogAllItem}
+		</div>
+		{/blogAll}
+		{_PAGING}
+		<div class="la_blogcontainer">
+			{_has_page_previous}
+			<a href="index.{ext2use}{QUERY_STRINGS|p_init}p_init={page_previous}">«</a>
+			{/has_page_previous}
+			{_pages}
+			<a href="index.{ext2use}{QUERY_STRINGS|p_init}p_init={p_init}" {current_page|map|1=style="font-size:16px"}>{p_number}</a>
+			{/pages}
+			{_t}of{/t} {p_total}
+			{_has_page_next}
+			<a href="index.{ext2use}?all=true{QUERY_STRINGS|p_init}p_init={page_next}">»</a>
+			{/has_page_next}
+		</div>
+		{/PAGING}
+		{_blogNone}
+		<div class="la_blognotice">
+			{_t}no_blogs_found{/t}
+		</div>
+		{/blogNone}
+	</div>
+	{_removeonindexajax}
+	<div class="la_blog_menu">
+		{_aboutarea}
+		<div class="la_blog_menuitemtitle">{_t}contents{/t}</div>
+		<div class="la_blog_menuitem">
+			{CONTENTMAN2}
+		</div>
+		{/aboutarea}
+		{_customarea}
+		<div class="la_blog_menuitemtitle">{customareaname}</div>
+		<div class="la_blog_menuitem">
+			{customarea}
+		</div>
+		{/customarea}
+		<div class="la_blog_menuitemtitle"><a id="s0" href="#" onclick="menu(0);">{_t}ultimos{/t}</a> • <a href="#" onclick="menu(1);" id="s1">{_t}destaque{/t}</a> • <a href="#" onclick="menu(2);" id="s2">{_t}arquivo{/t}</a></div>
+		<div class="la_blog_menuitem" id="i0">
+			{_blogList}
+			<a href="{urla}.{ext2use}" style="display:block">• {title|truncate|31|…}</a>
+			{/blogList}
+			<a href="index.{ext2use}?all=true" style="display:block">✚ {_t}all{/t}</a>
+		</div>
+		<div class="la_blog_menuitem" id="i1" style="display:none">
+			{_featureList}
+			<a href="{urla}.{ext2use}" style="display:block">• {title|truncate|33|…}</a>
+			{/featureList}
+		</div>
+		<div class="la_blog_menuitem" id="i2" style="display:none">
+			{_blogArchieves}
+			<a href="index.{ext2use}?date={year}{month}" style="display:block">• {_t}{monthname}{/t} {year}</a>
+			{/blogArchieves}
+		</div>
+		
+		<div class="la_blog_menuitemtitle">{_t}categories{/t}</div>
+		<div class="la_blog_menuitem">
+			<a href="index.{ext2use}" style="display:block">• {_t}all{/t}</a>
+			{_blogCategories}
+			<a href="index.{ext2use}?id_category={id}" style="display:block">• {title}</a>
+			{/blogCategories}
+		</div>
+		<div class="la_blog_menuitemtitle">{_t}tags{/t}</div>
+		<div class="la_blog_menuitem">
+			{_blogTags}<a class="la_tagsize{tagsize}" href="index.{ext2use}?tag={tag}">{tag}</a> {/blogTags}
+		</div>
+	</div>
+	{/removeonindexajax}
+	{_removeonindexajax}
+	<div style="clear:both"></div>
+	{/removeonindexajax}
+</div>
+<script type="text/javascript">
+	
+	if (affbi_blog_selectedMenu == undefined) var affbi_blog_selectedMenu = '#ffffff';
+	if (affbi_blog_otherMenu == undefined) var affbi_blog_otherMenu = '#333333';
+
+	function menu(mode) {
+		activemenu = $('i0').style.display == 'none'?($('i1').style.display == 'none'?2:1):0;
+		if (mode==activemenu) {
+			new Effect.Pulsate('i'+mode);
+		} else {
+			new Effect.BlindDown('i'+mode);
+			new Effect.BlindUp('i'+activemenu);
+			$('s'+mode).style.color = affbi_blog_selectedMenu;
+			$('s'+activemenu).style.color = affbi_blog_otherMenu;
+		}
+	}
+	function initBlog() {
+		$('s0').style.color = affbi_blog_selectedMenu;
+		$('s1').style.color = affbi_blog_otherMenu;
+		$('s2').style.color = affbi_blog_otherMenu;
+		d = windowDimensions();
+		if ($('blogcontainer').offsetHeight < d[1])
+			$('blogcontainer').style.height = d[1] + "px";
+	}
+	Event.observe(window,"load",initBlog());
+</script>

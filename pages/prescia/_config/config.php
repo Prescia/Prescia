@@ -10,7 +10,7 @@
 	define("CONS_DEFAULT_FAVICON",true); // if TRUE will use default favicon if none found
 
 	if (CONS_ONSERVER) { // <-- settings for your online "final" server
-		define("CONS_INSTALL_ROOT","/"); // if Prescia is installed in other than the ROOT folder, fill this (must end and start with /)
+		define("CONS_INSTALL_ROOT","/"); // if Prescia is installed in other than the ROOT folder, fill this (must end and start with /)	
 		define("CONS_DB_HOST",""); // leave empty if not using a database. The framework will enter dbless mode
 		define("CONS_DB_BASE","");
 		define("CONS_DB_USER","");
@@ -60,10 +60,10 @@
 		$bb->registrationGroup = 4;
 
 	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
-	    $stats->admFolder = "adm";
-		$stats->admRestrictionLevel = 10; // what we consider an admin level
-		$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
-		$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this
+	    #$stats->admFolder = "adm";
+		#$stats->admRestrictionLevel = 10; // what we consider an admin level
+		#$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
+		#$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this
 
 	// Uncomment and change as needed
 	$this->languageTL = array("en" => "en", "pt" => "pt-br"); # url/PATH/[subdir/] => url/[subdir/]?lang=PATH

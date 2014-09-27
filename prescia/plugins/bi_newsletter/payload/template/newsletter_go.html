@@ -1,0 +1,169 @@
+<div class="lxmladm_box">
+	<div class="lxmladm_title">{_t}newsletter_send{/t}:</div>
+
+	<div class="lxmladm_box" style="position:relative">
+		<input style="float:right" type="button" onclick="previewme()" class="ladm_buttonblue" value=" ↗ {_t}preview{/t} "/>
+		Newsletter selecionada: {title}<br/>
+		E-mail de origem da Newsletter: <a href="options.php">{newslettersourcemail} [opções]</a><br/>
+		Destinatários: {dest}<br/>
+		Observações: <br/>
+
+		<form name="frmbase" method="post" action="newsletter_go.php">
+			<input type="hidden" name="gcf" value="1"/>
+			<input type="hidden" name="haveinfo" value="1"/>
+			<input type="hidden" name="id" value="{id}"/>
+			<div style="width:90%;margin:0 auto;">
+				<div> <!-- I hope you drop dead, IE -->
+				<textarea name="obs" rows="5" style="width:100%;font-size:11px;margin:0px;">{obs}</textarea><br/>
+				</div>
+			</div>
+			<input style="float:right" class="ladm_buttonblue" type="submit" value=" Gravar "/>
+			<div style="clear:both"></div>
+		</form>
+	</div>
+
+	<div class="lxmladm_box" id="progressBar">
+		<div style="border:1px solid #000000;margin:0px auto;padding:2px;width:90%;height:12px;">
+			<div id="progressBar_interior" style="heigth:10px;font-size:10px;float:left;width:10px;color:#ffffff;text-align:center;background:#5555cc">0%</div>
+		</div>
+	</div>
+
+	<div class="lxmladm_box" id="mailStatus">Status atual: {progress}/{dest} enviadas</div>
+
+	<div class="lxmladm_box" style="text-align:center">
+		<input type="button" class="ladm_buttongreen" id="btnStart" onclick="myStart(false);" value=" {progress|map|0=Iniciar|Continuar} Envio " style="font-size:10px"/>
+		<input type="button" class="ladm_buttonred" id="btnRestart" onclick="myStart(true);" value=" Reiniciar do zero " style="font-size:10px"/>
+		<input type="button" class="ladm_buttonblue" onclick="mailteste();" value="E-mail de teste" style="font-size:10px"/>
+		<div style="width:300px;margin:0px auto;height:12px;position:relative"><div id="div_animation" style="position:absolute;top:0px;left:0px;height:12px;display:none">✉</div></div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	function previewme() {
+		window.open("preview.php?module=affbi_newsletter&id={id_newsletter}&layout=1",'preview',"status=0,toolbar=0,menubar=0");
+	}
+	if ("{dest}" != "0") {
+		$('progressBar_interior').style.width = Math.ceil(100*{progress}/{dest}) + "%";
+		$('progressBar_interior').innerHTML = Math.ceil(100*{progress}/{dest}) + "%";
+	}
+	var position = {progress};
+	var total = {dest};
+	var sending = false;
+	var tickHandler = false;
+	function myStart(full) { /* IE does not support function named start, why don't that fucking browser won't just die? */
+		if (sending) {
+			$('btnStart').value = " Continuar Envio ";
+			$('btnStart').className = "ladm_buttongreen";
+			sending = false;
+			clearTimeout(tickHandler);
+			tickHandler = false;
+			return;
+		}
+		if (full && !confirm('Tem certeza que quer reiniciar o envio desde o início?')) {
+			full = false;
+		}
+		if (full) {
+			position = 0;
+			$('btnStart').disabled = false;
+			$('progressBar_interior').style.width = "0%";
+			$('progressBar_interior').innerHTML = "0%";
+		}
+		$('btnStart').className = "ladm_buttonred";
+		$('btnStart').value = " PAUSA ";
+		tick();
+		$('div_animation').style.display = '';
+		setTimeout(sendingAnimation,100);
+	}
+	function tick() {
+		sending = true;
+		query = "newsletter_engine.ajax?layout=2&id={id}&position="+position; // sends the LAST submited position (thus, 0 if starting)
+		new Ajax.Request(query,{
+			asynchronous: true,
+			onComplete: tickComplete
+		});
+	}
+	function tickComplete(data) {
+		data = parseajax(data);
+		isError = false;
+		if (data != '' && data[0] != 'e') {
+			edata = data.split("|"); // format: mails sent so far|mails sent in this iteraction comma delimited
+			if (parseInt(edata[0])>0) {
+				position = edata[0];
+				if (position > {dest}) position = {dest};
+				$('progressBar_interior').style.width = Math.ceil(100*position/{dest}) + "%";
+				$('progressBar_interior').innerHTML = Math.ceil(100*position/{dest}) + "%";
+				$('mailStatus').innerHTML = "Status atual: " + position + "/{dest} enviadas<br/>Últimos mails processados: " + edata[1];
+				if (position == {dest}) {
+					$('btnStart').disabled = true;
+					$('btnStart').className = "ladm_buttongrey";
+					sending = false;
+					tickHandler = false;
+					alert("Envio completo!");
+				} else if (sending) // might have been set to false by "PAUSE"
+					tickHandler = setTimeout(tick,250);
+			} else {
+				isError = true;
+			}
+		} else
+			isError = true;
+		if (isError) {
+			$('mailStatus').innerHTML = "ERRO! " + data;
+			$('btnStart').value = " Continuar Envio ";
+			$('btnStart').className = "ladm_buttongreen";
+			sending = false;
+			tickHandler = false;
+		}
+	}
+
+	if (total == 0) {
+		$('btnStart').disabled = true;
+		$('btnStart').className = "ladm_buttongrey";
+		$('btnRestart').disabled = true;
+		$('btnRestart').className = "ladm_buttongrey";
+	} else if (position == total) {
+		$('btnStart').className = "ladm_buttongrey";
+		$('btnStart').disabled = true;
+	}
+
+	var sA = 0;
+	var sS = true;
+	function sendingAnimation() {
+		if (!sending) {
+			$('div_animation').style.display = 'none';
+			return;
+		}
+		$('div_animation').style.left = sA + "%";
+		if (sS) {
+			sA += 5;
+			if (sA >= 100) {
+				sA -= 10;
+				sS = false;
+			}
+		} else {
+			sA -= 5;
+			if (sA <= 0) {
+				sS = true;
+			}
+		}
+
+		setTimeout(sendingAnimation,100);
+	}
+	function mailteste() {
+		mail = prompt("Digite o E-mail de destino");
+		if (!mail || mail == '') return;
+		if (!isMail(mail)) {
+			alert("E-mail inválido");
+		} else {
+			query = "newsletter_engine.ajax?layout=2&id={id}&mail=" + mail;
+			new Ajax.Request(query,{
+				asynchronous: true,
+				onComplete: testComplete
+			});
+		}
+	}
+	function testComplete(data) {
+		data = parseajax(data);
+		alert(data);
+	}
+
+</script>

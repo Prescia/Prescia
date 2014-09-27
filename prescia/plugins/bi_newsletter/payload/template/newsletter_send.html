@@ -1,0 +1,259 @@
+<div class="lxmladm_box">
+	<div class="lxmladm_title">{_t}newsletter_send{/t}:</div>
+
+	<form name="frmbase" action="newsletter_go.php" method="post">
+		<input type="hidden" name="gcf" value="1"/>
+		<input type="hidden" name="haveinfo" value="1"/>
+		<input type="hidden" name="register" value="true"/>
+		<input type="hidden" name="groups" id="formids" value=""/>
+
+	<div id="passo1">
+		<div class="lxmladm_box">
+			<div style="height:32px">
+				<div style="width:20%;float:left;text-align:center;"><strong>Passo 1<br/>Texto</strong></div>
+				<div style="width:5%;float:left;text-align:center;padding-top:8px">➨</div>
+				<div style="width:20%;float:left;text-align:center">Passo 2<br/>Destinatários</div>
+				<div style="width:5%;float:left;text-align:center;padding-top:8px">➨</div>
+				<div style="width:20%;float:left;text-align:center">Passo 3<br/>Gravar</div>
+			</div>
+		</div>
+
+		<div class="lxmladm_box">
+			Selecione a newsletter a ser enviada:<br/>
+			<input onclick="new Effect.BlindUp('newTemplateDiv');" type="radio" checked="checked" name="mode" value="0" id="no0" /><label for="no0">
+				Texto já existente, selecione:	<select name='id_newsletter' id='id_newsletter' style="width:50%">
+				    {_newsletters}<option value="{id}">{title}</option>{/newsletters}
+				</select></label><input type="button" class="ladm_buttonblue" onclick="previewme()" value=" ↗ {_t}preview{/t} "/><br/>
+			<input onclick="new Effect.BlindDown('newTemplateDiv');checkcke();" type="radio"  name="mode" value="1" id="no1" /><label for="no1">
+				Criar novo texto, preencha:</label><br/>
+			<div style="display:none;margin:10px 5px 10px 25px" id="newTemplateDiv">
+				Titulo (para seu controle):<br/>
+				<input type="text" style="width:90%" id="newTemplateTitle" name="nttitle"/><br/>
+				Título do E-mail:<br/>
+				<input type="text" style="width:90%" id="newTemplateETitle" name="ntetitle"/><br/>
+				Texto:<br/>
+				<textarea id="newTemplateText" name="nttext" rows="10" style="height:300px;width:90%"></textarea><br/>
+				<em>(Você pode usar {\}NOME} ou {\}MAIL} no título do E-mail ou texto para preencher com tais valores no envio)</em>
+			</div>
+			<br/>
+			<input type="button" class="ladm_buttongreen" onclick="passo2();" value="Próximo" />
+		</div>
+	</div>
+
+	<div id="passo2" style="display:none">
+		<div class="lxmladm_box">
+			<div style="height:32px">
+				<div onclick="passo1();" style="cursor:pointer;width:20%;float:left;text-align:center"><strong>Passo 1<br/>Texto</strong></div>
+				<div style="width:5%;float:left;text-align:center;padding-top:8px">➨</div>
+				<div style="width:20%;float:left;text-align:center"><strong>Passo 2<br/>Destinatários</strong></div>
+				<div style="width:5%;float:left;text-align:center;padding-top:8px">➨</div>
+				<div style="width:20%;float:left;text-align:center">Passo 3<br/>Gravar</div>
+			</div>
+		</div>
+		<div class="lxmladm_box" id="passo1_selected"></div>
+		<div class="lxmladm_box">
+			Selecione os destinatários:<br/>
+			<br/>
+			<div style="width:48%;float:left" >
+				<div style="height:20px;line-height:20px;"><input type="checkbox" checked="checked" onclick="passo2_check();" id="include_groups" name="isInclude" /><label for="include_groups" id="include_groups_div"> Incluir os seguintes grupos:</label></div>
+				<div id="leftside" style="width:100%;border:1px solid #999999;background:#ffffff;color:#000000;overflow:auto;height:300px;">
+					{_sdirs}
+						<input type="checkbox" id="d{id}" name="destinatarios[]" value="{id}"/><label for="d{id}">{treetitle} ({dest} e-mails)</label><br/>
+					   	{_insubdirs}{subdirs}{/insubdirs}
+					{/sdirs}
+					{_ssubdirs}
+						<div style="padding-left:{level}0px"><input type="checkbox" id="d{id}" name="destinatarios[]" value="{id}"/><label for="d{id}">{treetitle} ({dest} e-mails)</label></div>
+				  		{_insubdirs}{subdirs}{/insubdirs}
+					{/ssubdirs}
+				</div>
+			</div>
+			<div style="width:48%;float:right" id="rightside">
+				<div style="height:20px;line-height:20px;">E-mails extras selecionados (digite um por linha ou separado por vírgula):</div>
+				<div><!-- I hate IE -->
+				<textarea id="extra_mails" name="extras" style="width:100%;border:1px solid #999999;background:#ffffff;color:#000000;height:100px;padding:0px;margin:0px;"></textarea><br/><br/>
+				</div>
+				<div style="height:20px;line-height:20px;">Filtros (enviar apenas para):</div>
+				{_filters}
+				<div style="height:24px;line-height:24px;border-bottom: 1px solid #999999;padding:2px">
+					<div style="width:30%;float:left;line-height:20px;">
+						<input type="checkbox" id="fc{name}" name="{name}_c" /><label for="fc{name}"> {_t}{name}{/t}:</label>
+					</div>
+					<select name="{name}_match" id="fm{name}" style="width:65px;float:left;margin:0px 5px 0px 5px;padding:0px">
+			      		{_string}
+			      		<option value="c" title="{_t}contem{/t}" {selected|select|c}>&ni;</option>
+			      		{/string}
+			      		<option value="i" title="{_t}igual{/t}" {selected|select|i}>=</option>
+			      		<option value="d" title="{_t}diferente{/t}" {selected|select|d}>&ne;</option>
+			      	</select>
+			      	{_text}
+			      	<input type="text" id="f{name}" name="{name}" onkeypress="$('fc{name}').checked = true;" style="width:40%;float:left;padding:0px;margin:0px" />
+			      	{/text}
+			      	{_select}
+			      	<select id="f{name}" name="{name}" style="width:40%;float:left;padding:0px;margin:0px">
+			      		{options}
+			      	</select>
+			      	{/select}
+			    </div>
+				{/filters}
+			</div>
+			<div style="clear:both"></div>
+			<input type="button" onclick="passo3();" value="Próximo Passo" class="ladm_buttongreen" style="margin-top:5px"/>
+		</div>
+	</div>
+
+	<div id="passo3" style="display:none">
+		<div class="lxmladm_box">
+			<div style="height:32px">
+				<div onclick="passo1();" style="cursor:pointer;width:20%;float:left;text-align:center"><strong>Passo 1<br/>Texto</strong></div>
+				<div style="width:5%;float:left;text-align:center;padding-top:8px">➨</div>
+				<div onclick="passo2();"style="cursor:pointer;width:20%;float:left;text-align:center"><strong>Passo 2<br/>Destinatários</strong></div>
+				<div style="width:5%;float:left;text-align:center;padding-top:8px">➨</div>
+				<div style="width:20%;float:left;text-align:center"><strong>Passo 3<br/>Gravar</strong></div>
+			</div>
+		</div>
+		<div class="lxmladm_box" id="passo2_selected"></div>
+		<div class="lxmladm_box" id="selected_mail">Aguarde enquanto a quantidade de destinatários é verificada ...</div>
+
+		<div class="lxmladm_box" style="display:none" id="div_finalbtns">
+			Digite um nome para este envio de newsletter:<br/>
+			<input type="text" id="name_newsletter" name="name_newsletter" style="width:50%"/><br/>
+			<input type="button" onclick="enviar();" value=" ✉ Gravar " class="ladm_buttongreen"/>
+		</div>
+
+	</div>
+
+	</form>
+</div>
+
+<script type="text/javascript">
+	var cke_loaded = false;
+	var CKE = false;
+	function previewme() {
+		window.open('preview.php?module=affbi_newsletter&id=' + $('id_newsletter').value + "&layout=1",'preview',"status=0,toolbar=0,menubar=0");
+	}
+	function passo1() {
+		$('passo1').style.display = '';
+		$('passo2').style.display = 'none';
+		$('passo3').style.display = 'none';
+		$('div_finalbtns').style.display = 'none';
+	}
+	function passo2() {
+		if ($('no0').checked)
+			$('passo1_selected').innerHTML = "Newsletter selecionada: " + $('id_newsletter').options[$('id_newsletter').selectedIndex].text + " <div onclick='passo1();' style='float:right;cursor:pointer'>[← voltar]</div>";
+		else {
+			msg = "";
+			for (var instance in CKEDITOR.instances)
+		        CKEDITOR.instances[instance].updateElement();
+			if ($('newTemplateTitle').value == '') msg += "Preencha o título do template\n";
+			if ($('newTemplateETitle').value == '') msg += "Preencha o título do E-mail\n";
+			if ($('newTemplateText').value == '') msg += "Preencha o texto da newsletter\n";
+			if (msg != "") {
+				alert("Atenção:\n_______________\n"+msg);
+				return false;
+			}
+			$('passo1_selected').innerHTML = "Newsletter selecionada: <em>Novo texto</em> <div onclick='passo1();' style='float:right;cursor:pointer'>[← voltar]</div>";
+		}
+		$('passo1').style.display = 'none';
+		$('passo2').style.display = '';
+		$('passo3').style.display = 'none';
+		$('div_finalbtns').style.display = 'none';
+
+		// adjusts both columns to have the same size
+		try {
+			$rs = parseInt($('rightside').offsetHeight);
+			if ($rs > 0) {
+				if ($rs < 200) $rs == 200;
+				$rs -= 20;
+				$('leftside').style.height = $rs + "px";
+			}
+		} catch (ee) {
+			alert(ee);
+		}
+	}
+	function passo2_check() {
+		c = $('include_groups').checked;
+		$('include_groups_div').innerHTML = c?' Incluir os seguintes grupos:':' Incluir todos <b>exceto</b> dos seguintes grupos:';
+	}
+	function passo3() {
+		dt = document.getElementsByName("destinatarios[]");
+		isInclude = $('include_groups').checked;
+		total = 0;
+		sels = '';
+		for (c=0;c<dt.length;c++) {
+			if (dt[c].checked) {
+				total++;
+				sels += dt[c].value + ",";
+			}
+		}
+		if (isInclude && total == 0) {
+			alert('Selecione pelo menos um grupo');
+			return;
+		}
+		if (!isInclude && total == dt.length) {
+			alert('Não selecione todos os grupos como exceção')
+			return;
+		}
+		$('formids').value = sels;
+		if ($('no0').checked)
+			$('passo2_selected').innerHTML = "Newsletter selecionada: " + $('id_newsletter').options[$('id_newsletter').selectedIndex].text + " <div onclick='passo1();' style='float:right;cursor:pointer'>[← voltar]</div>";
+		else
+			$('passo2_selected').innerHTML = "Newsletter selecionada: <em>Novo texto</em> <div onclick='passo1();' style='float:right;cursor:pointer'>[← voltar]</div>";
+
+		$('passo1').style.display = 'none';
+		$('passo2').style.display = 'none';
+		$('passo3').style.display = '';
+		$('div_finalbtns').style.display = 'none';
+		waitWhileLoad(true);
+		query = "newsletter_squery.ajax?" + getQuery();
+		new Ajax.Request(query,{
+			asynchronous: true,
+			onComplete: nsComplete
+		});
+	}
+	function nsComplete(data) {
+		remove_wwl();
+		data = parseajax(data);
+		$('selected_mail').innerHTML = data + " <div onclick='passo2();' style='float:right;cursor:pointer'>[← voltar]</div>";
+		if (data.length > 0 && data[0] != '0')
+			$('div_finalbtns').style.display = '';
+	}
+	function getQuery() {
+		var validNames = new Array();
+		{validnames}
+		dt = document.getElementsByName("destinatarios[]");
+		isInclude = $('include_groups').checked;
+		sels = '';
+		for (c=0;c<dt.length;c++) {
+			if (dt[c].checked) {
+				sels += dt[c].value + ",";
+			}
+		}
+		query = "groups="+sels+"&isInclude="+(isInclude?"true":"false")+"&";
+		for (c=0;c<validNames.length;c++) {
+			if ($('fc'+validNames[c]).checked) {
+				query += validNames[c] + "_match=" + $('fm'+validNames[c]).value + "&" + validNames[c] + "=" + $('f'+validNames[c]).value + "&";
+			}
+		}
+		return query;
+	}
+	function enviar() {
+		if ($('name_newsletter').value == '') {
+			alert("Por favor digite um nome para este envio de newsletter");
+			return false;
+		}
+		waitWhileLoad(true);
+		document.frmbase.submit();
+	}
+	function checkcke() {
+		if (!cke_loaded) {
+			CKE = CKEDITOR.replace( 'newTemplateText' , {
+				language : '{SESSION_LANG}'
+				} );
+			CKFinder.setupCKEditor( CKE, '/pages/_js/ckfinder/' );
+			cke_loaded = true;
+		}
+	}
+
+
+
+</script>

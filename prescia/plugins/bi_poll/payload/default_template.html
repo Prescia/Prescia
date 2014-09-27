@@ -1,0 +1,25 @@
+{_removeonpopup}
+<div id="poll{id}_container">
+{/removeonpopup}
+	<p>{question}</p>
+	{_answers}<input class="radio" type="radio" name="poll{id}[]" id="poll{id}_{#}" onclick="$('poll{id}').value='{#}';"/><label for="poll{id}_{#}">{answer}</label><br/>{/answers}
+	<input type="hidden" id="poll{id}" value=""/>
+	<input type="button" value=" Ver resultados " onclick="submitPoll({id},false);"/>
+	<input type="button" value=" {_t}vote{/t} " onclick="if ($('poll{id}').value != '') submitPoll({id},true);" />
+{_removeonpopup}
+</div>
+<script type="text/javascript">
+	try {
+		function submitPoll(id,withVote) {
+			if (withVote) {
+				setCookie('voted'+id,'true',1);
+				theVote = $('poll'+id).value; 
+			}
+			$('poll'+id+'_container').innerHTML = "{_t}loading{/t}...";
+			new Ajax.Updater('poll'+id+'_container','affbi_poll.ajax?id='+id+(withVote?'&vote='+theVote:''));
+		}
+	} catch (e) {
+		// already declared (more than one poll on screen)
+	}
+</script>
+{/removeonpopup}

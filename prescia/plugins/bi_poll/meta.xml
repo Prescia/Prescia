@@ -1,0 +1,15 @@
+<AFFBI_POLL dbname="app_poll"
+	title="question"
+	plugins="bi_poll"
+	listing="question,date_start,date_end"
+	order="ordem+,date_created+"
+	>
+	<QUESTION ignorenedit="true" mandatory="true">VC</QUESTION>
+	<ANSWERS ignorenedit="true" mandatory="true" meta="an answer per line">TEXT</ANSWERS>
+	<DATE_START ignorenedit="true" mandatory="true">DATE</DATE_START>
+	<DATE_END ignorenedit="true" mandatory="true">DATE</DATE_END>
+	<ACCEPT_MULTIPLE ignorenedit="true" default='n'>BOL</ACCEPT_MULTIPLE>
+	<ORDEM ignorenedit="true">SMALLINT</ORDEM>
+	<DATE_CREATED timestamp='true'>DATETIME</DATE_CREATED>
+	<RESULTS meta="votes">VC</RESULTS>
+</AFFBI_POLL>

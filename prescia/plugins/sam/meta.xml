@@ -1,0 +1,7 @@
+<sam dbname="sam" title="age" order="" systemmodule="true" meta="sam is watching you" plugins="sam">
+	<context mandatory="true" custom="true">text</context>
+	<data mandatory="true" custom="true">mediumtext</data>
+	<power mandatory="true" default="1">int</power>
+	<age timestamp="true">datetime</age>
+	<agems>smallint</agems>
+</sam>

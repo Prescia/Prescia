@@ -1269,7 +1269,7 @@ class CModule {
 		if (is_object($action)) $this->parent->errorControl->raise(126);
 		$this->parent->lastReturnCode = 0;
 		unset($this->parent->storage['lastactiondata']);
-		
+
 		if (is_numeric($data)) {
 			if ($action == CONS_ACTION_DELETE) {
 				$id = $data;
@@ -1304,9 +1304,9 @@ class CModule {
 		}
 		$EnumPrunecache = array();
 		switch ($action) {
-			
+
 			case CONS_ACTION_UPDATE: ###################################################### UPDATE ############################################
-				
+
 				$wS = ""; # whereStruct
 				$kA = array(); # keyArray
 				$haveAllKeys = $this->getKeys($wS,$kA,$data); // is it ok not to have all keys?
@@ -1361,7 +1361,7 @@ class CModule {
 				break;
 
 			case CONS_ACTION_INCLUDE: ###################################################### INCLUDE ############################################
-				
+
 				if ($this->parent->safety) { # checkPermission has this test but this is faster
 					if ($this->parent->safety && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < 100) {
 						$this->parent->lockPermissions();
@@ -1504,7 +1504,7 @@ class CModule {
 						$this->parent->notifyEvent($this,CONS_ACTION_INCLUDE,$data,$startedAt,false); # later notify (there is no early notify for an include)
 						$this->parent->lastReturnCode = $id; // notifyEvent could have changed/consumed lastReturnCode
 						$this->parent->storage['lastactiondata'] = &$data;
-						
+
 					}
 				} else {
 					# null insert? error
@@ -1518,7 +1518,7 @@ class CModule {
 
 			case CONS_ACTION_DELETE: ###################################################### DELETE ############################################
 				$wS = ""; $kA = array();
-			
+
 				$haveallKeys = $this->getKeys($wS,$kA,$data);
 				# security
 				$Owner = $this->parent->authControl->checkOwner($this,$kA); // array with isOwner and isSameGroup
@@ -1698,7 +1698,7 @@ class CModule {
  	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNotify = false) {
  		# notifies this module about a change in another module
  		if (!$this->loaded) $this->parent->loadAllmodules(); # a notify will require all anyway
- 		
+
  		foreach ($this->plugins as $pname) {
  			if ($this->parent->loadedPlugins[$pname]->moduleRelation == $this->name)
  				$this->parent->loadedPlugins[$pname]->notifyEvent($module,$action,$data,$startedAt,$earlyNotify); # script should also know about this
@@ -1715,7 +1715,7 @@ class CModule {
 
 	 			if (isset($data[$module->keys[0]])) {
 	 				# there is a key the same as one of mine. Try translate
-	 				if ($this->moduleRelation != $module->name) {
+	 				if ($this->name != $module->name) {
 	 					# not a notification of this exact module
 	 					$key = $this->get_key_from($module->name,'id_'.$module->name); // how I link the module that changes?
 	 					if ($key != "")
@@ -1745,7 +1745,7 @@ class CModule {
 				if ($keys == count($module->keys)) { # I am linked to that field, so either zero or delete me
 					$this->parent->deleteAllFrom($this,$data,$zerothem,$startedAt); # delete all my fields with this values (or zero them)
 				}
-				if ($module->name == $this->moduleRelation) { #one of my instances were deleted
+				if ($module->name == $this->name) { #one of my instances were deleted
 					$this->deleteUploads($data);
 				}
 	 		}

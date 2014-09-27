@@ -179,6 +179,7 @@ class CErrorControl {
 								523 => CONS_ERROR_NOTICE, # bi_dev cron reports php variables post_max_size or upload_max_filesize too low
 								524 => CONS_ERROR_WARNING_SHOW, # bi_adm multiple uploads reached time limit and aborted
 								525 => CONS_ERROR_SEC, # bi_stats reports too many bot hits
+								526 => CONS_ERROR_FATAL, # checkPermission called with an invalid $owner variable (must be either false or a 4-lenght array)
 
 								598 => CONS_ERROR_FATAL, # generic fatal plugin error
 								599 => CONS_ERROR_ERROR, # generic non-fatal plugin error

@@ -44,7 +44,7 @@
 	  return $valor;
 	}
 	function vardump($content) { // better output then var_dump (does not work with objects tough)
-		if (!is_array($content)) return $content;
+		if (!is_array($content)) return $content === true?"true":($content===false?"false":$content);
 		else {
 			$out = "(";
 			foreach ($content as $c) {

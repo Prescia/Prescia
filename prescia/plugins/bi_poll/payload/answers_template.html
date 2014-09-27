@@ -1,0 +1,50 @@
+<textarea name="answers" id="answers" style="display:none;visibility:hidden">{answers}</textarea>
+
+<div style="width:200px;position:relative;margin-bottom:5px">
+	<div id="answers_container"></div>
+	<div style="cursor:pointer;z-Index:100;position:absolute;right:0px;line-height:20px;height:20px;text-align:center;bottom:0px;width:20px;" id="answers_btn_plus" onclick="answersclick();" title="{_t}more_answers{/t}"><b>+</b></div>
+</div>
+
+<div id="answers_template" style="display:none;visibility:hidden"><input type="text" onchange="answersrefill()" style="width:198px;margin:0px;padding:0px;heigth:18px;line-heigth:20px;" id="answers_#n#" value="#a#"/><br/></div>
+
+<script type="text/javascript">
+	
+	var answers_count = 0;
+	var as = $('answers').value.split('\n');
+	for (c=0;c<as.length;c++) {
+		if (as[c] != '') {
+			option = str_replace("#n#",c,$('answers_template').innerHTML,1);
+			option = str_replace("#a#",as[c],option,1);
+			$('answers_container').innerHTML += option;
+			answers_count++;
+		}
+	}
+	while (answers_count<2) {
+		option = str_replace("#n#",answers_count,$('answers_template').innerHTML,1);
+		option = str_replace("#a#","",option,1);
+		$('answers_container').innerHTML += option;
+		answers_count++;
+	}
+	$('answers_container').style.height = (answers_count*20) + "px";
+
+	function answersclick() {
+		var option = str_replace("#n#",answers_count,$('answers_template').innerHTML,1);
+		option = str_replace("#a#","",option,1);
+		$('answers_container').innerHTML += option; // redo this with DOM to preserve old options
+		answers_count++;
+		$('answers_container').style.height = (answers_count*20) + "px";
+		$('answers_'+(answers_count-1)).style.display = 'none';
+		new Effect.Appear('answers_'+(answers_count-1));
+		
+	}
+	
+	function answersrefill() {
+		output = "";
+		for (c=0;c<answers_count;c++) {
+			if ($('answers_' + c).value != '')
+				output += $('answers_' + c).value + "\n";
+		}
+		$('answers').value = output;
+	}
+	
+</script>

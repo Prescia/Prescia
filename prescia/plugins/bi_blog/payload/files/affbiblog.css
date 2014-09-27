@@ -1,0 +1,28 @@
+/* Fluid (dinamic) width css */
+
+.la_blog_container { width: 100%; overflow:auto; position:relative; }
+.la_blog_main_full { margin-right: 260px; float:left}
+.la_blog_menu {position: absolute; right:10px; top:10px; width: 240px; }
+
+.la_blog_main { }
+.la_blognotice { margin: 10px; padding:10px; color:#aa9999; background: url('white50.png');}
+.la_blogcontainer { margin: 5px 10px 15px 10px; border-bottom: 1px solid #eeeeee; background: url('white50.png'); padding:5px }
+.la_blogheader { margin: 10px 10px 5px 10px; border-bottom: 1px solid #eeeeee; background: url('white50.png'); padding:5px }
+.la_blogcat { font-size: 14px; font-weight: bold;}
+.la_blogtitle { font-size: 14px; }
+.la_blogdate { font-size: 10px; color: #999999}
+.la_blogbody { font-size: 12px; color: #333333;}
+.la_blogthumb { background: #333333; padding:10px; width: 400px; margin: 0px 5px 5px 0px ; float:left;  }
+.la_blogtags { font-size: 10px; color: #999999}
+
+.la_blog_menuitemtitle { font-size: 13px; font-weight: bold; border-bottom: 1px solid #333333; margin-bottom:5px; background: url('white50.png'); padding: 1px}
+.la_blog_menuitem { font-size: 12px; margin-bottom:15px; background: url('white50.png'); padding: 5px}
+
+.la_tagsize0 { font-size: 9px }
+.la_tagsize1 { font-size: 11px }
+.la_tagsize2 { font-size: 12px }
+.la_tagsize3 { font-size: 14px }
+.la_tagsize4 { font-size: 15px; font-weight: bold}
+
+.la_quote { background: url('quotes.png') 10px 10px no-repeat; border-top: 1px solid #cccccc; margin:10px; padding-top: 40px; font-weight:bold; width:120px; float:right }
+pre { padding: 5px; margin: 5px; border: 1px solid #cccccc; overflow:auto; white-space: pre-wrap;  word-wrap: break-word; font-size:10px}

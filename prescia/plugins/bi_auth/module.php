@@ -261,7 +261,7 @@ class mod_bi_auth extends CscriptedModule  {
 						sendMail($email,$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut('registration_approved'),$html);
 					}
 				}
-			} else {
+			} else if ($data['id'] == $_SESSION[CONS_SESSION_ACCESS_USER]['id']) { // changed MY data
 				# Also, reset logged data
 				$this->parent->authControl->logsGuest();
 				$this->parent->authControl->logUser($data['id'],CONS_AUTH_SESSION_KEEP);

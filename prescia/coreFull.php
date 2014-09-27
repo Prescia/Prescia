@@ -1016,8 +1016,8 @@ class CPresciaFull extends CPrescia {
 			case "bigint":
 			case "smallint":
 				if (!isset($fields[$namefield][CONS_XML_FIELDLIMIT]))
-					$fields[$namefield][CONS_XML_FIELDLIMIT] = $tipo == "bigint" ? 11 : ( $tipo == "int" ? 10 : ( $tipo == 'smallint' ? 6 : 3));
-				$fields[$namefield][CONS_XML_SQL] = "INT (".$fields[$namefield][CONS_XML_FIELDLIMIT].") UNSIGNED";
+					$fields[$namefield][CONS_XML_FIELDLIMIT] = $tipo == "bigint" ? 20 : ( $tipo == "int" ? 10 : ( $tipo == 'smallint' ? 5 : 3));
+				$fields[$namefield][CONS_XML_SQL] = strtoupper($tipo)." (".$fields[$namefield][CONS_XML_FIELDLIMIT].") UNSIGNED";
 				$fields[$namefield][CONS_XML_TIPO] = CONS_TIPO_INT;
 				break;
 			case "float":
