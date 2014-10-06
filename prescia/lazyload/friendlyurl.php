@@ -6,8 +6,9 @@
   | Parameters: module = which module to look for the friendly url
   |				keys = comma separated fields on the module to try and compare the URL
   |				page = which page to foward if we successfully get a match
-  |				condition = a condition (to be tested on the module) for the redirect. For instance, same category, active page, etc
+  |				condition = a condition (to be tested on the module, not sql) for the redirect. For instance, same category, active page, etc
   |				queryfilter = comma separated list of fields that we will perform a comparission from the $_REQUEST
+  |				filter = SQL filter to be passed
   |				title = a CKTemplare enabled title to be used as the meta title of the page
   |				metadesc = a CKTemplare enabled meta description to be used as the meta description of the page
   |				metakeys = a CKTemplare enabled meta keywords to be used as the meta keywords of the page

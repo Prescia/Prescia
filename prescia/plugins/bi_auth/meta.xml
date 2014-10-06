@@ -14,7 +14,7 @@
 	<EXPIRATION_DATE restrict="50">DATETIME</EXPIRATION_DATE>
 	<HISTORY restrict="100" custom="true" html="true">TEXT</HISTORY>
 	<USERPREFS custom='true' meta="this predates the serialization system" restrict="10">TEXT</USERPREFS>
-	<IMAGE filetypes="gif,jpg,png" filemaxsize="256000" thumbnails="600,600|28,28" tweakimages="croptofit|croptofit">UPLOAD</IMAGE>
+	<IMAGE filetypes="gif,jpg,png" filemaxsize="256000" thumbnails="600,600|50,50" tweakimages="croptofit|croptofit">UPLOAD</IMAGE>
 </USERS>
 <GROUPS dbname="auth_groups"
 		keys="id"

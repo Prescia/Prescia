@@ -6,7 +6,7 @@
 #			  The actual administrative menu is read from admin.xml in the _config. You can generate one running at debugmode=true, it will be called admin_suggestion.xml
 
 define ("CONS_ADM_BASESKIN","base"); // which skin is the default skin if none set?
-define ("CONS_ADM_ACTIVESKINGS","base"); // which skins are active? If the user is using another, will reset to baseskin
+define ("CONS_ADM_ACTIVESKINS","base"); // which skins are active? If the user is using another, will reset to baseskin
 
 define("CONS_FIELD_ORDER","ordem"); // which field can be used to re-order a list
 // for the module options
@@ -87,11 +87,11 @@ class mod_bi_adm extends CscriptedModule  {
 				if ($field[CONS_XML_TIPO] == CONS_TIPO_LINK && $field[CONS_XML_MODULE] != $mname) { // links to OTHER link not myself
 					$links++; # do not count PARENTS as links
 					# ADDS THAT THIS LINK CAN BE USED TO FILTER, AND VICE-VERSA
-					if (!$module->options[CONS_MODULE_SYSTEM]/* && isset($field[CONS_XML_MANDATORY])*/) { // MANDATORY reomoved because canfilter requires non-mandatory. If you need it for partOf, implement on the other foreach
+					if (!$module->options[CONS_MODULE_SYSTEM]) { // MANDATORY reomoved because canfilter requires non-mandatory. If you need it for partOf, implement on the other foreach
 						$this->parent->modules[$field[CONS_XML_MODULE]]->options[CONS_MODULE_CANFILTER][] = $mname;
 						$this->parent->modules[$mname]->options[CONS_MODULE_CANBEFILTERED][] = $field[CONS_XML_MODULE];
 					}
-					$fieldsRequiredToLinks += count($this->parent->modules[$mname]->keys); # a module can have more than one key, thus to know if this module is a linker module, we need to check if ALL THIS HAVE are the keys for 2 modules
+					$fieldsRequiredToLinks += count($this->parent->modules[$field[CONS_XML_MODULE]]->keys); # a module can have more than one key, thus to know if this module is a linker module, we need to check if ALL THIS HAVE are the keys for 2 modules
 				}
 			}
 			if (($links == 2 && count($module->fields) == $fieldsRequiredToLinks) || $this->parent->modules[$mname]->linker) { # this is a linker module!
@@ -158,7 +158,7 @@ class mod_bi_adm extends CscriptedModule  {
 			}
 			if ($this->parent->action == "login") $this->skin = CONS_ADM_BASESKIN;
 
-			$temp = explode(",",CONS_ADM_ACTIVESKINGS);
+			$temp = explode(",",CONS_ADM_ACTIVESKINS);
 			if (!in_array($this->skin,$temp)) $this->skin = CONS_ADM_BASESKIN;
 
 			// check if statistics are installed
@@ -266,12 +266,13 @@ class mod_bi_adm extends CscriptedModule  {
 	}
 
 	function canEdit($dir) {
+
 		if ($dir == "" || $dir == "/") return true; // can create but not delete root
 		if ($dir[0] == "/") $dir = substr($dir,1);
 
 		$dir = explode("/",$dir);
 
-		if (!$this->parent->loaded(array_shift($dir)))
+		if (!$this->parent->loaded(array_shift($dir),true))
 			return true; // base folder is not a module, ok to edit
 		else { // base folder IS a module, ok only if it's a sub dir different from "t"
 			if (count($dir) == 0 || array_shift($dir) == "t")
@@ -395,8 +396,8 @@ class mod_bi_adm extends CscriptedModule  {
 
 	function addMenuItens(&$xml,&$menu,$idp,&$core,$inModule="") {
 		if ($xml->data[0] != 'xhtml') { // not the BASE node
-			$tm = $core->loaded(strtolower($xml->data[0])); // check if this is a module
-			if (!is_object($tm) && $inModule != '') $tm = $core->loaded($inModule); // if not a module, but we are INSIDE a module, inherit it
+			$tm = $core->loaded(strtolower($xml->data[0]),true); // check if this is a module
+			if (!is_object($tm) && $inModule != '') $tm = $core->loaded($inModule,true); // if not a module, but we are INSIDE a module, inherit it
 			if (is_object($tm)) $inModule = $tm->name; // works both ways
 			else $inModule = "";
 			$permissionTag = strtolower($xml->data[0]) == 'new' ? CONS_ACTION_INCLUDE : (strtolower($xml->data[0]) == 'list' ? true : strtolower($xml->data[0]));

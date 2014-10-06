@@ -144,19 +144,6 @@ class mod_bi_permissions extends CscriptedModule  {
 				}
 				$pos = 9;
 
-				foreach ($pmodule->plugins as $pluginname) {
-					foreach ($this->parent->loadedPlugins[$pluginname]->customPermissions as $ptag => $pi18n) {
-						$thisPermission = array(
-							'title' => $hasSOME ? '&nbsp;' : $this->parent->langOut($name).(defined("CONS_MODULE_PARTOF") && $pmodule->options[CONS_MODULE_PARTOF]!=''?" (".$this->parent->langOut($pmodule->options[CONS_MODULE_PARTOF]).")":""),
-							'pname' => 'c_'.$name."_".$ptag,
-							'ptitle' => $pi18n,
-							'checked' => isset($allperm[$name][$pos]) && $allperm[$name][$pos] == '1' ? true : '',
-						);
-						$output .= $customPerm->techo($thisPermission);
-						$pos++;
-					}
-				}
-
 			}
 			foreach ($this->parent->loadedPlugins as $pname => $plugin) { // stand alone plugins (no module)
 				if (count($plugin->customPermissions) != 0 ) {

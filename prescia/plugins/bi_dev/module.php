@@ -140,14 +140,14 @@ class mod_bi_dev extends CscriptedModule  {
 							$this->log[] = "Missing fields in serialized field $mname.$name";
 						} else {
 							foreach ($field[CONS_XML_SERIALIZEDMODEL] as $exname => $exfield) {
-								switch ($field[CONS_XML_TIPO]) {
+								switch ($exfield[CONS_XML_TIPO]) {
 									case CONS_TIPO_SERIALIZED:
 										$this->log[] = "Invalid serialized inside serialized $mname.$name ($exname)";
 									break;
 								}
-								if (isset($field[CONS_XML_ISOWNER ]))
+								if (isset($exfield[CONS_XML_ISOWNER ]))
 									$this->log[] = "isowner cannot be used a serialized field in $mname.$name ($exname)";
-								if (isset($field[CONS_XML_JOIN]))
+								if (isset($exfield[CONS_XML_JOIN]))
 									$this->log[] = "merge cannot be used a serialized field in $mname.$name ($exname)";
 							}
 						}
@@ -545,13 +545,15 @@ class mod_bi_dev extends CscriptedModule  {
 		# now which terms are NOT translated?
 		$notTranslated = array();
 		$context = "";
+		$lastcontext = "";
 		$contexts = 0;
 		foreach ($terms as $term) {
 			$sourceIncluded = false;
 			if ($term[0] != "-") {
 				if (!isset($this->parent->template->lang_replacer[$term])) {
 					if (!$sourceIncluded) {
-						$notTranslated[] = $context;
+						if ($lastcontext != $context) $notTranslated[] = $context;
+						$lastcontext = $context;
 						$contexts++;
 						$sourceIncluded = true;
 					}
@@ -913,7 +915,7 @@ class mod_bi_dev extends CscriptedModule  {
 		}
 
 		if (isset($_REQUEST['dev_fill'])) {
-			$this->dev_fill();
+			$this->fill();
 		}
 	}
 

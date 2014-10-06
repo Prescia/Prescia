@@ -54,6 +54,11 @@
 			return $out;
 		}
 	}
+	function multiexplode ($delimiters,$string) {
+		if (!is_array($delimiters) || count($delimiters)==1) return explode($delimiters[0],$string); // default for performance
+		$ready = str_replace($delimiters, $delimiters[0], $string);
+		return explode($delimiters[0], $ready);
+	}
 	function extractUri($install_root="",$uri="") { // returns an array with: array of folders from URI, filename (no extension), actual filename with extension, extension
 		// removes install_root to make some changes to how it is handled (basically, ignores it)
 		# context

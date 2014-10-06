@@ -9,7 +9,7 @@ function isnumber( value, accept_commas ) {
 	return ereg(value,accept_commas?"^(\-)?([0-9]+)(([,\.])([0-9]{3}))*(([,\.]{1})([0-9]*))?$":"^(\-)?([0-9]+)$");
 }
 function validhtmlpost(data) { // detects malicious/invalid HTML content. Return TRUE if you are ok
-	return !ereg(data,"(<( \t\n\r)*(form|input|button|layer|object|embed|frame|ifarme|textarea|select|option|optgroup|fieldset|label|applet|!doctype|audio|video|canvas|script|style|meta|header|title))",'i');
+	return !ereg(data,"(<( \t\n\r/)*(form|input|button|layer|object|embed|frame|iframe|textarea|select|option|optgroup|fieldset|label|applet|!doctype|audio|video|canvas|script|style|meta|head|title|body|htmy))",'i');
 }
 function isDate (value, canDate, canTime, datePattern) { // supports d/m/Y and m/d/Y. Hour (second optional) should come before the date
 	if (!datePattern) datePattern = "(([0-9]{1,2})([^0-9])){2}([0-9]{2,4})";

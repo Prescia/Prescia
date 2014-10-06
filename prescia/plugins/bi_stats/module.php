@@ -5,10 +5,12 @@ if (CONS_DB_HOST=='') $this->errorControl->raise(4,'bi_stats','STATS module requ
 
 class mod_bi_stats extends CscriptedModule  {
 
+	###########################
 	var $logBOTS = false; // if a BOT is detected, dumps the agent into CONS_PATH_LOGS.$_SESSION['CODE']."/bots".date("Ymd").".log", "a" VERY RESOURCE INTENSIVE, USE ONLY FOR DEBUG
 	var $doNotLogMe = false; // any plugin, page or automato that is aware of this plugin can set this to TRUE to prevent logging this page
 	var $forceLogMe = false; // oposite of the above
 	var $doNotLogAdmins = false; // if true, if you are looged with an account of a higher level of admRestrictionLevel, you won't be logged
+	###########################
 
 	function loadSettings() {
 
@@ -20,8 +22,8 @@ class mod_bi_stats extends CscriptedModule  {
 		$this->parent->onShow[] = $this->name;
 		$this->parent->onEcho[] = $this->name;
 		$this->parent->onCron[] = $this->name;
-		$this->admRestrictionLevel = 10; 
-		$this->admOptions = array( ); 
+		$this->admRestrictionLevel = 10;
+		$this->admOptions = array( );
 	}
 
 
@@ -50,7 +52,7 @@ class mod_bi_stats extends CscriptedModule  {
 				echo "err";
 			$this->parent->close(true);
 		}
-		
+
 	}
 
 	function onShow(){
@@ -66,7 +68,7 @@ class mod_bi_stats extends CscriptedModule  {
 	}
 
 	function getCounter($filterPage,$filterLang='') {
-		// let's play caching?	
+		// let's play caching?
 		$sum = $this->parent->cacheControl->getCachedContent('getCounter'.$filterPage."_".$filterLang);
 		// if there is no cache ...
 		if ($sum === false) {
@@ -138,23 +140,25 @@ class mod_bi_stats extends CscriptedModule  {
 
 
 	function onEcho(&$PAGE){
+		
+		$core = &$this->parent;
+
+		$pageToBelogged = substr($core->original_context_str,1);
+		if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
 
 		$core = &$this->parent;
-		if (isset($core->dimconfig['nostats']) && strpos(',rss,'.$core->dimconfig['nostats'],','.$core->action) !== false) {
+		if (isset($core->dimconfig['nostats']) && strpos(',/rss,'.$core->dimconfig['nostats'],','.$pageToBelogged.$core->action) !== false) {
 			$this->doNotLogMe = true;
 		}
-		if (isset($core->dimconfig['nostats']) && strpos(','.$core->dimconfig['nostats'],','.$core->context_str) !== false) {
+		if (isset($core->dimconfig['nostats']) && strpos(','.$core->dimconfig['nostats'],','.$pageToBelogged) !== false) {
 			$this->doNotLogMe = true;
 		}
 		if ($core->action == '404' || $core->action == '403') $this->doNotLogMe = true;
-			
-		
 
 		if (!$this->doNotLogMe || $this->forceLogMe) {
 
  			# what page are we logging (original call always)
-			$pageToBelogged = substr($core->original_context_str,1);
-			if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
+			
 			$act = $core->original_action;
 			if ($act == "") $act = "index";
 			else if (strpos($act,".")!==false) {
@@ -310,7 +314,7 @@ class mod_bi_stats extends CscriptedModule  {
 			$id = (isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))?$_REQUEST['id']:0;
 			$isReturning = isset($_COOKIE['akr_returning']);
 			$isAdm = str_replace("/","",$this->parent->context_str) == $this->admFolder;
-			
+
 			$x = $core->dbo->fetch("SELECT hits FROM ".$core->modules['stats']->dbname." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 			if ($x===false) {
 				# FIRST hit here today
@@ -371,7 +375,6 @@ class mod_bi_stats extends CscriptedModule  {
 			}
 
 		}
-
 
 		## BENCHMARK ##
 		if (isset($core->dimconfig['nobenchstats']) && strpos(','.$core->dimconfig['nobenchstats'],','.$core->action) !== false) {
@@ -451,7 +454,6 @@ class mod_bi_stats extends CscriptedModule  {
 			}
 			$this->resetSTdata($data);
 		} else { # daily
-
 			$core = &$this->parent;
 			# daily statistics:
 			$previousDay = datecalc(date("Y-m-d"),0,0,-1);

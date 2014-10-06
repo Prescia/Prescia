@@ -1,12 +1,11 @@
 <?
-
 	// master options (remove if not master)
 	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<100) $core->template->assign("_master");
 	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<99) $core->template->assign("_highadmin");
 
 	if ($core->context_str == "/")
 		$core->template->assign("_hasSite");
-	
+
 	// module log --
 	$temp = $core->cacheControl->getCachedContent('admindex_modules',30); // get cached content
 	$shown = 0;
@@ -20,18 +19,18 @@
 				if ($core->authControl->checkPermission($name)) {
 					$sql = "SELECT count(*) FROM ".$module->dbname;
 					$n = $core->dbo->fetch($sql);
-					$temp .= $template->techo(array('module' => $name, 
+					$temp .= $template->techo(array('module' => $name,
 													'name' => $core->langOut($name).($module->options[CONS_MODULE_PARTOF]!=''?" (".$core->langOut($module->options[CONS_MODULE_PARTOF]).")":""),
 													'n' => $n)
 											 );
 					$shown++;
 				}
-			}	
+			}
 		}
 		$core->template->assign("_module",$temp);
 		$core->cacheControl->addCachedContent('admindex_modules',$temp,true);
 	}
-	
+
 	// Action log --
 	$temp = $core->cacheControl->getCachedContent('admindex_actionlog',30);
 	if ($temp !== false) {
@@ -66,7 +65,7 @@
 		$added = 0;
 		if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log"))
 			$added = appendActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")),$maxActions);
-		$maxActions -= $added;		
+		$maxActions -= $added;
 		if ($maxActions>0) {
 			// 1 day ago
 			$previousDay = datecalc(date("Y-m-d"),0,0,-1);
@@ -77,13 +76,13 @@
 		$core->template->assign("_actions",$temp);
 		$core->cacheControl->addCachedContent('admindex_actionlog',$temp,true);
 	}
-	
+
 	// Warnings to developer
 	if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/fulltest.log") && isset($core->loadedPlugins['bi_dev']))
 		$core->template->assign("bi_dev",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/fulltest.log"));
 	else
 		$core->template->assign("_devwarning");
-	
+
 	// Statistics
 	if ($this->hasStats) {
 		// stats installed, show today's hits
@@ -99,16 +98,16 @@
 			$st = isset($stp[$p]) ? $stp[$p][0] : 0;
 			$core->template->assign("stheight".$c,ceil(100*$st/$biggest));
 			$core->template->assign("sttop".$c,100-ceil(100*$st/$biggest));
-			$core->template->assign("sthits".$c,$st);			
+			$core->template->assign("sthits".$c,$st);
 		}
 	} else
 		$core->template->assign("_statistics");
-	
+
 	// Mural
 	if (is_file(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/mural.txt"))
 		$core->template->assignFile('admmural',CONS_PATH_DINCONFIG.$_SESSION['CODE']."/mural.txt");
-	
-	
+
+
 	// Calendar
 	if (!CONS_BROWSER_ISMOB || isset($_SESSION['NOMOBVER'])) { // on mob version, do not show the calendar
 		if (!function_exists('echoCalendar')) include_once CONS_PATH_INCLUDE."calendar.php";

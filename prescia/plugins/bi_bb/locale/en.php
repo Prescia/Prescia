@@ -19,5 +19,7 @@
 	"login_required" => "Login required",
 	"lost_password" => "Lost password",
 	"confirm_post" => "Confirm your posting",
-	"add_a_comment" => "Add your comment"
+	"add_a_comment" => "Add your comment",
+	"force_lang_and_om_to_parent" => "A forum/area must have the same language and operation mode as it's parent",
+	"operationmode" => "Operation mode"
 );

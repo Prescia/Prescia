@@ -14,15 +14,15 @@
 	<new>edit.php?module=contentman</new>
 	<list>list.php?module=contentman</list>
 </CONTENTMAN>
-<FORUM icon="list" listing="title,lang,urla,ordem">
+<FORUM icon="list" listing="parent_title,title,lang,urla,operationmode,#forumthread">
 	<new>edit.php?module=forum</new>
 	<list>list.php?module=forum</list>
 </FORUM>
-<FORUMTHREAD icon="list" listing="forum_title,title,date,urla,lastupdate,author_name">
+<FORUMTHREAD icon="list" listing="forum_title,title,video,date,tags,urla,lastupdate,author_name">
 	<new>edit.php?module=forumthread</new>
 	<list>list.php?module=forumthread</list>
 </FORUMTHREAD>
-<FORUMPOST icon="list" listing="forum_title,forumthread_title,author_name,date,flagged,whoflagged_name,props">
+<FORUMPOST icon="list" listing="forum_title,forumthread_title,author_name,date,flagged,whoflagged_name,props,ip">
 	<new>edit.php?module=forumpost</new>
 	<list>list.php?module=forumpost</list>
 </FORUMPOST>

@@ -8,7 +8,8 @@
 	define("CONS_POSSIBLE_LANGS","pt-br,en"); // which languages can be selected for this site, comma separated (ex.: "pt-br,en") (if CONS_USE_I18N)
 		// if you add multiple languages, remember to disable $this->forceLang
 	define("CONS_DEFAULT_FAVICON",true); // if TRUE will use default favicon if none found
-
+	
+	
 	if (CONS_ONSERVER) { // <-- settings for your online "final" server
 		define("CONS_INSTALL_ROOT","/"); // if Simpla is installed in other than the ROOT folder, fill this (must end and start with /)
 		define("CONS_DB_HOST","localhost"); // leave empty if not using a database. The framework will enter dbless mode
@@ -52,6 +53,12 @@
 		#$advadm->admFolder = "adm";
 		#$advadm->admRestrictionLevel = 10; // minimum level to access admin
 		
+	#$bb = $this->addPlugin('bi_bb'); // Bulleting Board
+		#$bb->bbfolder = "bb";
+		#$bb->registrationGroup = 4;
+		#$bb->areaname = "community";
+		#$bb->homename = "Home";
+		
 	#$this->addPlugin('bi_cms'); // suggest to leave later so it's also the last to handle 404
 	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
 		#$stats->admFolder = "adm";
@@ -63,3 +70,4 @@
 	#$this->languageTL = array("en" => "en", "pt" => "pt-br"); # url/PATH/[subdir/] => url/[subdir/]?lang=PATH
 	#$this->forceLang = "en"; # force this language (kinda spoils i18n settings, this is used mostly for debugging)
 	#$this->charset = "utf-8"; # default charset (default is utf-8 already)
+	$this->doctype = "html"; // use html or xhtml. This will change how the page is served. Note xhtml is VERY STRICT, like ... VERY

@@ -38,6 +38,7 @@ class CErrorControl {
 								6 => CONS_ERROR_ERROR, # cache error on reading locale file
 								7 => CONS_ERROR_ERROR, # master error on reading locale file
 								8 => CONS_ERROR_NOTICE_SHOW, # addLink failed
+								9 => CONS_ERROR_FATAL, # A plugin was loaded but never set it's own name (or have a different name!)
 
 
 								#01xx internal errors and warnings
@@ -48,7 +49,7 @@ class CErrorControl {
 								104 => CONS_ERROR_WARNING, # Database down, trying to run offline (core::dbconnect)
 								105 => CONS_ERROR_FATAL_MAIL, # Database down, aborting script (core::dbconnect)
 								106 => CONS_ERROR_WARNING, # _modules metadata corrupt, attempting to debug (core::loadMetadata)
-								//107 => CONS_ERROR_WARNING, # automato (PageSettings) cache corrupt, attempting to debug (core::loadPageSettings)
+								107 => CONS_ERROR_FATAL, # Unknown XML error on meta.xml, module not found (core::loadMetadata)
 								108 => CONS_ERROR_FATAL, # Incorrect permission check: SQL FROM differs from module (auth::forcePermissions)
 								109 => CONS_ERROR_WARNING, # Last CRON timed out (core::cronCheck)
 								110 => CONS_ERROR_WARNING, # Quota exceeded (core::cronCheck)
@@ -58,7 +59,7 @@ class CErrorControl {
 								114 => CONS_ERROR_NOTICE , # Context/action not found 404 (core::renderPage)
 								115 => CONS_ERROR_NOTICE_SHOW, # internalFoward aborted due to config.php options (headerControl::internalFoward)
 								116 => CONS_ERROR_FATAL, # Pages XML corrupt (coreFull::loadPageSettings)
-								//117 => CONS_ERROR_FATAL, # Automato defined in .XML not found (coreFull::loadPageSettings)
+								117 => CONS_ERROR_ERROR_SHOW, # Module not found on core::loaded
 								118 => CONS_ERROR_FATAL, # Install is corrupt (missing files or something) (coreFull::loadMetadata)
 								119 => CONS_ERROR_FATAL, # metadata (merger of all) XML corrupt (coreFull::loadMetadata)
 								120 => CONS_ERROR_FATAL, # Two modules using the same database name! (coreFull::loadMetadata)
@@ -111,7 +112,7 @@ class CErrorControl {
 								167 => CONS_ERROR_WARNING, # Script nearing time-out (core::nearTimeLimit)
 								168 => CONS_ERROR_MESSAGE, # a Plugin prevented database change based on edit_parse (modules::runAction // [script]::edit_parse)
 								169 => CONS_ERROR_FATAL_MAIL, # on RunContent, tried to use fast counting and failed
-								170 => CONS_ERROR_FATAL, # Script not found on onMeta, check if it's name is set,
+								170 => CONS_ERROR_FATAL, # Script not found on onMeta (which means the script loaded and registered onMeta, but was not found onMeta)
 								171 => CONS_ERROR_WARNING, # FMANAGER request arrived to index.html
 								178 => CONS_ERROR_FATAL_MAIL, # too many errors/possible error loop
 								179 => CONS_ERROR_WARNING, # 404 error was unable to be stored in 404.log
@@ -125,6 +126,7 @@ class CErrorControl {
 								187 => CONS_ERROR_ERROR, # send only a value to runAction instead of a valid SQL/assoc
 								188 => CONS_ERROR_WARNING_SHOW, # error while performing unserialize on a serialized field
 								189 => CONS_ERROR_WARNING_SHOW, # error processing a serialized array (input) into a serialized field
+								190 => CONS_ERROR_WARNING_SHOW, # Unable to parse HTML to make it simplified on module (CONS_XML_SIMPLEEDITFORCE)
 
 								# upload and validation errors
 								200 => CONS_ERROR_MESSAGE, # Upload error 0
@@ -148,7 +150,7 @@ class CErrorControl {
 								303 => CONS_ERROR_NOTICE_SHOW, # Login attempt failed: login inactive
 								304 => CONS_ERROR_NOTICE_SHOW, # Login attempt failed: login expired
 								305 => CONS_ERROR_NOTICE_SHOW, # Login attempt failed: unknown login/password pair
-								306 => CONS_ERROR_WARNING, # A user took an action that did not suceed
+								306 => CONS_ERROR_WARNING, # A user took an action that did not succeed
 
 								# 04xx available
 

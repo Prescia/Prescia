@@ -20,5 +20,7 @@
 	"login_required" => "Login necessário",
 	"lost_password" => "Perdi a senha",
 	"confirm_post" => "Confirme a postagem",
-	"add_a_comment" => "Adicione seu comentário"
+	"add_a_comment" => "Adicione seu comentário",
+	"force_lang_and_om_to_parent" => "Um forum/area deve ter o mesmo modo de operação e lingua que o objeto pai",
+	"operationmode" => "Modo de operação"
 );

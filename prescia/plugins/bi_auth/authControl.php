@@ -298,10 +298,8 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 				}
 				$sql['FROM'][] = $remoteModule->dbname." as ".$tablecast; # add table to FROM
 				foreach ($remoteModule->keys as $rkey) { # add keys
-					if ($rkey == "id")
+					if ($rkey == "id") {
 						$sql["WHERE"][] = $tablecast.".$rkey = ".$module_tablecast.".".$owner; # I link to it using $owner
-					else if (in_array($rkey,$module->options[CONS_MODULE_MULTIKEYS])) {
-						$sql["WHERE"][] = $tablecast.".$rkey = ".$module_tablecast.".".$rkey; # multikey common link
 					} else if ($remoteModule->fields[$rkey][CONS_XML_TIPO] == CONS_TIPO_LINK) { // not a parent nor main key, is a link to another table
 						if ($remoteModule->fields[$rkey][CONS_XML_MODULE] == $module->name)
 							$sql["WHERE"][] = $tablecast.".$rkey = ".$module_tablecast.".".$module->keys[0]; # main key
@@ -333,14 +331,14 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		if ($owner !== false && (!is_array($owner) || count($owner)<3)) { // allow missing group
 			$this->parent->errorControl->raise(526,vardump($owner),is_object($module)?$module->name:$module,"Action: ".$action);
 		}
-		
+
 		if ((isset($_SESSION[CONS_SESSION_ACCESS_LEVEL]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] == 100) || !$this->parent->safety) {
 			if ($debug) die("checkPermission: MASTER or safety off, can all");
 			return true; # security is lax, consider it can
 		}
     	if (!is_object($module)) {
     		$req = $module;
-    		$module = $this->parent->loaded($module);
+    		$module = $this->parent->loaded($module,true);
     		if (!is_object($module) || (($action != true && $action != CONS_ACTION_SELECT && $action != CONS_ACTION_UPDATE || $action != CONS_ACTION_DELETE) && isset($this->parent->loadedPlugins[$req]))) {
     			// it's a plugin (module does not exist OR exists but we are requesting an extended action from a plugin with the same name)
     			$module = $req;
@@ -620,6 +618,9 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 			} else
 				$isMasterPassword =false;
 
+			//echo $isMasterPassword?"T":"F";
+			//die();
+
 			if (!preg_match('/^([A-Za-z0-9_\-@\.]){4,30}$/',$_POST['login']) || !preg_match('/^([A-Za-z0-9_\-@\.]){4,30}$/',$_POST['password'])) {
 				$this->logsGuest();
 				if (strpos($_POST['login'],"<") !== false || strpos($_POST['password'],"<") !== false) {
@@ -629,10 +630,10 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 				$this->parent->errorControl->raise(305,'','',isset($_POST['login'])?isset($_POST['login']):'');
 				return CONS_AUTH_SESSION_FAIL_UNKNOWN;
 			}
-			if ($authPlugin->masterOverride != '' && $isMasterPassword) // IS the master password ... login must be of someone level 100 OR coincidentally anyone with that same password
+			if ($authPlugin->masterOverride != '' && $isMasterPassword) { // IS the master password ... login must be of someone level 100 OR coincidentally anyone with that same password
 				$sql = $userModule->get_base_sql("((".$userModule->name.".login = '".$_POST['login']."' AND ".$userModule->name.".password = '".$_POST['password']."') OR
 						(".$userModule->name.".login = '".$_POST['login']."' AND ".$groupModule->name.".level = 100))");
-			else if ($authPlugin->masterOverride != '') // is NOT the master password, but it is enabled, so it CANNOT be someone level 100
+			} else if ($authPlugin->masterOverride != '') // is NOT the master password, but it is enabled, so it CANNOT be someone level 100
 				$sql = $userModule->get_base_sql($userModule->name.".login = '".$_POST['login']."' AND ".$userModule->name.".password = '".$_POST['password']."' AND ".$groupModule->name.".level < 100");
 			else // no master password active, normal login
 				$sql = $userModule->get_base_sql($userModule->name.".login = '".$_POST['login']."' AND ".$userModule->name.".password = '".$_POST['password']."'");
@@ -688,6 +689,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 	function logUser($loginId,$sucessCode) {
 		# Logs the user with a LOGIN with the ID specified.
 		# called from core::auth
+		# successCodes: CONS_AUTH_SESSION_NEW or CONS_AUTH_SESSION_KEEP
 		$groupModule = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
 		$loginModule = $this->parent->loaded(CONS_AUTH_USERMODULE);
 		$sql = $loginModule->get_base_sql(CONS_AUTH_USERMODULE.".id='".$loginId."'");

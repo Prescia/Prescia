@@ -1,7 +1,15 @@
 TODO list is on site/github
 
-
-
+14.10.6 BETA 0.8 (stable, clean)
+	presciatester stage 2
+	changed main format to HTML 5 instead of XHTML 1, though you can still use XHTML by changing the new doctype variable
+14.10.2 BETA 0.8 (stabilization and testing version)
+	presciatester implemented. Can't say how many bugs have been fixed
+	** will no longer report "general/several bug fix" in here. Will only point IMPORTANT bug fixes **
+	implemented CONS_XML_SIMPLEEDITFORCE and CONS_XML_CONDITIONAL (the later only at meta level)
+14.9.28 BETA 0.7 (getting warmer)
+	Tonloads of bugfixes at core, SQL management, and others
+	Started merging bi_bb with bi_blogs
 14.9.26 BETA 0.7 (no, it was not stable)
 	Added test for proper owner parameter on checkPermission
 	Fixed several bigs on bi_bb thread/post creation process AND permission checking

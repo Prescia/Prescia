@@ -1,0 +1,5 @@
+Keep your files organized!
+
+Please do not fill this root folder with files. Create contextual folders and fill them in.
+
+For temporary files, you can use a standard "uploads" folder

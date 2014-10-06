@@ -1,7 +1,7 @@
 <div class="container">
 	<div class="panel panel-info">
 		<div class="panel-heading">
-			<spam class="glyphicon glyphicon-comment"></spam> <a href="{vdir|/}{BBROOT_PATH}forum.html?id={id_forum}">{forum_title}</a> - {title} 
+			<spam class="glyphicon glyphicon-comment"></spam> <a href="{vdir|/}{BBROOT_PATH}{forumurla}forum.html?id={id_forum}">{forum_title}</a> - {title}
 		</div>
 		<div class="panel-body">
 			<div class="row">
@@ -10,26 +10,32 @@
 				<div class="col-sm-3">{p} <small>{_t}posts{/t} ({pg} {_t}pages{/t})</small></div>
 			</div>
 		</div>
+		{_hasvideo}<figure><div style="width:90%px;margin:0px auto">
+			<div class="embed-responsive embed-responsive-16by9">
+  				{videoembed}
+			</div>
+		</div></figure>{/hasvideo}
+		{_hasimage}<figure><a href="/{image_1}" rel="shadowbox[imgs]">{image_2t}</a></figure>{/hasimage}
 	</div>
 </div>
 
 <div class="container">
-	
+
 	{_paginacao}
 	<div class="text-center">
 		<ul class="pagination">
-			{_has_page_previous}<li><a href="{vdir|/}{BBROOT_PATH}{urla}.html?p_init={page_previous}">&laquo;</a></li>{/has_page_previous}
-			{_pages}<li {current_page|map|1=class="active"}><a href="{vdir|/}{BBROOT_PATH}{urla}.html?p_init={p_init}">{p_number}</a></li>{/pages}
-			{_has_page_next}<li><a href="{vdir|/}{BBROOT_PATH}{urla}.html?p_init={page_next}">&raquo;</a></li>{/has_page_next}
+			{_has_page_previous}<li><a href="{vdir|/}{BBROOT_PATH}{forumurla}{urla}.html?p_init={page_previous}">&laquo;</a></li>{/has_page_previous}
+			{_pages}<li {current_page|map|1=class="active"}><a href="{vdir|/}{BBROOT_PATH}{forumurla}{urla}.html?p_init={p_init}">{p_number}</a></li>{/pages}
+			{_has_page_next}<li><a href="{vdir|/}{BBROOT_PATH}{forumurla}{urla}.html?p_init={page_next}">&raquo;</a></li>{/has_page_next}
 		</ul>
 	</div>
 	{/paginacao}
-	
+
 	{_post}
 	<div class="panel panel-default">
 		<div class="panel-heading">
 			<div style="float:right"><spam class=" glyphicon glyphicon-flag" alt="{_t}flag{/t}"></spam></div>
-			{_imageyes}<img src="/{image}" alt="User Avatar" class="img-rounded"/>{/imageyes}
+			{_imageyes}<img src="/{image}" alt="User Avatar" class="img-rounded" style="width:28px;height:auto"/>{/imageyes}
 			{_imageno}<spam class="glyphicon glyphicon glyphicon-user"></spam>{/imageno}
 			<b>{login}</b> {date|past|true} {_t}ago{/t}
 		</div>
@@ -38,7 +44,7 @@
 		</div>
 	</div>
 	{/post}
-	
+
 	<div class="text-center">
 		{pg_2}
 	</div>
@@ -50,7 +56,7 @@
 		</div>
 		<div class="panel-body">
 			{_t}login_required{/t}
-			<form action="{vdir|/}{BBROOT_PATH}{urla}.html" method="post">
+			<form action="{vdir|/}{BBROOT_PATH}{forumurla}{urla}.html" method="post">
 			<div class="row">
 				<div class="col-md-2 text-right" style="line-height:30px;">{_t}login{/t} <spam class="glyphicon glyphicon-user"></spam></div>
 				<div class="col-md-10" style="line-height:30px;"> <input type="text" class="form-control" placeholder="{_t}login{/t}" name="login" style="width:50%"/> </div>
@@ -81,7 +87,7 @@
 			<input type="hidden" name="haveinfo" value="1"/>
 			<input type="hidden" name="id_forum" value="{id_forum}"/>
 			<input type="hidden" name="id_forumthread" value="{id}"/>
-			<input type="hidden" name="url" value="{vdir|/}{BBROOT_PATH}{urla}.html"/>
+			<input type="hidden" name="url" value="{vdir|/}{BBROOT_PATH}{forumurla}{urla}.html"/>
 			<input type="hidden" name="bbaction" value="post"/>
 			<div class="row">
 				<div class="col-md-2 text-right" style="line-height:30px;">{_t}posting_as{/t} <spam class="glyphicon glyphicon-user"></spam></div>

@@ -1,5 +1,0 @@
-<GALLERY dbname="affbi_gallery" title="title" order="date+">
-	<TITLE mandatory="true">VC</TITLE>
-	<IMAGE mandatory="true" thumbnails="1920,1440|320,180" filemaxsize="5120000" filetypes="jpg,png,jpeg" tweakimages="|croptofit">UPLOAD</IMAGE>
-	<DATE timestamp="true">DATETIME</DATE>
-</GALLERY>

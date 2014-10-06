@@ -432,3 +432,11 @@ if (!defined('CONS_JPGQUALITY')) define ("CONS_JPGQUALITY",85);
     return false;
   }
 
+  function getVideoFrame($code,$w=640,$h=480,$class="") {
+		if (is_numeric($code)) {
+			return '<iframe '.($class!=''?'class="'.$class.'" ':'width="'.$w.'" height="'.$h.'" ').'src="//player.vimeo.com/video/'.$code.'?badge=0" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
+		} else {
+			return '<iframe '.($class!=''?'class="'.$class.'" ':'width="'.$w.'" height="'.$h.'" ').'src="//www.youtube.com/embed/'.$code.'" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
+		}
+  }
+

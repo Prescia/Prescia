@@ -148,5 +148,5 @@
 "back_to_site"=>"Back to site",
 "detalhes"=>"Detail",
 "calendar"=>"Calendar",
-
+"videofield_explanation"=>"(Only the Youtube/Vimeo code)"
 );

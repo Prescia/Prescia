@@ -4,9 +4,9 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","14.9.26 beta"); // (Y.m.d) ~ last stable: n/a
-define ("AFF_VERSION",0.7);  // 1.0 conditioned to intrade release
-// Original numbering before ɔ: 1 = Akari, 2 = Sora, 3 = Aff(ɔ)/Nekoi, 4 = Prescia(ɔ)
+define ("AFF_BUILD","14.10.6 alpha"); // (Y.m.d) ~ last stable: n/a
+define ("AFF_VERSION",0.8);  // 1.0 conditioned to intrade release
+// Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 
 # -- XML parameter
 define ("CONS_XML_MANDATORY",0); # field is mandatory
@@ -26,6 +26,7 @@ define ("CONS_XML_IGNORENEDIT",12); # ignores when a mandatory field comes empty
 define ("CONS_XML_OPTIONS",13); # option list (array) for an OPTION field
 define ("CONS_XML_AUTOFILL",14); # will fill this field with another if empty
 define ("CONS_XML_META",15); # will store the meta description of this field (used ones: masked, password)
+define ("CONS_XML_CONDITIONAL",24); # conditions this field using a simple comparission VARIABLE OPERATOR VALUE where variable is an ENUM, operator must be =, == or !=, and value is the ENUM data
 define ("CONS_XML_SERIALIZED",23); # how this field deals with serialization: 0/none (ignores), 1/read (will parse on output/runcontent), 2/write (will parse on input/runaction), 3/all (always parses)
 define ("CONS_XML_CUSTOM",21); # this field will will NOT be subject to ANY system check. Be careful
 define ("CONS_XML_NOIMG",22); # default image to be returned if no image is set
@@ -35,11 +36,10 @@ define ("CONS_XML_READONLY", 18); # not editable on admin panes
 define ("CONS_XML_TWEAKIMAGES",19); # see documentation. Uses watermark/tweaker for images
 define ("CONS_XML_SPECIAL",25); # login, mail, ucase, lcase, path, google, youtube, time, cpf, cnpj, id
 define ("CONS_XML_SOURCE",27); # for URLA. Default is title, but multilanguage fields might require others
-define ("CONS_XML_SIMPLEEDITFORCE",26); # forces via PHP the simpleEdit effect. 0 to none (default), 1 to always, 2 to only non-highlevel
+define ("CONS_XML_SIMPLEEDITFORCE",26); # forces via PHP the simpleEdit effect. 
 define ("CONS_XML_ISOWNER",28); # this field is considered an owner of this item (auto-checked on coreFull, if a SINGLE owner is found, even not a user, it will be set)
 # -- MODULE OPTIONS. This options are not in raw format thus are formated here, other options are directly on the options array as they come (such as autoclean)
 define ("CONS_MODULE_VOLATILE","cmv"); # (cron) This module has no link with other modules or no upload fields, thus it can be deleted with no check
-define ("CONS_MODULE_MULTIKEYS","cmmk"); # which fields are considered multiple keys for this module. Having multiple key fields will void the autoincrement system
 define ("CONS_MODULE_SYSTEM","cmadmsys"); # (adm) this is a system module and should not be listed for the end user
 define ("CONS_MODULE_AUTOCLEAN","cmac"); # (cron) WHERE statement with date handling to when this database should be cleaned (cron)
 define ("CONS_MODULE_PARENT","cmtp"); # If the module defines a tree structure, which field defines the tree parenthood (usually id_parent)
@@ -111,6 +111,7 @@ class CPresciaVar {
 	var $languageTL = array(); # folder names for different languages, leave blank not to use it
 	var $forceLang = ""; # ignore all langage settings and use THIS language always
 	var $charset = "utf-8"; # kinda obvious
+	var $doctype = "html"; # html or xhtml. xhtml is very restrictive, beware
 	var $domainTranslator = array(); # if a site has multiple domains, you can foward each domain to a separate folder with domain=>folder here (no "/" allowed)
 	var $debugFile = ''; # Set this to the HTML template to debug areas (full path)
 

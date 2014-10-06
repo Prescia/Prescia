@@ -31,9 +31,9 @@ class CPrescia extends CPresciaVar {
 			$_SESSION['CODE'] = CONS_SINGLEDOMAIN;
 		} else if (!CONS_ONSERVER && CONS_SITESELECTOR) { # multiple domain, if on production and we can select domain manually ...
 			if (isset($_REQUEST['nocache'])) $domainList = $this->builddomains();
-			if (isset($_REQUEST['changelocalsite']) && isset($_REQUEST['nosession'])) { # new domain arrived! switch everything to this domain
+			if (isset($_REQUEST['changelocalsite']) && isset($_REQUEST['nosession']) && is_dir(CONS_PATH_PAGES.$_REQUEST['changelocalsite'])) { # new domain arrived! switch everything to this domain
 				$_COOKIE['prescia_cls'] = $_REQUEST['changelocalsite'];
-				setcookie('prescia_cls',$_REQUEST['changelocalsite'],time()+86400);
+				setcookie('prescia_cls',$_REQUEST['changelocalsite'],time()+28800);
 			} else if (!isset($_COOKIE['prescia_cls']) || (isset($_REQUEST['prescia_cls']) && isset($_REQUEST['debugmode']) && isset($_REQUEST['nosession']))) { # no domain selected or requested domain change, chose domain selector
 				include_once CONS_PATH_SYSTEM."lazyload/cls.php";
 				die();
@@ -152,9 +152,9 @@ class CPrescia extends CPresciaVar {
 		if (CONS_BOTPROTECT && ($this->layout != 2 || !$this->noBotProtectOnAjax)) require CONS_PATH_SYSTEM."lazyload/botprotect.php";
 
 		# domainTranslator (allows you to translate a sub-domain to a folder)
-		if (count($this->domainTranslator)>0) { # (TODO: test)
+		if (count($this->domainTranslator)>0) { #
 			if (isset($this->domainTranslator[$this->domain]) && $this->domainTranslator[$this->domain] != '') {
-				array_shift($this->context);
+				array_shift($this->context); // remove root
 				if (count($this->context)>0) {
 					$folder = array_shift($this->context);
 					if ($folder == 'm' || (CONS_USE_I18N && isset($this->languageTL[$folder]))) { # mobile or language translator folder tag
@@ -166,15 +166,17 @@ class CPrescia extends CPresciaVar {
 					}
 				} else
 					array_unshift($this->context,trim($this->domainTranslator[$this->domain],"/"));
-				array_unshift($this->context,"");
+				if ($this->context[0] != '') array_unshift($this->context,"");
 			}
 		}
 
 		# builds proper context and action data
+
 		$this->context_str = implode("/",$this->context)."/";
 		if ($this->context_str[0] != "/") $this->context_str = "/".$this->context_str;
 		if ($this->action == "") $this->action = "index";
 		$this->original_context_str = $this->context_str; # storage of original call in case script redirects us, also used by stats
+
 
 		# special cases (robots,favicon, sitemap)
 		if ($this->context_str == "/") {
@@ -410,11 +412,13 @@ class CPrescia extends CPresciaVar {
 			}
 			return true;
 		} else {
-			if (is_file(CONS_PATH_JSFRAMEWORK.$file))
+			$tfile = explode("?",$file);
+			$tfile = $tfile[0];
+			if (is_file(CONS_PATH_JSFRAMEWORK.$tfile))
 				$file = CONS_PATH_JSFRAMEWORK.$file;
-			else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$file))
+			else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$tfile))
 				$file = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$file;
-			else if (!is_file($file)) {
+			else if (!is_file($tfile)) {
 				$this->errorControl->raise(8,'Style not found',$file,"addLink");
 				return false;
 			}
@@ -505,7 +509,7 @@ class CPrescia extends CPresciaVar {
 
 		if ($this->virtualFolder) { // if we are in a virtualFolder, we run the closest default.php
 
-		 	if ($strContext == "" || $strContect[strlen($strContext)-1] == "/") $strContext .= "/";
+		 	if ($strContext == "" || $strContext[strlen($strContext)-1] != "/") $strContext .= "/";
 
 			// closest default (which SHOULD disable virtualFolder or disable 404)
 			if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/actions".$strContext."default.php")) {
@@ -767,7 +771,7 @@ class CPrescia extends CPresciaVar {
 	 * Loads ONE module metadata and returns such module object (or false on failure)
 	 * If the module is already loaded, simply returns it's object
 	 */
-	function loaded($moduleName) {
+	function loaded($moduleName,$noRaise=false) {
 		# loads the module if it exists, or return false
 		if (is_object($moduleName)) return $moduleName;
 		$moduleName = strtolower($moduleName);
@@ -802,6 +806,7 @@ class CPrescia extends CPresciaVar {
 			}
 			return $this->modules[$moduleName];
 		}
+		if (!$noRaise && CONS_DEVELOPER) $this->errorControl->raise(117,$moduleName,$moduleName);
 		return false;
 	} # loaded
 #-
@@ -1033,16 +1038,22 @@ class CPrescia extends CPresciaVar {
 
 		# Header / cache
 		if ($this->action != "404" && $this->action != "403") $this->headerControl->addHeader(CONS_HC_HEADER,200);
-		$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: text/html; charset=".$this->charset);
+		
+		if ($this->doctype == "xhtml" && (CONS_BROWSER != "IE" || CONS_BROWSER_VERSION > 8))
+			$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: application/xhtml+xml; charset=".$this->charset);
+		else {
+			$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: text/html; charset=".$this->charset);
+		}
 		$this->headerControl->addHeader(CONS_HC_PRAGMA,'Pragma: '.($this->layout!=2 && $this->cachetime>2000?'public':'no-cache'));
 		if (CONS_CACHE && $this->layout != 2)
 			$this->headerControl->addHeader(CONS_HC_CACHE,'Cache-Control: public,max-age='.floor($this->cachetime/1000).',s-maxage='.floor($this->cachetime/1000));
 
 		if (is_object($this->template)) {
 			$this->template->constants['CHARSET'] = $this->charset;
+			if ($this->doctype == "html" || (CONS_BROWSER == "IE" && CONS_BROWSER_VERSION < 9)) $this->template->assign("_DOCTYPEXML");
 
 			# metadata - fill default values if not set yet (plugins can set)
-			$this->addMeta("\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />"); // render in the most recent engine for IE
+			$this->addMeta("\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />"); // render in the most recent engine for IE
 			if ($this->layout != 2) {
 				if ((!isset($this->template->constants['METAKEYS']) || $this->template->constants['METAKEYS'] == '') && $this->dimconfig['metakeys'] != '') {
 					$this->template->constants['METAKEYS'] = $this->dimconfig['metakeys'];

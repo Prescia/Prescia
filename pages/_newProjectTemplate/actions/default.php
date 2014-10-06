@@ -8,7 +8,8 @@
 	$ok = $this->udm(array(array('module' => 'BLOG_CATEGORY',
 								 'key' => 'urla',
 								 'convertquery' => 'category_id', // if the URL is the key, put keys this $_REQUEST
-								 'fillqueries' => 'lang' // also, fill the $_REQUEST for these fields
+								 'fillqueries' => 'lang', // also, fill the $_REQUEST for these fields
+								 'filter' => 'x=0' // add this SQL to the WHERE statement to match the udm
 								)
 							) // we can have multiple folders, just put in descending order
 					,true); // true, trash all others, we don't care about them (false would cause 404)

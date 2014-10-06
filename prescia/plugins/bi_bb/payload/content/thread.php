@@ -1,21 +1,27 @@
 <?
 
 	$ipp = 2; // itens per page
-	
+
 	if (!isset($core->storage['friendlyurldata']) ||
 	    !isset($core->storage['friendlyurlmodule'])) $core->fastClose(404);
 
 	$core->template->fill($core->storage['friendlyurldata']);
+	$core->template->assign("forumurla",$core->storage['friendlyurldata']['forum_urla'] != ''?$core->storage['friendlyurldata']['forum_urla']."/":"");
+	if ($core->storage['friendlyurldata']['video']!='') {
+		$core->template->assign("videoembed",getVideoFrame($core->storage['friendlyurldata']['video'],0,0,'embed-responsive-item'));
+	} else
+		$core->template->assign("_hasvideo");
+
 	$idf = $core->storage['friendlyurldata']['id_forum'];
 	$idt = $core->storage['friendlyurldata']['id'];
-	
+
 	$totalPost = $core->dbo->fetch("SELECT count(id) FROM bb_post WHERE id_forum=$idf AND id_forumthread=$idt");
 	if (isset($_REQUEST['lastpage'])) {
-		$_REQUEST['p_init'] = floor($totalPost/$ipp)*$ipp; 
+		$_REQUEST['p_init'] = floor($totalPost/$ipp)*$ipp;
 	}
 	$p = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])?$_REQUEST['p_init']:0; // item starting this page
 	$core->template->assign("pg",ceil($totalPost/$ipp));
-	
+
 	// views
 	$pageToBelogged = substr($core->original_context_str,1);
 	if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
@@ -25,13 +31,13 @@
 		array_pop($act);
 		$act = implode(".",$act);
 	}
-	$pageToBelogged .= $act;	
+	$pageToBelogged .= $act;
 	$v = $core->loadedPlugins['bi_stats']->getCounter($pageToBelogged);
 	$core->template->assign("v",$v>0?$v:1);
-	
+
 	// posts (count)
 	$core->template->assign("p",$core->dbo->fetch("SELECT count(distinct id) FROM bb_post WHERE id_forum=$idf AND id_forumthread=$idt GROUP BY id_forumthread"));
-	
+
 	// posts
 	$sql = "SELECT p.*,u.login, u.image
 		    FROM (bb_post as p, auth_users as u)
@@ -46,7 +52,7 @@
 		$core->template->assign("_paginacao");
 
 	$core->template->assign("pg_2",$core->template->get("_paginacao"));
-	
+
 	function getuseravatar(&$template, &$params, $data, $processed=false) {
 		if ($processed) return $data;
 		if ($data['image'] == 'n')
@@ -59,6 +65,6 @@
 		}
 		return $data;
 	}
-	
+
 	$core->addLink("ckeditor/ckeditor.js",true);
 	$core->addLink("validators.js");

@@ -16,7 +16,7 @@ class CPresciaFull extends CPrescia {
 
 	# loads a module and sets is as loaded (on operation mode, modules are only referenced without loading)
 	function loadModule($name, $dbname="") {
-		if ($this->loaded($name)) {
+		if ($this->loaded($name,true)) {
 			# redefining module (.xml is redefining a module already present in other .xml)
 			return;
 		}
@@ -58,7 +58,8 @@ class CPresciaFull extends CPrescia {
 	function checkConfig() {
 		# checks if these fields exist
 		$dimconfig = array( 'adminmail' => '', # on server, mails errors to this account
-							'contactmail' => '', # default contact mail for forms. FROM and TO should default to this
+							'contactmail' => '', # default contact mail for forms. TO mails should default to this
+							//'originmail' => '', # defailt mail FROM the system. FROM should default to this
 							'pagetitle' => "", # page HEADER TITLE
 							'metakeys' => "", # meta keywords
 							'metadesc' => "", # meta description
@@ -158,8 +159,7 @@ class CPresciaFull extends CPrescia {
 	  	$total = $model->total();
 	  	$relation = array(); # foreign keys are only created later
 
-
-
+		$lastLoad = "";
 	  	for ($c=0;$c<$total;$c++) { # for each module ...
 			$thisbranch = &$model->getbranch($c);
 
@@ -173,9 +173,9 @@ class CPresciaFull extends CPrescia {
 				if ($otherModule->dbname == $dbname && $dbname != "" && $module != $otherModule->name)
 					$this->errorControl->raise(120,$otherModule->name,$name,$dbname);
 			}
-			unset($name); unset($otherModule);
+			if ($module == '') $this->errorControl->raise(107,$dbname,"XML error","Module after $lastLoad is corrupt");
 			$this->loadModule($module,$dbname); #MODULE CREATE
-
+			$lastLoad = $module;
 			# loads standard data from this object ---------------------------------------------------------------------
 
 			# read parameters for the MODULE
@@ -198,14 +198,6 @@ class CPresciaFull extends CPrescia {
 							# this module can be deleted as a stand-alone volatile item
 							$this->modules[$module]->options[CONS_MODULE_VOLATILE] = strtolower($pcontent)=="true";
 						break;
-						case "multikeys":
-					   		$this->modules[$module]->options[CONS_MODULE_MULTIKEYS] = explode(",",strtolower($pcontent));
-			  				# checks if each parent is inside the key field
-			  				foreach ($this->modules[$module]->options[CONS_MODULE_MULTIKEYS] as $field) {
-				  				if (!in_array($field,$this->modules[$module]->keys))
-				  					$this->modules[$module]->keys[] = $field;
-			  				}
-			  			break;
 			  			case "parent":
 			  				$this->modules[$module]->options[CONS_MODULE_PARENT] = strtolower($pcontent); // field which denotes parenthood
 			  			break;
@@ -267,9 +259,11 @@ class CPresciaFull extends CPrescia {
 
 		  		$thiscampo= &$thisbranch->getbranch($campo);
 
+				## processParameters #########################################
 		  		$campos = $this->processParameters($thiscampo,$campos,$module);
-				$nomecampo = strtolower($thiscampo->data[0]);
+				##############################################################
 
+				$nomecampo = strtolower($thiscampo->data[0]);
 		  		if ($campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_LINK)
 		  			array_push($relation,array($module,$nomecampo,$campos[$nomecampo][CONS_XML_MODULE]));
 				else if ($campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_SERIALIZED) {
@@ -283,7 +277,7 @@ class CPresciaFull extends CPrescia {
 
 		  		# checks if this field can be NULL or NOT depending on options and mandatory setting
 				if (isset($campos[$nomecampo][CONS_XML_SQL]) && $campos[$nomecampo][CONS_XML_SQL] != "") { # relation will not be set
-					if (isset($campos[$nomecampo][CONS_XML_MANDATORY]) || $campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_OPTIONS) {
+					if (isset($campos[$nomecampo][CONS_XML_MANDATORY]) || $campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_OPTIONS || isset($campos[$nomecampo][CONS_XML_DEFAULT])) {
 						$campos[$nomecampo][CONS_XML_SQL] .= " NOT NULL";
 						$mandatory++;
 					} else
@@ -310,9 +304,9 @@ class CPresciaFull extends CPrescia {
 						}
 						unset($fieldname); unset($fieldobj);
 					} else {
-						$campos['id'][CONS_XML_SQL] = "INT (10) UNSIGNED NOT NULL".(count($this->modules[$module]->options[CONS_MODULE_MULTIKEYS])==0?" AUTO_INCREMENT":"");
+						$campos['id'][CONS_XML_SQL] = "INT (11) UNSIGNED NOT NULL".(count($this->modules[$module]->keys)<=1?" AUTO_INCREMENT":"");
 						$campos['id'][CONS_XML_TIPO] = CONS_TIPO_INT;
-						if ($this->modules[$module]->options[CONS_MODULE_MULTIKEYS] != "") {
+						if (count($this->modules[$module]->keys)>1) {
 							$campos['id'][CONS_XML_RESTRICT] = 99;
 						}
 					}
@@ -328,15 +322,14 @@ class CPresciaFull extends CPrescia {
 	 			# -- makes sure all keys are mandatory and present
 	  			foreach($this->modules[$module]->keys as $x => $chave) {
 	  				if (!isset($this->modules[$module]->fields[$chave])) {
-						array_push($this->log,"Key not defined, considering INT 10, please fix the XML: $module.$chave");
-						$this->modules[$module]->fields[$chave] = array("CONS_XML_SQL" => "INT (10)",
+						array_push($this->log,"Key not defined, considering INT 11, please fix the XML: $module.$chave");
+						$this->modules[$module]->fields[$chave] = array("CONS_XML_SQL" => "INT (11) UNSIGNED NOT NULL",
 																		"CONS_XML_TIPO" => CONS_TIPO_INT);
 	  				}
 					$this->modules[$module]->fields[$chave][CONS_XML_MANDATORY] = true;
 	  			}
 	  			unset($x); unset($chave);
 			}
-
   		} # -- foreach module
 
   		$total_relacoes = count($relation);
@@ -364,7 +357,7 @@ class CPresciaFull extends CPrescia {
 						# only standard id exists (always link it), or it's not a standard key ... still have to test if it's not a key to this table
 						# basically, this will create the second+ keys on multikey relations
 					  	if (!($this->modules[$rel[2]]->fields[$chave][CONS_XML_TIPO] == CONS_TIPO_LINK && $this->modules[$rel[2]]->fields[$chave][CONS_XML_MODULE] == $rel[0])) {
-							# ok not a key to this table!
+							# ok not a key to this table (the FOREING key is not this table, pay attention! this will still be true for id_parent)
 							if ($sfield == "") { # normal
 								if ($chave == "id") { # uses the name that came in the XML model
 							  		if (!isset($this->modules[$rel[0]]->fields[$field])) $this->modules[$rel[0]]->fields[$field] = array();
@@ -376,10 +369,10 @@ class CPresciaFull extends CPrescia {
 						  			if ((isset($this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN]) && $this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN] == "inner") || isset($this->modules[$rel[0]]->fields[$field][CONS_XML_MANDATORY])) {
 						  				// is set join to INNER or is explicitly mandatory, make sure both are set
 										$this->modules[$rel[0]]->fields[$field][CONS_XML_MANDATORY] = true;
-										$this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN] = "inner";
+										if ($x==0)  $this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN] = "inner";
 									} else {
 										// no join mode set (defaults to left), set to left, and no explicit mandatory tag
-										$this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN] = "left";
+										if ($x==0)  $this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN] = "left";
 										$this->modules[$rel[0]]->fields[$field][CONS_XML_SQL] = str_replace("NOT NULL","NULL",$this->modules[$rel[0]]->fields[$field][CONS_XML_SQL]);
 						  			}
 								} else {
@@ -393,9 +386,9 @@ class CPresciaFull extends CPrescia {
 						  			$this->modules[$rel[0]]->fields[$nome][CONS_XML_MODULE] = isset($this->modules[$rel[2]]->fields[$chave][CONS_XML_MODULE])?$this->modules[$rel[2]]->fields[$chave][CONS_XML_MODULE]:$rel[2];
 								  	if ((isset($this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN]) && $this->modules[$rel[0]]->fields[$field][CONS_XML_JOIN] == "inner") || isset($this->modules[$rel[0]]->fields[$nome][CONS_XML_MANDATORY])) {
 										$this->modules[$rel[0]]->fields[$nome][CONS_XML_MANDATORY] = true;
-										$this->modules[$rel[0]]->fields[$nome][CONS_XML_JOIN] = "inner";
+										if ($x==0) $this->modules[$rel[0]]->fields[$nome][CONS_XML_JOIN] = "inner";
 								  	} else {
-										$this->modules[$rel[0]]->fields[$nome][CONS_XML_JOIN] = "left";
+										if ($x==0)  $this->modules[$rel[0]]->fields[$nome][CONS_XML_JOIN] = "left";
 										unset($this->modules[$rel[0]]->fields[$nome][CONS_XML_MANDATORY]);
 										$this->modules[$rel[0]]->fields[$nome][CONS_XML_SQL] = str_replace("NOT NULL","NULL",$this->modules[$rel[0]]->fields[$nome][CONS_XML_SQL]);
 								  	}
@@ -432,7 +425,7 @@ class CPresciaFull extends CPrescia {
 						  			}
 								}
 							} # sfield?
-				  		} # link to other table?
+				  		}
 					} # secondary (multikey)?
 			  	} # foreach
 			  	unset($x); unset($chave);
@@ -440,6 +433,7 @@ class CPresciaFull extends CPrescia {
 			  		array_push($this->log,"Error (pass 2) trying to build foreing keys from ".$rel[0]." to ".$rel[2]." at ".$field.": ignoring relation");
 			  	}
 		  	}
+
 		} # foreach for relations
 
 		// now some automatic settings since all modules are loaded, and consistency check on build, partOf, etc ---------------------
@@ -451,7 +445,7 @@ class CPresciaFull extends CPrescia {
 			foreach ($module->fields as $name => $field) { // check for linker modules
 				if ($field[CONS_XML_TIPO] == CONS_TIPO_LINK && $field[CONS_XML_MODULE] != $mname) { // links to OTHER link not myself
 					$links++; # do not count PARENTS as links
-					$fieldsRequiredToLinks += count($this->modules[$mname]->keys); # a module can have more than one key, thus to know if this module is a linker module, we need to check if ALL THIS HAVE are the keys for 2 modules
+					$fieldsRequiredToLinks += count($this->modules[$field[CONS_XML_MODULE]]->keys); # a module can have more than one key, thus to know if this module is a linker module, we need to check if ALL THIS HAVE are the keys for 2 modules
 				}
 				if (isset($field[CONS_XML_FILTEREDBY])) {
 					foreach ($field[CONS_XML_FILTEREDBY] as $fbname) {
@@ -468,7 +462,6 @@ class CPresciaFull extends CPrescia {
 				$this->modules[$mname]->linker = true;
 			}
 
-
 			if ($this->modules[$mname]->title == "" && !$this->modules[$mname]->options[CONS_MODULE_SYSTEM] && !$this->modules[$mname]->linker) {
 				$this->modules[$mname]->title = $this->modules[$mname]->keys[0]; // first key
 			}
@@ -483,6 +476,14 @@ class CPresciaFull extends CPrescia {
 				} else
 					$this->loadedPlugins[$sname]->moduleRelation = $name;
 			}
+
+
+		}
+
+		foreach ($this->loadedPlugins as $sname => $obj) {
+			if ($obj->name == '' || $obj->name != $sname) {
+				$this->errorControl->raise(9,$obj->name,$sname);
+			}
 		}
 
 		# DIE FREAKING THUMBS.DB, DIE!
@@ -490,14 +491,15 @@ class CPresciaFull extends CPrescia {
 			if ($folder[strlen($folder)-1] != '/') $folder .= "/";
 			foreach(glob($folder."*") as $file) {
 				if(is_dir($file))
-					$dieFreakingThumbs($file);
+					dieFreakingThumbs($file);
 				else {
-					if (array_pop(explode(".",$file)) == 'db')
+					$arf = explode(".",$file);
+					if (array_pop($arf) == 'db')
 						@unlink($file);
 				}
 			}
 		}
-		dieFreakingThumbs(CONS_PATH_PAGES.$_SESSION['CODE']."files/");
+		dieFreakingThumbs(CONS_PATH_PAGES.$_SESSION['CODE']."/");
 
 		$customxml = is_file(CONS_PATH_PAGES.$_SESSION["CODE"]."/_config/custom.xml")?cReadFile(CONS_PATH_PAGES.$_SESSION["CODE"]."/_config/custom.xml"):'';
 		# All plugins are loaded, check their manifest and customs
@@ -885,7 +887,7 @@ class CPresciaFull extends CPrescia {
 						break;
 					case "condthumbnails":
 						$fields[$namefield][CONS_XML_CONDTHUMBNAILS] = explode(":",strtolower($content));
-						if (!isset($fields[$namefield][CONS_XML_THUMBNAILS])) {
+						if (!isset($fields[$namefield][CONS_XML_THUMBNAILS])) { // if no normal thumbs specified, do it
 							$fields[$namefield][CONS_XML_THUMBNAILS] = explode(";",$fields[$namefield][CONS_XML_CONDTHUMBNAILS][1]);
 							$fields[$namefield][CONS_XML_THUMBNAILS] = explode("|",$fields[$namefield][CONS_XML_THUMBNAILS][0]);
 						}
@@ -905,6 +907,7 @@ class CPresciaFull extends CPrescia {
 						else
 							unset($fields[$namefield][CONS_XML_IGNORENEDIT]);
 						break;
+					case "simple":
 					case "forcesimple":
 						if ($content == 'true')
 							$fields[$namefield][CONS_XML_SIMPLEEDITFORCE] = true;
@@ -954,11 +957,11 @@ class CPresciaFull extends CPrescia {
 						if (!$isSerialized) {
 							if (in_array($content,array(0,1,2,3,'none','read','write','all'))) {
 								$fields[$namefield][CONS_XML_SERIALIZED] = $content == 'read'?1:($content=='write'?2:($content=='all'?3:($content=='none'?0:$content)));
-								// will proceed to set custom
+								$fields[$namefield][CONS_XML_CUSTOM] = true;
 							} else {
 								unset($fields[$namefield][CONS_XML_SERIALIZED]);
-								break;
 							}
+							break;
 						} else
 							$this->log[]= "Cannot have a serialized field inside another at $namefield in $module";
 					case "custom":
@@ -967,9 +970,13 @@ class CPresciaFull extends CPrescia {
 						else
 							unset($fields[$namefield][CONS_XML_CUSTOM]);
 						break;
+					case "conditional": // conditions this field if it is to be displayed based on VARIABLE OPERATOR VALUE
+						$fields[$namefield][CONS_XML_CONDITIONAL] = trim($content);
+						break;
 					case "filteredby": // if the automatic filtering doesn't underestand what you want, you can override here
 							$fields[$namefield][CONS_XML_FILTEREDBY] = explode(",",strtolower(trim($content)));
 						break;
+					case "noimage":
 					case "noimg": // default image if image not set
 							$fields[$namefield][CONS_XML_NOIMG] = trim($content);
 						break;
@@ -979,6 +986,16 @@ class CPresciaFull extends CPrescia {
 						else
 							unset($fields[$namefield][CONS_XML_READONLY]);
 						break;
+					case "language": // overrides the enums with languages
+						if (strpos($thiscampo->data[2],"ENUM")!== false) {
+							$thiscampo->data[2] = "ENUM:";
+							foreach (explode(',',CONS_POSSIBLE_LANGS) as $l)
+								$thiscampo->data[2] .= "'$l',";
+							$thiscampo->data[2] = substr($thiscampo->data[2],0,strlen($thiscampo->data[2])-1);
+							$fields[$namefield][CONS_XML_DEFAULT] = CONS_DEFAULT_LANG;
+						} else
+							$this->log[] = "Invalid language parameter inside a non-enum field";
+					break;
 					default:
 						$fields[$namefield][strtolower($name)] = $content;
 						$this->warning[] = "Unknown parameter at $namefield: $name";
@@ -990,7 +1007,7 @@ class CPresciaFull extends CPrescia {
 		if ($thiscampo->total()>0) {
 			if (!$fields[$namefield][CONS_XML_SERIALIZED]) {
 				$this->log[] = "Field has nested tags, but have no serialization option: $namefield at $module";
-			} else { // serialized field, oh my god
+			} else { // serialized field,
 				$thiscampo->data[2] = "serialized";
 			}
 		}
@@ -1021,7 +1038,7 @@ class CPresciaFull extends CPrescia {
 				$fields[$namefield][CONS_XML_TIPO] = CONS_TIPO_INT;
 				break;
 			case "float":
-				$fields[$namefield][CONS_XML_SQL]= "FLOAT NOT NULL";
+				$fields[$namefield][CONS_XML_SQL]= "FLOAT";
 				$fields[$namefield][CONS_XML_TIPO] = CONS_TIPO_FLOAT;
 				break;
 			case "varchar":
@@ -1072,7 +1089,6 @@ class CPresciaFull extends CPrescia {
 				$fields[$namefield][CONS_XML_OPTIONS] = array();
 				if (!isset($fields[$namefield][CONS_XML_DEFAULT]))
 					$fields[$namefield][CONS_XML_DEFAULT] = "000"; # pad
-				unset($fields[$namefield][CONS_XML_MANDATORY]); # we can have all options 0'ed which DOES NOT mean it's missing
 				$temp = explode(",",$xipo);
 				foreach ($temp as $item)
 					if (strlen($item)>2) {
@@ -1132,7 +1148,7 @@ class CPresciaFull extends CPrescia {
 		$r = parent::addPlugin($script,$relateToModule,$renamePluginTo,$noRaise);
 
 		if (!isset($this->dimconfig['_pluginStarter'.$script]) || $this->dimconfig['_pluginStarter'.$script] != true) {
-
+			// ad monitors form this script to the list
 			$fileP = CONS_PATH_SYSTEM."plugins/$script/monitor.xml";
 			$fileS = CONS_PATH_PAGES.$_SESSION['CODE']."/_config/monitor.xml";
 			if (is_file($fileP)) { // plugin has a monitor

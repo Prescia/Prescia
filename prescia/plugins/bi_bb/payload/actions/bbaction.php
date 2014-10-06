@@ -1,28 +1,29 @@
 <?
-	
+
 	// safety: are we logged to perform actions? if not, kick out to 403 (unless you are registering)
 	// we test post include (self) because that's the most basic permission
 	if (!$core->authControl->checkPermission('FORUMPOST',CONS_ACTION_INCLUDE,array(true,false,false)) && $_POST['bbaction'] != 'profile') {
 		$core->action = 403;
 		return;
 	}
-	
+
 	// yes but do we have an action to perform anyway?
 	if (!$core->queryOk(array("haveinfo","bbaction"))) {
 		$core->action = 404;
 		return;
 	}
 
-	
+
 	// ok let's get to work
 	switch ($_POST['bbaction']) {
 		case 'tpreview': // preview a thread
-			if (!$core->queryOk(array("#id_forum","ftitle","fmessage"))) {
+			if (!$core->queryOk(array("#id_forum","ttitle","fmessage"))) {
 				$core->action = "index";
 				$core->log[] = "Error on preview";
 				break;
 			}
 			$core->action = "preview"; // send me to preview screen (same for both)
+			return;
 		break;
 		case 'preview': // preview a post
 			if (!$core->queryOk(array("#id_forumthread","#id_forum","fmessage"))) {
@@ -31,18 +32,33 @@
 				break;
 			}
 			$core->action = "preview"; // send me to preview screen (same for both)
+			return;
 		break;
 		case 'tpost': // post thread
-			if (!$core->queryOk(array("#id_forum","ftitle","fmessage"))) {
+			if (!$core->queryOk(array("#id_forum","ttitle","fmessage"))) {
 				$core->action = "index";
 				$core->log[] = "Error on post";
 				break;
 			}
 			$postData = array('id_forum' => $_POST['id_forum'],
-							  'title' => $_POST['ftitle'],
+							  'title' => $_POST['ttitle'],
+							  'video' => isset($_POST['video'])?$_POST['video']:'',
+							  'tags' => isset($_POST['tags'])?$_POST['tags']:'',
 							  'id_author' => $_SESSION[CONS_SESSION_ACCESS_USER]['id']
 							  );
-			$ok = $core->runAction('forumthread',CONS_ACTION_INCLUDE,$postData);
+			$threadobj = $core->loaded('forumthread');
+			if (!isset($_REQUEST['operationmode'])) { // UDM could have filled this for us
+				$_REQUEST['operationmode'] = $core->dbo->fetch("SELECT operationmode FROM ".$threadobj->dbname." WHERE id=".$_POST['id_forum']);
+			}
+			if ($_REQUEST['operationmode'] == 'bb') {
+				// on BB mode, people can't post images directly
+				$_REQUEST['image_delete'] = 'checked';
+				if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+					@unlink ($_FILES['image']['tmp_name']);
+					unset($_FILES['image']);
+				}
+			}
+			$ok = $core->runAction($threadobj,CONS_ACTION_INCLUDE,$postData);
 			if (!$ok) {
 				$core->action = "forum";
 				$_REQUEST['id'] = $_POST['id_forum'];
@@ -50,7 +66,7 @@
 				return;
 			} else {
 				$core->action = $core->storage['lastactiondata']['urla'];
-				$_POST['url'] = $core->action; 
+				$_POST['url'] = $core->action;
 				$_POST['id_forumthread'] = $core->lastReturnCode;
 			}
 			// no break: continue on to add post
@@ -78,7 +94,7 @@
 				$_REQUEST['id'] = $_POST["id_forum"];
 			}
 			return;
-		break;	
+		break;
 		case 'edit': // edit a comment
 		break;
 		case 'delete': // delete a comment (delete first comment of a thread to delete it all)

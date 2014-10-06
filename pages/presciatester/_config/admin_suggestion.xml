@@ -1,0 +1,44 @@
+<USERS icon="list" listing="groups_name,name,login,email,active">
+	<new>edit.php?module=users</new>
+	<list>list.php?module=users</list>
+</USERS>
+<GROUPS icon="list" listing="name,#users,level,active">
+	<new>edit.php?module=groups</new>
+	<list>list.php?module=groups</list>
+</GROUPS>
+<SEO icon="list" listing="page,alias,lang,meta,metakey,title,publicar,redirectmode">
+	<new>edit.php?module=seo</new>
+	<list>list.php?module=seo</list>
+</SEO>
+<FORUM icon="list" listing="parent_title,title,lang,urla,operationmode,#forumthread">
+	<new>edit.php?module=forum</new>
+	<list>list.php?module=forum</list>
+</FORUM>
+<FORUMTHREAD icon="list" listing="forum_title,title,video,date,tags,urla,lastupdate,author_name">
+	<new>edit.php?module=forumthread</new>
+	<list>list.php?module=forumthread</list>
+</FORUMTHREAD>
+<FORUMPOST icon="list" listing="forum_title,forumthread_title,author_name,date,flagged,whoflagged_name,props,ip">
+	<new>edit.php?module=forumpost</new>
+	<list>list.php?module=forumpost</list>
+</FORUMPOST>
+<CONTENTMAN icon="list" listing="parent_title,page,title,lang">
+	<new>edit.php?module=contentman</new>
+	<list>list.php?module=contentman</list>
+</CONTENTMAN>
+<PRESCIATOR icon="list" listing="title,makemefamous,data,dateup,randomtext,leavemealone,autourl,manualurl">
+	<new>edit.php?module=presciator</new>
+	<list>list.php?module=presciator</list>
+</PRESCIATOR>
+<PRESCIAALPHA icon="list" listing="parent_title,title">
+	<new>edit.php?module=presciaalpha</new>
+	<list>list.php?module=presciaalpha</list>
+</PRESCIAALPHA>
+<PRESCIABETA icon="list" listing="nested_title,title">
+	<new>edit.php?module=presciabeta</new>
+	<list>list.php?module=presciabeta</list>
+</PRESCIABETA>
+<PRESCIAMKEY icon="list" listing="tor_title,hithere,changesintor,id_tor_beta">
+	<new>edit.php?module=presciamkey</new>
+	<list>list.php?module=presciamkey</list>
+</PRESCIAMKEY>

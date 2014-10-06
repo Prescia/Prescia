@@ -87,9 +87,11 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 					if (is_numeric($data[$fname])) {
 						$data[$fname.'_url'] = "http://player.vimeo.com/video/".$data[$fname];
 						$data[$fname.'_embed'] = "http://player.vimeo.com/video/".$data[$fname];
+						// <iframe src="//player.vimeo.com/video/107395294?badge=0" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 					} else {
 						$data[$fname.'_url'] = "http://www.youtube.com/v/".$data[$fname];
 						$data[$fname.'_embed'] = "http://www.youtube.com/embed/".$data[$fname];
+						// <iframe width="560" height="315" src="//www.youtube.com/embed/p6XLNsJ9YrA?list=PLmAut-PjT9-3TIbZascroz-dqP34ohKD5" frameborder="0" allowfullscreen></iframe>
 					}
 				} else {
 					$data[$fname.'_url'] = "";
@@ -157,7 +159,6 @@ class CModule {
 		$this->name = $name;
 		$this->dbname = $dbname;
 		$this->options = array( CONS_MODULE_VOLATILE => false,
-								CONS_MODULE_MULTIKEYS => array(),
 								CONS_MODULE_SYSTEM => false,
 								CONS_MODULE_AUTOCLEAN => '',
 								CONS_MODULE_PARENT => '',
@@ -351,10 +352,8 @@ class CModule {
 					  if (isset($campo[CONS_XML_JOIN]) && $campo[CONS_XML_JOIN] == "left") {
 						$linker = array();
 						foreach ($remodeModule->keys as $rkey) {
-							if ($rkey == "id")
+							if ($rkey == "id") {
 								$linker[] = $tablecast.".$rkey = ".$this->name.".".$nome;
-							else if (in_array($rkey,$this->options[CONS_MODULE_MULTIKEYS])) {
-								$linker[] = $tablecast.".$rkey = ".$this->name.".".$rkey;
 							} else { // not a parent nor main key, how to link?
 								if ($remodeModule->fields[$rkey][CONS_XML_MODULE] == $this->name)
 									$linker[] = $tablecast.".$rkey = ".$this->name.".".$this->keys[0];
@@ -368,10 +367,8 @@ class CModule {
 					  } else {
 					  	$sql['FROM'][] = $remodeModule->dbname." as ".$tablecast;
 						foreach ($remodeModule->keys as $rkey) {
-							if ($rkey == "id")
+							if ($rkey == "id") {
 								$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$nome;
-							else if (in_array($rkey,$this->options[CONS_MODULE_MULTIKEYS])) {
-								$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$rkey;
 							} else if ($remodeModule->fields[$rkey][CONS_XML_TIPO] == CONS_TIPO_LINK) { // not a parent nor main key, is a link to another table
 								if ($remodeModule->fields[$rkey][CONS_XML_MODULE] == $this->name)
 									$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$this->keys[0];
@@ -466,10 +463,8 @@ class CModule {
 			  if (isset($campo[CONS_XML_JOIN]) && $campo[CONS_XML_JOIN] == "left") {
 				$linker = array();
 				foreach ($remodeModule->keys as $rkey) {
-					if ($rkey == "id")
+					if ($rkey == "id") {
 						$linker[] = $tablecast.".$rkey = ".$this->name.".".$nome;
-					else if (in_array($rkey,$this->options[CONS_MODULE_MULTIKEYS])) {
-						$linker[] = $tablecast.".$rkey = ".$this->name.".".$rkey;
 					} else { // not a parent nor main key, how to link?
 						if ($remodeModule->fields[$rkey][CONS_XML_MODULE] == $this->name)
 							$linker[] = $tablecast.".$rkey = ".$this->name.".".$this->keys[0];
@@ -483,10 +478,8 @@ class CModule {
 			  } else {
 				$sql['FROM'][] = $remodeModule->dbname." as ".$tablecast;
 				foreach ($remodeModule->keys as $rkey) {
-					if ($rkey == "id")
+					if ($rkey == "id") {
 						$sql['WHERE'][]= $tablecast.".$rkey = ".$this->name.".".$nome;
-					else if (in_array($rkey,$this->options[CONS_MODULE_MULTIKEYS])) {
-						$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$rkey;
 					} else if ($remodeModule->fields[$rkey][CONS_XML_TIPO] == CONS_TIPO_LINK) { // not a parent nor main key, is a link to another table
 						if ($remodeModule->fields[$rkey][CONS_XML_MODULE] == $this->name)
 							$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$this->keys[0];
@@ -721,12 +714,18 @@ class CModule {
 			return 4;
 		else if ($_FILES[$name]['error'] <5 && $_FILES[$name]['error'] != 0)
 			return $_FILES[$name]['error']; // 1~4
+		else if (!is_file($_FILES[$name]['tmp_name'])) {
+			return 3; // file not found
+		}
 
 		$isImg = isset($this->fields[$name][CONS_XML_TWEAKIMAGES]) || isset($this->fields[$name][CONS_XML_THUMBNAILS]);
 
 		if ($isImg) { # prepare thumbnail handling variables, as well conditional thumbs
 
 			if (isset($this->fields[$name][CONS_XML_CONDTHUMBNAILS])) {
+				//    />    'a'       'b'
+				//   /    t1  t2     t1   t2
+				// field:[   |   ;][   |    ;]
 				preg_match("@ENUM \(([^)]*)\).*@",$this->fields[$this->fields[$name][CONS_XML_CONDTHUMBNAILS][0]][CONS_XML_SQL],$regs);
 				$thumbsettings = explode(";",$this->fields[$name][CONS_XML_CONDTHUMBNAILS][1]);
 				$enums = explode(",",$regs[1]);
@@ -821,14 +820,15 @@ class CModule {
 			$mfs = isset($this->fields[$name][CONS_XML_FILEMAXSIZE])?$this->fields[$name][CONS_XML_FILEMAXSIZE]:0;
 			if ($mfs >0 && !$isImg) {
 				if (filesize($_FILES[$name]['tmp_name'])>$mfs) {
-					@unlink($_FILES[$name]['tmp_name']);
+					if (!isset($_FILES[$name]['virtual'])) @unlink($_FILES[$name]['tmp_name']);
 					return 2; # file larger than allowed by field and is not an image (thus, we cannot reduce)
 				}
 			}
 
 			# perform upload
 			$thisFilename = $path.$filename."1";
-			$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes); # <----------------- upload happens here
+			//$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes); # <----------------- upload happens here
+			$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes,true); # <----------------- use this (note the true) for full debug 
 
 			$arquivo = explode(".",$thisFilename);
 			$ext = strtolower(array_pop($arquivo)); # <-- ext for the file
@@ -846,7 +846,7 @@ class CModule {
 
 				# if this is not an JPG image, and it's larger then mfs, won't work at all. Abort
 				if ($mfs > 0 && filesize($thisFilename)>$mfs && $ext != 'jpg') {
-					@unlink($thisFilename);
+					if (!isset($_FILES[$name]['virtual'])) @unlink($thisFilename);
 					return 2; # file larger than allowed by field and is not a resizable image
 				}
 
@@ -976,20 +976,22 @@ class CModule {
 							$this->parent->errorControl->raise(128,$name,$this->name,"Parent=Self");
 							if (isset($field[CONS_XML_MANDATORY])) return false;
 						} else {
-							$antiCicle = array($data[$this->keys[0]]);
-							$idP = $data[$name];
+							$antiCicle = $isADD?array():array($data[$this->keys[0]]);
+							$idP = isset($data[$name])?$data[$name]:0;
+							if ($idP == null) $idP = 0;
 							while ($idP !== 0) {
 								$idP = $this->parent->dbo->fetch("SELECT $name FROM ".$this->dbname." WHERE ".$this->keys[0]."=$idP");
+								if ($idP == NULL) $idP = 0;
 								if (in_array($idP,$antiCicle)) break; // cicle!
 								$antiCicle[] = $idP;
 							}
 							unset($antiCicle);
 							if ($idP !== 0) {
 								# did not reach root
+								$this->parent->errorControl->raise(128,$name,$this->name,"Initial parent was = ".$data[$name]);
 								$data[$name] = 0;
-								$this->parent->errorControl->raise(128,$name,$this->name);
 								if (isset($field[CONS_XML_MANDATORY])) return false;
-							}
+							} 
 						}
 					}
 					$output = $encapsulation.$data[$name].$encapsulation;
@@ -1078,7 +1080,7 @@ class CModule {
 						}
 					}
 					if (!$isADD && isset($field[CONS_XML_IGNORENEDIT]) && $data[$name] == "") break;
-					else if ($isADD && isset($field[CONS_XML_DEFAULT])) $data[$name] = $encapsulation.$field[CONS_XML_DEFAULT].$encapsulation;
+					else if ($isADD && (!isset($data[$name]) || $data[$name]=='') && isset($field[CONS_XML_DEFAULT])) $data[$name] = $field[CONS_XML_DEFAULT];
 					$output = $encapsulation.$data[$name].$encapsulation;
 				}
 				break;
@@ -1086,12 +1088,20 @@ class CModule {
 				if (isset($data[$name])) {
 					# WYSIWYG garbage ...
 					if (isset($field[CONS_XML_HTML]) && !isset($field[CONS_XML_CUSTOM])) {
-						# WYSIWYG garbage
 						$data[$name] = str_replace("&#160;"," ",trim($data[$name]));
-						$data[$name] = trim(str_replace("<p></p>","",$data[$name]));
+						if (isset($field[CONS_XML_SIMPLEEDITFORCE]) && $data[$name]!='') {
+							if (!function_exists('xmlParamsParser')) include CONS_PATH_INCLUDE."xmlHander.php";
+							$data[$name] = parseHTML($data[$name],true);
+							if ($data[$name]===false) {
+								$this->parent->errorControl->raise(190,$name,$this->name);
+								$data[$name] = '';
+								break;
+							}
+						}
 						if ($this->invalidHTML($data[$name])) { # external editors garbage that can break HTML
 							$this->parent->errorControl->raise(135,$name,$this->name);
 						}
+						
 					}
 					if (!isset($field[CONS_XML_CUSTOM])) {
 						$data[$name] = cleanString($data[$name],isset($field[CONS_XML_HTML]),$_SESSION[CONS_SESSION_ACCESS_LEVEL]==100);
@@ -1373,9 +1383,9 @@ class CModule {
 					# can create items
 				}
 				# if this module have multiple key fields, there is no auto_increment IF there is an id (id created automatically w/o AI)
-				if (count($this->options[CONS_MODULE_MULTIKEYS])>0 && $this->keys[0] == "id") {
+				if (count($this->keys)>1 && $this->keys[0] == "id") {
 					$wheres = array();
-					foreach ($this->options[CONS_MODULE_MULTIKEYS] as $field) {
+					foreach ($this->keys as $field) {
 						if ($field != "") {
 							if (!isset($data[$field])) {
 								# we need this parent data to create the id, but it's missing!
@@ -1411,7 +1421,7 @@ class CModule {
 						if (!isset($field[CONS_XML_MANDATORY]) || isset($field[CONS_XML_DEFAULT]))
 							unset($data[$name]);
 					}
-					if (strpos(strtolower($field[CONS_XML_SQL]),"auto_increment") === false && !($this->keys[0] == "id" && $name == $this->keys[0] && count($this->options[CONS_MODULE_MULTIKEYS])>0 )) { # cannot change auto_increment or main key fields
+					if (strpos(strtolower($field[CONS_XML_SQL]),"auto_increment") === false && !($this->keys[0] == "id" && $name == $this->keys[0] && count($this->keys)>1 )) { # cannot change auto_increment or main key fields
 
 						$outfield = $this->sqlParameter(true,$data,$name,$field,$EnumPrunecache);
 						if ($outfield !== false) $output .= $name."=".$outfield.",";

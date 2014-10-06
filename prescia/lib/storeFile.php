@@ -24,7 +24,7 @@ function storeFile($file,&$destination,$type="",$completeDebug=false) {
 	|  0 - Upload ok
 	|  1 - File was larger than allowed on the server - upload fail
 	|  2 - File was larger than allowed by the page (MAX_FILE_SIZE) - upload fail
-	|  3 - Upload incomplete (might also be triggered if there is no permission to save at destination folder, of you forgot the multipart encode)
+	|  3 - Upload incomplete (might also be triggered if there is no permission to save at destination folder, of you forgot the multipart encode). Can also be triggered at dot files
 	|  4 - Nothing sent (no file sent)
 	|  5 - Upload of invalid extension
 		|  7 - File extension differs from file content (image,zip,rar), thus causing GD/zip issues

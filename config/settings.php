@@ -34,7 +34,7 @@
 
 	# -- BEHAVIOUR/SAFETY SETTINGS --
 	if (CONS_ONSERVER) { # When on main server/deployed
-		define("CONS_OVERRIDE_DB"		,""); // ALL sites will use this database (blank to allow different db per site)
+		define("CONS_OVERRIDE_DB"		,""); // <-- SERVER WIDE, if ALL your sires run on the same DB, you can set here (same as 2 below)
 		define("CONS_OVERRIDE_DBUSER"	,""); // ALL sites will use this database user (blank to allow different users per site)
 		define("CONS_OVERRIDE_DBPASS"	,""); // ALL sites will use this database password (blank to allow different passwords per site)
 
@@ -52,7 +52,7 @@
 		define ("CONS_SLOWQUERY_TH"		, 2); # queries that take longer than this will trigger an internal (log) warning
 		define ("CONS_MAXRUNCONTENTSIZE",50000); // lists larger then this will result a fatal error due to overflow of the TC system (paging should prevent this altogether, so this catches infinite loops)
 
-		define("CONS_BOTPROTECT"		,true); // monitors calls from same IP and prevent too many in a short time (see CONS_BOTPROTECT_MAXHITS)
+		define("CONS_BOTPROTECT"		,false); // monitors calls from same IP and prevent too many in a short time (see CONS_BOTPROTECT_MAXHITS)
 		define("CONS_BOTPROTECT_MAXHITS",35); // how many hits one IP can perform per MINUTE. More than that will trigger a temporary IP ban
 											  // KEEP IN MIND this also count ajax and other hits. So be conservative
 		define("CONS_BOTPROTECT_BANTIME",5); // how long, in minutes, someone caught by BOTPROTECT should be banned from the system
@@ -62,9 +62,9 @@
 
 	} else { # When on local PRODUCTION system (same as above)
 
-		define("CONS_OVERRIDE_DB"		,"localhost");
-		define("CONS_OVERRIDE_DBUSER"	,"root");
-		define("CONS_OVERRIDE_DBPASS"	,"root");
+		define("CONS_OVERRIDE_DB"		,""); // <-- SERVER WIDE, if ALL your sires run on the same DB, you can set here
+		define("CONS_OVERRIDE_DBUSER"	,"");
+		define("CONS_OVERRIDE_DBPASS"	,"");
 
 		define ("CONS_DEVELOPER"		,true);
 		define ("CONS_FOWARDER"			,true);

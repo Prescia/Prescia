@@ -1,6 +1,7 @@
 #REMEMBER: This file is heavily CACHED, any change in this file will not be read until you run a ?debugmode=true&nocache=true query
-#code [comma delimited domain names] 
+#To force one code locally if is set, use ?debugmode=true&nocache=true&nosession=true&changelocalsite=[code]
 
+#code [comma delimited domain names] EXAMPLE: 
 #yoursitecodehere yoursitedomains,overhere.com,commadelimited,this is a sample
 
 prescia	*

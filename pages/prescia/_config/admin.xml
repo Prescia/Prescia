@@ -18,7 +18,7 @@
 	<new>edit.php?module=functions</new>
 	<list>list.php?module=functions</list>
 </FUNCTIONS>
-<FORUM icon="list" listing="title,lang,ordem">
+<FORUM icon="list" listing="parent_title,title,lang,urla,operationmode,#forumthread">
 	<new>edit.php?module=forum</new>
 	<list>list.php?module=forum</list>
 	<FORUMTHREAD icon="list" listing="forum_title,title,date,lastupdate,urla,flagged">

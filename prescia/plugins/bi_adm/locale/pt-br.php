@@ -245,6 +245,6 @@
 "author" => "Autor",
 "history_lasts_7days" => "O histórico mantém registros apenas dos últimos 7 dias",
 "registration_approved" => "Cadastro Aprovado",
-"registration_approved_msg" => "Seu cadastro no site foi aprovado. Você já pode fazer login e acessar os conteúdos restritos a partir de agora !"
-
+"registration_approved_msg" => "Seu cadastro no site foi aprovado. Você já pode fazer login e acessar os conteúdos restritos a partir de agora !",
+"videofield_explanation" => "(Apenas o código do Youtube/Vimeo)"
 );

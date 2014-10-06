@@ -1584,7 +1584,39 @@ Object.extend(Number.prototype, (function() {
   };
 })());
 
+function $R(start, end, exclusive) {
+  return new ObjectRange(start, end, exclusive);
+}
 
+var ObjectRange = Class.create(Enumerable, (function() {
+  function initialize(start, end, exclusive) {
+    this.start = start;
+    this.end = end;
+    this.exclusive = exclusive;
+  }
+
+  function _each(iterator, context) {
+    var value = this.start, i;
+    for (i = 0; this.include(value); i++) {
+      iterator.call(context, value, i);
+      value = value.succ();
+    }
+  }
+
+  function include(value) {
+    if (value < this.start)
+      return false;
+    if (this.exclusive)
+      return value < this.end;
+    return value <= this.end;
+  }
+
+  return {
+    initialize: initialize,
+    _each:      _each,
+    include:    include
+  };
+})());
 
 
 

@@ -1,0 +1,46 @@
+<PRESCIATOR dbname="dbp" title="title" keys="alpha,beta" order="data+" meta="teste" >
+	<alpha mandatory="true">enum:'key','chave','kage'</alpha>
+	<beta mandatory="true">int</beta>
+	<title mandatory="true">vc</title>
+	<makemefamous default='n' hashkey="true">BOL</makemefamous>
+	<data timestamp="true">DATETIME</data>
+	<dateup updatestamp="true">DATETIME</dateup>
+	<randomtext>text</randomtext>
+	<randomhtml html="true">text</randomhtml>
+	<randomhtmllt html="true" forcesimple="true">text</randomhtmllt>
+	<leavemealone custom="true">text</leavemealone>
+	<autourl special="urla">vc</autourl>
+	<manualurl urlaformat="{title}-{alpha}-{date|date|Ymd}">vc</manualurl>
+	<ignoreme ignorenedit="true" default="something">vc</ignoreme>
+	<sosmall>tinyint</sosmall>
+	<id_someome merge="left">USERS</id_someome>
+	<id_author mandatory="true" owner="true">USERS</id_author>
+	<onlyonchave size="20" conditional="alpha=key">vc</onlyonchave>
+	<readmeonly default='ha' readonly="true">ENUM:'ha','he','hu'</readmeonly>
+	<getawaylowly restrict="50">float</getawaylowly>
+	<showmaoptions>options:'check1','check2','check3'</showmaoptions>
+	<somefile filetypes="txt" filemaxsize="500">upload</somefile>
+	<someimage filetypes="jpg,png" noimg="noimg.jpg" filemaxsize='1024000' thumbnails="400,300|100,100" tweakimages="|croptofit">file</someimage>
+	<conditionedimage  filetypes="jpg,png" filemaxsize='1024000' condthumbnails="alpha:100,100|50,50;200,200|100,100;300,300|150,150" tweakimages="croptofit|croptofit|croptofit">file</conditionedimage>
+	<id_alpha>PRESCIAALPHA</id_alpha>
+	<id_beta>PRESCIABETA</id_beta>
+	<oneofakind unique="true" mandatory="true">smallint</oneofakind>
+	<mylanguage language="true" default='en'>ENUM:'this','shit','should','be','ignored'</mylanguage>
+</PRESCIATOR>
+<PRESCIAALPHA dbname="dba" title="title" parent="id_parent">
+	<ID_PARENT>PRESCIAALPHA</ID_PARENT>
+	<TITLE mandatory="true">vc</TITLE>
+</PRESCIAALPHA>
+<PRESCIABETA dbname="dbb" title="title">
+	<ID_NESTED mandatory="true">PRESCIAALPHA</ID_NESTED>
+	<TITLE mandatory="true">vc</TITLE>
+</PRESCIABETA>
+<PRESCIAMKEY dbname="dbmk" title="hithere" plugins="presciacounter">
+	<ID_TOR mandatory="true">PRESCIATOR</ID_TOR>
+	<hithere>vc</hithere>
+	<changesintor readonly="true">int</changesintor>
+</PRESCIAMKEY>
+<PRESCIALINKER dbname="dbl" linker="true" title="id_a">
+	<ID_A mandatory="true">PRESCIAALPHA</ID_A>
+	<ID_B mandatory="true">PRESCIABETA</ID_B>
+</PRESCIALINKER>

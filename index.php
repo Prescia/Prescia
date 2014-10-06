@@ -106,7 +106,7 @@ if (CONS_CACHE) $core->cacheControl->startCaches(); // detects which cache to us
 
 # -- database and metadata load
 if (!$core->dbconnect()) $core->offlineMode = true;
-if (!$core->loadMetadata()) $core->errorControl->raise(1); // loadMetadata loads dimconfig
+if (!$core->loadMetadata()) $core->errorControl->raise(1,"metamodel fault"); // loadMetadata loads dimconfig
 if ($core->debugmode) $core->applyMetaData(); // only in debug. Executes onMeta's and save metadata/sql changes
 # ab -n50 total mean: 546ms 28ms
 

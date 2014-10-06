@@ -56,16 +56,19 @@
 
 	$this->addPlugin('bi_cms'); // suggest to leave later so it's also the last to handle 404
 	$bb = $this->addPlugin('bi_bb'); // Bulleting Board
-		$bb->bbfolder = "/bb/,/profile/";
+		$bb->bbfolder = "bb";
 		$bb->registrationGroup = 4;
+		$bb->areaname = "community";
+		$bb->homename = "Prescia";
 
 	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
-	    #$stats->admFolder = "adm";
-		#$stats->admRestrictionLevel = 10; // what we consider an admin level
-		#$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
-		#$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this
+	    $stats->admFolder = "adm";
+		$stats->admRestrictionLevel = 10; // what we consider an admin level
+		$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
+		$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this
 
 	// Uncomment and change as needed
 	$this->languageTL = array("en" => "en", "pt" => "pt-br"); # url/PATH/[subdir/] => url/[subdir/]?lang=PATH
 	#$this->forceLang = "en"; # force this language (kinda spoils i18n settings, this is used mostly for debugging)
 	#$this->charset = "utf-8"; # default charset (default is utf-8 already)
+	$this->doctype = "html"; // use html or xhtml. This will change how the page is served. Note xhtml is VERY STRICT, like ... VERY

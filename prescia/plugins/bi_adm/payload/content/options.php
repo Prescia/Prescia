@@ -1,6 +1,6 @@
 <?
 	$core->loadDimconfig(true);
-	
+
 	// info
 	$b = getbrowser(false);
 	$core->template->assign("browser",$b[0]);
@@ -185,7 +185,7 @@
 					preg_match("@ENUM \(([^)]*)\).*@",$dimconfigMD[$data['name']][CONS_XML_SQL],$regs);
 					if (isset($dimconfigMD[$data['name']][CONS_XML_DEFAULT]) && $data['value'] == "") $data['value'] = $dimconfigMD[$data['name']][CONS_XML_DEFAULT];
 					if ($data['name'] == 'bi_adm_skin') {
-						$regs = array(1=>CONS_ADM_ACTIVESKINGS);
+						$regs = array(1=>CONS_ADM_ACTIVESKINS);
 					}
 					$xtp = "<option value=\"{enum}\" {checked}>{enum_translated}</option>";
 					$tp = new CKTemplate($core->template);

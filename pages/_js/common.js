@@ -187,6 +187,12 @@ function selectall(frm,para,filter) { // prototype/jQuery compatible
 	}
   }
 }
+function radioValue(radioName) { // prototype/jQuery compatible
+	for (var i=0;i<radioName.length;i++) {
+		if (radioName[i].checked) return radioName[i].value;
+	}
+	return '';
+}
 function windowDimensions() { // prototype/jQuery compatible
 	var myWidth = 0, myHeight = 0;
 	if( typeof( window.innerWidth ) == 'number' ) {

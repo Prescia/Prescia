@@ -45,6 +45,8 @@
 'sendmail_sent_from' => "Mail sent from",
 "fmanager" => "File manager",
 "filemanager"=>"File manager",
+"video" => "Video",
+"image" => "Image",
 
 "xmltype200" => "Integer Number",
 "xmltype201" => "Decimal Number",

@@ -1,10 +1,9 @@
 <? /* ----------------------------------------- Default script for admin pages
- * 
+ *
  */
 
  	// loads frame
  	$core->loadTemplate();
- 
 	$core->addLink('common.js');
 	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]>=$this->admRestrictionLevel) {
 		$core->template->assign("LOGGED_USER",$_SESSION[CONS_SESSION_ACCESS_USER]['name']);
@@ -37,7 +36,7 @@
 					$_SESSION['admstatistics_left'] = $stp;
 				} else
 					$_SESSION['admstatistics_left'] = '';
-				
+
 
 				// monitored items
 				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/_config/monitor.xml") && $core->authControl->checkPermission('bi_adm','can_monitor')) { // we have monitored items AND can see them
@@ -50,7 +49,7 @@
 					$c=0;
 					$totalItems = 0;
 					foreach ($monitorXml as $monitoredItem) {
-						$monitoredModule = $core->loaded($monitoredItem['module']);
+						$monitoredModule = $core->loaded($monitoredItem['module'],true);
 						$monitoredItem['sql'] = str_replace("\$id_user",$_SESSION[CONS_SESSION_ACCESS_USER]['id'],$monitoredItem['sql']);
 						$sql = $monitoredModule->get_base_sql("(".$monitoredItem['sql'].")","","");
 						$sql['ORDER'] = array();

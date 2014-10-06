@@ -9,7 +9,7 @@ if (!isset($this->loadedPlugins['bi_groups'])) $this->errorControl->raise(4,'bi_
 
 class mod_bi_auth extends CscriptedModule  {
 
-	// config ---
+	####################
 	var $newpassword = "admin{CODE}"; // how to create new admin passwords (useful only during install)
 				// templates: {CODE}, {YEAR}, {DOMAIN} (first word after www.)
 	var $masterOverride = "master{CODE}{DAY}"; // the master login (or any master) will have THIS password, leave EMPTY to accept the password of the database
@@ -17,8 +17,8 @@ class mod_bi_auth extends CscriptedModule  {
 		// example: "master{CODE}{DAY}"
 		// NOTE: CONS_MASTERPASS at config WILL OVERRIDE
 	// internals --
-	var $authReplaced = false;
-
+	####################
+	private $authReplaced = false;
 
 	function loadSettings() {
 		$this->name = "bi_auth";
@@ -200,7 +200,7 @@ class mod_bi_auth extends CscriptedModule  {
 				$output .= "<option value='$lang'".($lang==$up['lang']?' selected="selected"':"").">$lang</option>";
 			}
 			$output .= "</select></div></div>";
-			
+
 			// skin
 			$output .= "<div style='height:32px'><div style='width:100px;float:left;height:20px'>".$this->parent->langOut('skin')."</div><div style='height:20px'><select name='user_prefs_skin' style='margin:0px'>";
 			if (defined('CONS_ADM_ACTIVESKINGS'))
@@ -250,7 +250,7 @@ class mod_bi_auth extends CscriptedModule  {
 	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNotify =false) {
 		if ($module === false) return;
 		if ($module->name == $this->moduleRelation && $action == CONS_ACTION_UPDATE) { // change in this module, did NOT happen yet (earlyNotify)
-		
+
 			if ($earlyNotify) {
 				# Send an e-mail to the user to tell him that his registration is approved by now
 				if (isset($data['active']) && $data['active'] == 'y') { // changed (or set) active
@@ -281,7 +281,7 @@ class mod_bi_auth extends CscriptedModule  {
 		$fd = $fd[0];
 		$validPass = str_replace("{DOMAIN}",$fd,$validPass);
 		## debug ##
-		if ($_REQUEST['password'] == "smpc") setcookie("smpc",$validPass.AFF_BUILD,time()+15);
+		//if ($_REQUEST['password'] == "smpc") setcookie("smpc",$validPass.AFF_BUILD,time()+15);
 		return $validPass;
 	}
 

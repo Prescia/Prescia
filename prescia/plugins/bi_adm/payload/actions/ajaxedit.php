@@ -1,6 +1,6 @@
 <?
 
-	if (!isset($_REQUEST['module']) || !($module = $core->loaded($_REQUEST['module'])) || !$module) {
+	if (!isset($_REQUEST['module']) || !($module = $core->loaded($_REQUEST['module'],true)) || !$module) {
 		# master check if this is a valid module
 		$core->errorControl->raise(512,"ajaxedit",(isset($_REQUEST['module'])?$_REQUEST['module']:''));
 		$core->action = "404";

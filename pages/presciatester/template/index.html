@@ -1,0 +1,22 @@
+
+<div class="panel panel-primary">
+	<div class="panel-heading">Options</div>
+	<div class="panel-body">
+		The current stage of this test is: {presciastage|onnull|<b>Something is wrong</b>}<br/><br/>
+		<button onclick='document.location="nextstep.php?haveinfo=1";' class='btn btn-primary'>Run next step</button>
+		<hr/>
+		<button onclick='document.location="reset.php?haveinfo=1";' class='btn btn-danger'>Reset test</button>
+	</div>
+</div>
+<div class="panel panel-warning">
+	<div class="panel-heading">Diagnostics</div>
+	<div class="panel-body">
+		The current stage of this test is: {presciastage|onnull|<b>Something is wrong</b>}<br/><br/>
+		Diagnostics for this stage reports as follow:
+		<div>
+			{diagnostics|nl2br}
+		</div>
+	</div>
+</div>
+
+Presciatester

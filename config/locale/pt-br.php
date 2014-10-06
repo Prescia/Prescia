@@ -45,6 +45,8 @@
 'sendmail_sent_from' => "Enviado a partir de",
 "fmanager" => "Gerenciador de arquivos",
 "filemanager" => "Gerenciador de arquivos",
+"video" => "Vídeo",
+"image" => "Imagem",
 
 "xmltype200" => "Número Inteiro",
 "xmltype201" => "Numero Decimal",

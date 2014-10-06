@@ -8,6 +8,7 @@
   |					   convertquery = if found, fill this $_REQUEST with the MAIN key
   |						  if there are more than one main key, will fill as an array
   |					   fillqueries = comma delimited list of fields to also fill into $_REQUEST with data form the database match
+  |					   filter = SQL filter to be added
   | Second parameter: if we do not consume all virtual folders, ignore it and consider it processed
 -*/
 
@@ -29,7 +30,7 @@
 			else $param[$vFn]['convertquery'] = strtolower($param[$vFn]['convertquery']);
 			if (!isset($module->fields[$param[$vFn]['key']])) $this->errorControl->raise(186,$param[$vFn]['key'],"UDM","Field not found (".$param[$vFn]['key'].") on entry ".$vFn);
 
-			$sql = $module->get_base_sql($param[$vFn]['module'].".".$param[$vFn]['key']." =\"".$vF."\"","",1);
+			$sql = $module->get_base_sql($param[$vFn]['module'].".".$param[$vFn]['key']." =\"".$vF."\"".(isset($param[$vFn]['filter'])?" AND (".$param[$vFn]['filter'].")":""),"",1);
 
 			if ($this->dbo->query($sql,$r,$n) && $n>0) { // found!
 

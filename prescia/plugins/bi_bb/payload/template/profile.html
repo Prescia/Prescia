@@ -1,5 +1,5 @@
 <div class="container">
-	
+
 	<div class="panel panel-warning">
 		<div class="panel-heading">
 			{_LOGGED}
@@ -8,14 +8,14 @@
 			<spam class="glyphicon glyphicon-ok"></spam> {_t}profile{/t} {_LOGGED}: {USER_LOGIN}{/LOGGED}
 		</div>
 		<div class="panel-body">
-			
+
 			{CONTENTMAN}
-			
+
 			<form class="form-horizontal" action="bbaction.php" id="profileform" method="post" onsubmit="return checkprofile(this)" enctype="multipart/form-data">
 			<input type="hidden" name="haveinfo" value="1"/>
 			<input type="hidden" name="bbaction" value="profile"/>
 			<input type="hidden" name="MAX_FILE_SIZE" value="500000" />
-			
+
 			<div class="row">
 				<div class="col-md-2 text-right" style="line-height:30px;">{_t}name{/t} <spam class="glyphicon glyphicon-user"></spam></div>
 				<div class="col-md-9">
@@ -63,7 +63,7 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="row">
 				<div class="col-md-2 text-right" style="line-height:30px;">{_t}language{/t} <spam class="glyphicon glyphicon-globe"></spam></div>
 				<div class="col-md-5" style="line-height:30px;">
@@ -87,7 +87,7 @@
 				<div class="col-md-2 text-right" style="line-height:50px;">{_t}avatar{/t} <spam class="glyphicon glyphicon-picture"></spam></div>
 				<div class="col-md-9" style="line-height:50px;">
 					<div class="pull-left">
-						{_imageyes}<img src="/{image}" alt="User Avatar" class="img-rounded"/>{/imageyes}
+						{_imageyes}<img style="width:28px;height:auto" src="/{image}" alt="User Avatar" class="img-rounded"/>{/imageyes}
 						{_imageno}<spam class="glyphicon glyphicon glyphicon-user"></spam>{/imageno}
 					</div>
 					<input type="file" class="form-control" placeholder="{_t}avatar{/t}" style="margin-left:40px" name="image"/>
@@ -112,16 +112,16 @@
 					<button type="submit" class="btn btn-primary btn-sm">{_t}save{/t}</button>
 				</div>
 			</div>
-			
+
 			</form>
 		</div>
 	</div>
 
-	
+
 </div>
 
 <script type='text/javascript'><!--
-	
+
 	function fillfeedback(frm) {
 		// color/spans
 		setSuccess(frm.name,frm.name.value.length > 10?2:(frm.name.value.length > 3?1:0));
@@ -140,9 +140,9 @@
 		if (frm.name.value.length<10) {
 			if (frm.name.value.length<4) {
 				$(frm.name).next('span').prop('title', '{_t}name_too_short{/t}');
-				failed = true; 
+				failed = true;
 			} else {
-				$(frm.name).next('span').prop('title', '{_t}please_try_larger_name{/t}'); 
+				$(frm.name).next('span').prop('title', '{_t}please_try_larger_name{/t}');
 			}
 		}
 		{_GUEST}
@@ -191,7 +191,7 @@
 	function checkprofile(frm) {
 		return fillfeedback(frm);
 	}
-	
+
 	function setSuccess(el,level) {
 		var sp = $(el).next('span');
 		sp.removeClass('glyphicon-ok');
@@ -205,6 +205,6 @@
 		pt.removeClass('has-success');
 		if (level !== false) pt.addClass(level==2?'has-success':(level==1?'has-warning':'has-error'));
 	}
-	
+
 
 //--></script>
