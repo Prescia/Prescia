@@ -27,7 +27,6 @@ class mod_bi_bb extends CscriptedModule  {
 									);
 	public $isBBPage = false; // cache test result
 	// --
-	private $contextfriendlyfolderlist = array();
 	private $filter = ""; # filter used on the SQL above
 
 	function loadSettings() {
@@ -199,7 +198,7 @@ class mod_bi_bb extends CscriptedModule  {
 		}
 		return $result;
 	}
-	
+
 	function countMessages($filterOnlyNew=false) { # get number of messages on inbox
 		if (!$this->parent->logged()) return false;
 		$mod = $this->parent->loaded('bbmail');

@@ -22,6 +22,10 @@
 	<new>edit.php?module=forumpost</new>
 	<list>list.php?module=forumpost</list>
 </FORUMPOST>
+<BBMAIL icon="list" listing="author_login,recipient_login,title,date,dateseen">
+	<new>edit.php?module=bbmail</new>
+	<list>list.php?module=bbmail</list>
+</BBMAIL>
 <CONTENTMAN icon="list" listing="parent_title,page,title,lang">
 	<new>edit.php?module=contentman</new>
 	<list>list.php?module=contentman</list>

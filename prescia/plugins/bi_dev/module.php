@@ -32,7 +32,21 @@ class mod_bi_dev extends CscriptedModule  {
 		if ($this->devDisable) return;
 		foreach ($this->parent->modules as  $mname => &$module) {
 			if (!isset($module->fields[$module->title]) && !$module->options[CONS_MODULE_SYSTEM])
-				$this->log[] = "Module title does not exist! Title set to '".$module->title."' in $mname";
+				$this->log[] = "Module title does not exist in $mname! ";
+			if (!is_bool($module->options[CONS_MODULE_VOLATILE]))
+				$this->log[] = "Volatile option is not boolean in $mname! ";
+			if (!is_bool($module->options[CONS_MODULE_SYSTEM]))
+				$this->log[] = "System option is not boolean in $mname! ";
+			if (!is_string($module->options[CONS_MODULE_AUTOCLEAN]))
+				$this->log[] = "Auto clean option is not string in $mname! ";
+			if (!is_string($module->options[CONS_MODULE_PARENT]))
+				$this->log[] = "Parent option is not string in $mname! ";
+			else if ($module->options[CONS_MODULE_PARENT] != '' && !isset($module->fields[$module->options[CONS_MODULE_PARENT]])) {
+				$this->log[] = "Parent option is not a valid field (".$module->options[CONS_MODULE_PARENT].") in $mname! ";
+			}
+			
+			
+			
 			foreach ($module->fields as $name => $field) { # build a link cache, use this also to check for linker modules
 				switch ($field[CONS_XML_TIPO]) {
 					case CONS_TIPO_LINK:
@@ -273,7 +287,7 @@ class mod_bi_dev extends CscriptedModule  {
 			# for each module that is linked
 			$keys = array();
 			foreach ($this->parent->modules[$module]->keys as $key)
-			$keys[] = $key; # SELECT keys
+				$keys[] = $key; # SELECT keys
 			$sql = "SELECT ".implode(",",$keys)." FROM ".$this->parent->modules[$module]->dbname;
 			$this->parent->dbo->query($sql,$r,$n);
 			$report[] = "-Module '".$this->parent->modules[$module]->dbname."' opened with $n entries, each with ".count($keys)." key".(count($keys)>1?"s":"");
@@ -308,7 +322,8 @@ class mod_bi_dev extends CscriptedModule  {
 						# more than one key ...
 						$rk = $this->parent->modules[$field[CONS_XML_MODULE]]->keys; # get all keys
 						array_shift($rk); // first key is set with my local name
-						$desired = array_merge($desired,$rk); # merge such keys with desired fields
+						foreach ($rk as $fkey)
+							$desired[] = $fname."_".$fkey; # 2+ key to a multikey item
 					}
 				}
 			}
@@ -319,22 +334,24 @@ class mod_bi_dev extends CscriptedModule  {
 				$report[] = "-Performing integrity check on table '".$module->dbname."' with $n entries";
 				for ($c=0;$c<$n;$c++) {
 					$data = $this->parent->dbo->fetch_row($r); # keys, then desired in module order
-					$keys = array();
-					foreach ($module->keys as $key)
-						$keys[] = array_shift($data);
-					$myKeys = implode("_",$keys);
+					$delKey = array();
+					$myKeys = array();
+					foreach ($module->keys as $key) {
+						$delKey[$key] = array_shift($data);
+						if (in_array($key,$module->keys))
+							$myKeys[] = $delKey[$key];
+						
+					}
+					$myKeys = implode("_",$myKeys);
+					// removed keys from start of $data, now test remove keys
 					foreach ($moduleLinks as $modLink) {
 						$searchableKeys = array();
 						foreach ($this->parent->modules[$modLink]->keys as $rK)
-						$searchableKeys[] = array_shift($data);
+							$searchableKeys[] = array_shift($data);
 						$searchableKeys = implode("_",$searchableKeys);
 						if ($searchableKeys == "") {
-							$report[] = "--Unable to find keys at $modLink:".print_r($this->parent->modules[$modLink]->keys,true);
+							$report[] = "--Unable to find keys at $modLink";
 						} else if (!in_array($searchableKeys,$keystore[$modLink])) {
-							$delKey = array();
-							foreach ($module->keys as $key) {
-								$delKey[$key] = array_shift($keys);
-							}
 							$module->runAction(CONS_ACTION_DELETE,$delKey,true,false);
 							$report[] = "--Missing keys $searchableKeys to $modLink @ $name keys $myKeys (<strong>Item deleted since mandatory link cannot be null</strong>)";
 						}

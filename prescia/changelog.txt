@@ -1,8 +1,15 @@
 TODO list is on site/github
 
+14.10.11 BETA 0.8 (very stable)
+    general optimizations
+	fixed very serious bug on bi_dev foreign key orphan detector fixed
+	links to other tables using VC are now "forced" (if you don't specify otherwise" as uppercase
 14.10.6 BETA 0.8 (stable, clean)
 	presciatester stage 2
 	changed main format to HTML 5 instead of XHTML 1, though you can still use XHTML by changing the new doctype variable
+	bug when dealing with multikey foreing keys fixed
+	added 145 error type (unauthorized field change)
+	tables forcibly created as myISAM by engine (if you want innoDB, create the table yourself)
 14.10.2 BETA 0.8 (stabilization and testing version)
 	presciatester implemented. Can't say how many bugs have been fixed
 	** will no longer report "general/several bug fix" in here. Will only point IMPORTANT bug fixes **

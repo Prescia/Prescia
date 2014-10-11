@@ -2,10 +2,17 @@
 	$ok = false;
 	if (isset($_REQUEST['haveinfo'])) {
 		$step = $this->dimconfig['presciastage'];
+		$this->loadAllmodules(); // we need all of them so plugin on presciamkey (presciacounter) works
 
 		switch ($step) {
 			case 'start': # just created
-				$ok = true;
+			
+				$ok = $this->dimconfig['i_am_alive'] == 'presciacounter plugin is alive <3';
+				if (!$ok) {
+					$this->log [] = "ERROR: Plugin presciacounter was not loaded properly!";
+					break;
+				}
+				
 				$this->authControl->logUser(1,CONS_AUTH_SESSION_NEW);
 				# some alpha
 				$this->log[] = "Alpha 1";
@@ -71,7 +78,8 @@
 				'sosmall' => 100,
 				'id_someone' => 1, // master
 				'id_author' => 2, // admin
-				'onlyonchave' => 'he',
+				'onlyonchave' => 'hehehehe',
+				'readmeonly' => 'hu',
 				'getawaylowly' => 0.5,
 				'showmaoptions' => '101',
 				'id_alpha' => '', // no error
@@ -100,7 +108,7 @@
 				'sosmall' => 1,
 				'id_someone' => 2,
 				'id_author' => 2,
-				'onlyonchave' => 'ha',
+				'onlyonchave' => 'hsdfsdfsdfa',
 				'getawaylowly' => 1.5,
 				'showmaoptions' => '010',
 				'id_alpha' => $root1,
@@ -124,7 +132,8 @@
 				'sosmall' => 0,
 				'id_someone' => 1,
 				'id_author' => 1,
-				'onlyonchave' => 'ha',
+				'onlyonchave' => '00',
+				'readmeonly' => 'he',
 				'getawaylowly' => 1.5,
 				'showmaoptions' => '000',
 				'id_alpha' => $root3,
@@ -216,15 +225,17 @@
 				$ok = $this->runAction('presciator',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
 				# lets make some multiple links
-				$this->log[] = "Multiple linker MKEY 1";
+				$this->log[] = "Multiple linker MKEY 1 with file";
 				$data = array(
 					'id_tor' => 'key',
 					'id_tor_beta' => 1,
 					'hithere' => 'yes, you there',
 					'changesintor' => 0);
+				$_FILES['someimage'] = array( 'error'=>0, 'tmp_name' => CONS_PATH_PAGES.$_SESSION['CODE']."/files/prescia.png", 'virtual'=>true, 'name'=> "prescia1.png"	);
 				$ok = $this->runAction('presciamkey',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
-				$this->log[] = "Multiple linker MKEY 2";
+				
+				$this->log[] = "Multiple linker MKEY 2 with file";
 				$data = array(
 					'id_tor' => 'key',
 					'id_tor_beta' => 2,
@@ -232,6 +243,7 @@
 					'changesintor' => 0);
 				$ok = $this->runAction('presciamkey',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
+				unset($_FILES['someimage']);
 				$this->log[] = "Multiple linker MKEY 3";
 				$data = array(
 					'id_tor' => 'chave',
@@ -314,12 +326,121 @@
 							'publicar' => 'y');
 				$ok = $this->runAction('SEO',CONS_ACTION_INCLUDE,$data);
 				if ($ok) {
+					$this->log[] = "------------------------------------------------------------------------------";
+					$this->log[] = "PLEASE SET ALL PERMISSIONS TO TRUE ON EDITING PRESCIATOR ON WD40 GROUP BEFORE CONTINUING";
+					$this->log[] = "Remember the admin is at /admin/, and password should be master / presciatester{day}";
+					$this->log[] = "------------------------------------------------------------------------------";
 					$this->dimconfig['presciastage'] = 'creation';
 					$this->saveConfig();
 				}
 			break;
-			case 'creation': # just main fill
+			case 'creation': # just main fill, WITH ERRORS!
+			
+			
+				$this->authControl->logUser(1,CONS_AUTH_SESSION_NEW);
 				$ok = true;
+				$this->log[] = "Alpha error: no title (expected error: 127)";
+				$data = array('id_parent' => 0,
+							  'title' => '');
+				$ok = !$this->runAction('presciaalpha',CONS_ACTION_INCLUDE,$data);
+				if (!$ok) break;
+				$this->errorState = false;
+				$this->log[] = "Alpha error: ciclic parent (expected error: 128)";
+				$id = $this->dbo->fetch("SELECT id FROM dba LIMIT 1");
+				$data = array('id_parent' => $id,
+							  'id' => $id,
+							  'title' => 'this should be interesting');
+				$ok = $this->runAction('presciaalpha',CONS_ACTION_UPDATE,$data); // aborts id_parent but runs
+				if (!$ok) break;
+				$this->errorState = false;
+				$this->log[] = "Beta error: mandatory nest set to nothing (expected error: 127)";
+				$data = array('id_nested' => '',
+							  'title' => 'nested inside nothing');
+				$ok = !$this->runAction('presciabeta',CONS_ACTION_INCLUDE,$data);
+				if (!$ok) break;
+				$this->errorState = false;
+				$this->log[] = "Beta error: mandatory nest not set (expected error: 127)";
+				$data = array('title' => 'nested inside null');
+				$ok = !$this->runAction('presciabeta',CONS_ACTION_INCLUDE,$data);
+				if (!$ok) break;
+				$this->errorState = false;
+				$this->log[] = "Linker error: wtf a link is missing! (expected error: 127)";
+				$data = array('id_a' => $id);
+				$ok = !$this->runAction('prescialinker',CONS_ACTION_INCLUDE,$data);
+				if (!$ok) break;
+				$this->errorState = false;
+				if (!$this->dbo->query("SELECT alpha,beta,oneofakind FROM dbp LIMIT 2",$r,$n) || $n !=2) {
+					$this->log[] = "FAILED to select 2 Presciator";
+					$ok = false;
+					break;
+				}
+				list($a1,$b1,$o1) = $this->dbo->fetch_row($r);
+				list($a2,$b2,$o2) = $this->dbo->fetch_row($r);
+				unset($r);
+				
+				$this->log[] = "Fun with TOR 1: overflow fields (expected error: 136, and DBO raw output)";
+				$data = array('alpha' => $a1,
+							  'beta' => $b1,
+							  'sosmall' => 300, // max should be 127
+							  'onlyonchave' => '12345678901234567890this is overvlow', // set to 20 max
+							  );
+				$ok = !$this->runAction('presciator',CONS_ACTION_UPDATE,$data);
+				if (!$ok) break;
+				$this->errorState = false;
+				
+				$this->log[] = "Fun with TOR 2: duplicate unique key (expected error: 137)";
+				$data = array('alpha' => $a2,
+							  'beta' => $b2,
+							  'oneofakind' => $o1
+							  );
+				$ok = !$this->runAction('presciator',CONS_ACTION_UPDATE,$data);
+				if (!$ok) break;
+				$this->errorState = false;
+				
+				$this->log[] = "Fun with TOR 3: invalid file upload type (expected error: 202)";
+				$_FILES['somefile'] = array( 'error'=>0, 'tmp_name' => CONS_PATH_PAGES.$_SESSION['CODE']."/files/prescia.png", 'virtual'=>true, 'name'=> "prescia1.png"	);
+				$data = array('alpha' => $a2,
+							  'beta' => $b2);
+				$ok = $this->runAction('presciator',CONS_ACTION_UPDATE,$data); // will update what it can (aka nothing)
+				unset($_FILES['somefile']);
+				if (!$ok) break;
+				$this->errorState = false;
+				
+				$this->log[] = "Logging in with low-level user";
+				$uid = $this->dbo->fetch("SELECT id FROM auth_users WHERE login='wd40user'");
+				if ($uid === false) {
+					$ok = false;
+					$this->log[] = "Failed to fetch wd40 user";
+					return;
+				}
+				$this->authControl->logUser($uid,CONS_AUTH_SESSION_NEW);
+				
+				$this->log[] = "Fun with TOR 4: trying to edit fields only higher levels can (expected error: 145)";
+				$data = array('alpha' => $a1,
+							  'beta' => $b1,
+							  'getawaylowly' => 100,
+							  );
+				$ok = $this->runAction('presciator',CONS_ACTION_UPDATE,$data); // will succeed, ignoring getawaylowly
+				$this->errorState = false;
+				
+				$this->log[] = "Permission denied test (if wd40 has no permission to presciaalpha) (expected errors: 150 + 306)";
+				$data = array('id_parent' => 0,
+							  'title' => 'not going to happen pal');
+				$ok = !$this->runAction('presciaalpha',CONS_ACTION_INCLUDE,$data);
+				$this->errorState = false;
+				
+				// should have counted one change on each $a1+$b1 and $a2+$b2
+				
+				
+				
+				$this->log[] = "Logging off ...";
+				$this->authControl->logsGuest();
+				
+				if ($ok) {
+					$this->dimconfig['presciastage'] = 'pass1';
+					$this->saveConfig();
+				}
+				
 			break;
 			case 'pass1':
 				$ok = true;

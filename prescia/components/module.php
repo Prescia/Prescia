@@ -327,63 +327,68 @@ class CModule {
 					}
 				  }
 				  if ($insideHaveitem) {
-					  foreach ($remodeModule->fields as $cremote_nome => $remote_campo) {
-						if ($cremote_nome != $remodeModule->keys[0]) {
-						  # do not add main key (this module should have it anyway)
-						  $rmod_nome = $tablecast;
-						  $trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
-						  while (substr($rmod_nome,strlen($rmod_nome)-2) == "_e" && !isset($this->fields['id_'.$trmod_nome])) {
-							$rmod_nome = $trmod_nome;
-							$trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
-						  }
-						  if (isset($taglist[$rmod_nome."_".$cremote_nome]))
-							$sql['SELECT'][] = $tablecast.".".$cremote_nome." as ".$rmod_nome."_".$cremote_nome;
-						}
-						if ($remote_campo[CONS_XML_TIPO] == CONS_TIPO_LINK) {
-						  if ($remote_campo[CONS_XML_MODULE] == $this->name && (!isset($remote_campo[CONS_XML_JOIN]) || $remote_campo[CONS_XML_JOIN] == "from"))
-							# mandatory key to myself (parent)?
-							$extrakey[] = $tablecast.".".$cremote_nome."=".$this->name.".".$this->keys[0];
-						  else if (in_array($cremote_nome,$remodeModule->keys) &&
-								   in_array($cremote_nome,$this->keys)) {
-							$extrakey[] = $tablecast.".".$cremote_nome."=".$this->name.".".$cremote_nome;
-						  }
-						}
-					  }
-					  if (isset($campo[CONS_XML_JOIN]) && $campo[CONS_XML_JOIN] == "left") {
-						$linker = array();
-						foreach ($remodeModule->keys as $rkey) {
-							if ($rkey == "id") {
-								$linker[] = $tablecast.".$rkey = ".$this->name.".".$nome;
-							} else { // not a parent nor main key, how to link?
-								if ($remodeModule->fields[$rkey][CONS_XML_MODULE] == $this->name)
-									$linker[] = $tablecast.".$rkey = ".$this->name.".".$this->keys[0];
-								else {
-									$localField = $this->get_key_from($remodeModule->fields[$rkey][CONS_XML_MODULE]);
-									$linker[] = $tablecast.".$rkey = ".$this->name.".".$localField;
+						foreach ($remodeModule->fields as $cremote_nome => $remote_campo) {
+							if ($cremote_nome != $remodeModule->keys[0]) {
+								# do not add main key (this module should have it anyway)
+								$rmod_nome = $tablecast;
+							/*
+								$trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
+								while (substr($rmod_nome,strlen($rmod_nome)-2) == "_e" && !isset($this->fields['id_'.$trmod_nome])) {
+									$rmod_nome = $trmod_nome;
+									$trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
 								}
+							*/
+								if (isset($taglist[$rmod_nome."_".$cremote_nome]))
+									$sql['SELECT'][] = $tablecast.".".$cremote_nome." as ".$rmod_nome."_".$cremote_nome;
+							}
+							if ($remote_campo[CONS_XML_TIPO] == CONS_TIPO_LINK) {
+								if ($remote_campo[CONS_XML_MODULE] == $this->name && (!isset($remote_campo[CONS_XML_JOIN]) || $remote_campo[CONS_XML_JOIN] == "from"))
+									# mandatory key to myself (parent)?
+									$extrakey[] = $tablecast.".".$cremote_nome."=".$this->name.".".$this->keys[0];
+							  	else if (in_array($cremote_nome,$remodeModule->keys) &&
+										 in_array($cremote_nome,$this->keys)) {
+									$extrakey[] = $tablecast.".".$cremote_nome."=".$this->name.".".$cremote_nome;
+							  	}
 							}
 						}
-						$sql['LEFT'][] = ($remodeModule->dbname." as ".$tablecast." ON ".implode(" AND ",$linker)).(count($extrakey)>0 && count($linker)>0?" AND ":"").implode(" AND ",$extrakey);
-					  } else {
-					  	$sql['FROM'][] = $remodeModule->dbname." as ".$tablecast;
-						foreach ($remodeModule->keys as $rkey) {
-							if ($rkey == "id") {
-								$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$nome;
-							} else if ($remodeModule->fields[$rkey][CONS_XML_TIPO] == CONS_TIPO_LINK) { // not a parent nor main key, is a link to another table
-								if ($remodeModule->fields[$rkey][CONS_XML_MODULE] == $this->name)
-									$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$this->keys[0];
-								else {
-									$localField = $this->get_key_from($remodeModule->fields[$rkey][CONS_XML_MODULE]);
-									$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$localField;
+
+						if (isset($campo[CONS_XML_JOIN]) && $campo[CONS_XML_JOIN] == "left") { // left join
+							$linker = array();
+							foreach ($remodeModule->keys as $rkey) {
+								if ($rkey == "id") {
+									$linker[] = $tablecast.".$rkey = ".$this->name.".".$nome;
+								} else if ($remodeModule->fields[$rkey][CONS_XML_TIPO] == CONS_TIPO_LINK) { // not a parent nor main key, is a link to another table
+									if ($remodeModule->fields[$rkey][CONS_XML_MODULE] == $this->name)
+										$linker[] = $tablecast.".$rkey = ".$this->name.".".$this->keys[0];
+									else {
+										$localField = $this->get_key_from($remodeModule->fields[$rkey][CONS_XML_MODULE]);
+										$linker[] = $tablecast.".$rkey = ".$this->name.".".$localField;
+									}
+								} else {// not simple id, parent or link. Its a non-standard ID for another table
+									$linker[] = $tablecast.".$rkey = ".$this->name.".".($rkey == $remodeModule->keys[0]?$nome:$nome."_".$rkey); // first key as is, rest is the original key name + "_" and remote key name
 								}
-							} else {// not simple id, parent or link. Its a non-standard ID for another table
-								$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$nome;
 							}
+							$sql['LEFT'][] = ($remodeModule->dbname." as ".$tablecast." ON ".implode(" AND ",$linker)).(count($extrakey)>0 && count($linker)>0?" AND ":"").implode(" AND ",$extrakey);
+						} else { // inner join
+							$sql['FROM'][] = $remodeModule->dbname." as ".$tablecast;
+							foreach ($remodeModule->keys as $rkey) {
+								if ($rkey == "id") {
+									$sql['WHERE'][]= $tablecast.".$rkey = ".$this->name.".".$nome;
+								} else if ($remodeModule->fields[$rkey][CONS_XML_TIPO] == CONS_TIPO_LINK) { // not a parent nor main key, is a link to another table
+									if ($remodeModule->fields[$rkey][CONS_XML_MODULE] == $this->name)
+										$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$this->keys[0];
+									else {
+										$localField = $this->get_key_from($remodeModule->fields[$rkey][CONS_XML_MODULE]);
+										$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$localField;
+									}
+								} else {// not simple id, parent or link. Its a non-standard ID for another table
+									$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".($rkey == $remodeModule->keys[0]?$nome:$nome."_".$rkey); // first key as is, rest is the original key name + "_" and remote key name
+								}
+							}
+							foreach ($extrakey as $exk)
+								$sql['WHERE'][] = $exk;
 						}
-						foreach ($extrakey as $exk)
-							$sql['WHERE'][] = $exk;
-					  }
-					  $pos++;
+						$pos++;
 				    } # $insideHaveitem
 				  } # multiple ifs
 				} # haveitem
@@ -422,6 +427,7 @@ class CModule {
 	}
 #-
 	function get_base_sql($embedWhere = "", $embedOrder = "", $embedLimit = "",$noJoin=false) {
+		// send $noJoin to get only THIS table, with no auto joining linked tables
 	  $sql = false;
 	  if (!$this->parent->debugmode && !$noJoin && is_file(CONS_PATH_CACHE.$_SESSION['CODE']."/".$this->dbname."_list.cache") && !isset($_REQUEST['nocache'])) {
 		$sql = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/".$this->dbname."_list.cache"));
@@ -433,49 +439,58 @@ class CModule {
 		foreach($this->fields as $nome => $campo) {
 		  $extrakey = array();
 		  if ($campo[CONS_XML_TIPO] == CONS_TIPO_LINK && !$noJoin) {
-			  $linkname = $campo[CONS_XML_MODULE];
-			  $remodeModule = $this->parent->loaded($linkname);
+		  	  // we will add all fields and build the where or left join for this table
+			  $linkname = $campo[CONS_XML_MODULE]; // remote table name
+			  $remodeModule = $this->parent->loaded($linkname); // remote module
 			  $tablecast = substr($nome,3); # id_[name] ... removes id_
 			  if (in_array($tablecast,array("group","from","to","as","having","order","by","join","left","right"))) #reserved words that could cause issues on the SQL
 			  	$tablecast .= "s"; # keyword, add a "s" to prevent it from causing SQL problems
 			  foreach ($remodeModule->fields as $cremote_nome => $remote_campo) {
+			  	// for each field on remote table
 				if ($cremote_nome != $remodeModule->keys[0]) {
 				  # do not add main key (this module should have it anyway)
 				  $rmod_nome = $tablecast;
+				  
+				  # TODO: WTF is this?
+				  /*
 				  $trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
-				  while (substr($rmod_nome,strlen($rmod_nome)-2) == "_e" && !isset($this->fields['id_'.$trmod_nome])) {
+				  while (substr($rmod_nome,strlen($rmod_nome)-2) == "_e" && !isset($this->fields['id_'.$trmod_nome])) { // do not fields that end with _e and have one without _e
 					$rmod_nome = $trmod_nome;
 					$trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
 				  }
+				  */
+				  # ---- END WTF is this
 
 				  $sql['SELECT'][] = $tablecast.".".$cremote_nome." as ".$rmod_nome."_".$cremote_nome;
 				}
 				if ($remote_campo[CONS_XML_TIPO] == CONS_TIPO_LINK) {
 				  if ($remote_campo[CONS_XML_MODULE] == $this->name && (!isset($remote_campo[CONS_XML_JOIN]) || $remote_campo[CONS_XML_JOIN] == "from"))
 					# mandatory key to myself (parent)?
-					$extrakey[]= $tablecast.".".$cremote_nome."=".$this->name.".".$this->keys[0];
+					$extrakey[]= $tablecast.".".$cremote_nome."=".$this->name.".".$this->keys[0]; # TODO: WTF?
 				  else if (in_array($cremote_nome,$remodeModule->keys) &&
-						   in_array($cremote_nome,$this->keys)) {
-					$extrakey[]= $tablecast.".".$cremote_nome."=".$this->name.".".$cremote_nome;
+						   in_array($cremote_nome,$this->keys)) { // we are linking the same things oO 
+					$extrakey[]= $tablecast.".".$cremote_nome."=".$this->name.".".$cremote_nome; # TODO: is this necessary? who cares we have keys to the same things?
 				  }
 				}
 			  }
-			  if (isset($campo[CONS_XML_JOIN]) && $campo[CONS_XML_JOIN] == "left") {
+			  if (isset($campo[CONS_XML_JOIN]) && $campo[CONS_XML_JOIN] == "left") { // left join
 				$linker = array();
 				foreach ($remodeModule->keys as $rkey) {
 					if ($rkey == "id") {
 						$linker[] = $tablecast.".$rkey = ".$this->name.".".$nome;
-					} else { // not a parent nor main key, how to link?
+					} else if ($remodeModule->fields[$rkey][CONS_XML_TIPO] == CONS_TIPO_LINK) { // not a parent nor main key, is a link to another table
 						if ($remodeModule->fields[$rkey][CONS_XML_MODULE] == $this->name)
 							$linker[] = $tablecast.".$rkey = ".$this->name.".".$this->keys[0];
 						else {
 							$localField = $this->get_key_from($remodeModule->fields[$rkey][CONS_XML_MODULE]);
 							$linker[] = $tablecast.".$rkey = ".$this->name.".".$localField;
 						}
+					} else {// not simple id, parent or link. Its a non-standard ID for another table
+						$linker[] = $tablecast.".$rkey = ".$this->name.".".($rkey == $remodeModule->keys[0]?$nome:$nome."_".$rkey); // first key as is, rest is the original key name + "_" and remote key name
 					}
 				}
 				$sql['LEFT'][] = ($remodeModule->dbname." as ".$tablecast." ON ".implode(" AND ",$linker)).(count($extrakey)>0 && count($linker)>0?" AND ":"").implode(" AND ",$extrakey);
-			  } else {
+			  } else { // inner join
 				$sql['FROM'][] = $remodeModule->dbname." as ".$tablecast;
 				foreach ($remodeModule->keys as $rkey) {
 					if ($rkey == "id") {
@@ -488,7 +503,7 @@ class CModule {
 							$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$localField;
 						}
 					} else {// not simple id, parent or link. Its a non-standard ID for another table
-						$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".$nome;
+						$sql['WHERE'][] = $tablecast.".$rkey = ".$this->name.".".($rkey == $remodeModule->keys[0]?$nome:$nome."_".$rkey); // first key as is, rest is the original key name + "_" and remote key name
 					}
 				}
 				foreach ($extrakey as $exk)
@@ -968,6 +983,14 @@ class CModule {
 					# non-mandatory links accept 0 values, otherwise 0 is not acceptable
 					if (((!$isADD && isset($field[CONS_XML_IGNORENEDIT])) || $isADD) && ($data[$name] === 0 || $data[$name] === '')) break;
 					else if (($field[CONS_XML_LINKTYPE] == CONS_TIPO_INT || $field[CONS_XML_LINKTYPE] == CONS_TIPO_FLOAT) && $data[$name] === '') $data[$name]=0;
+					else if ($field[CONS_XML_LINKTYPE] == CONS_TIPO_VC && $data[$name] != '') {
+						if ($field[CONS_XML_SPECIAL] == "ucase") {
+							$data[$name] = strtoupper($data[$name]);
+						}
+						if ($field[CONS_XML_SPECIAL] == "lcase") {
+							$data[$name] = strtolower($data[$name]);
+						}
+					}
 
 					# if this is a parent, check if this won't create a cyclic parenting
 					if ($data[$name] !== 0 && $data[$name] !== '' && $field[CONS_XML_MODULE] == $this->name && $this->options[CONS_MODULE_PARENT] == $name) {
@@ -1336,6 +1359,7 @@ class CModule {
 				foreach ($this->fields as $name => $field) {
 					if ($this->parent->safety && isset($field[CONS_XML_RESTRICT]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < $field[CONS_XML_RESTRICT] && !isset($field[CONS_XML_UPDATESTAMP])) {
 						# safety is on and this is a restricted field, while the user trying to change it does not have enough level
+						$this->parent->errorControl->raise(145,$name,$this->name);
 						continue;
 					}
 					if ($name != $this->keys[0] && strpos($field[CONS_XML_SQL],"AUTO_INCREMENT") === false) { # cannot change main key or auto_increment ones
@@ -1418,8 +1442,10 @@ class CModule {
 					if ($this->parent->safety && isset($field[CONS_XML_RESTRICT]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < $field[CONS_XML_RESTRICT]) {
 						# safety is on and this is a restricted field, while the user trying to change it does not have enough level
 						# however while ADDING a field that is mandatory, if it has no default you can add
-						if (!isset($field[CONS_XML_MANDATORY]) || isset($field[CONS_XML_DEFAULT]))
+						if (!isset($field[CONS_XML_MANDATORY]) || isset($field[CONS_XML_DEFAULT])) {
 							unset($data[$name]);
+							$this->parent->errorControl->raise(145,$name,$this->name,'not mandatory nor default on add');
+						}
 					}
 					if (strpos(strtolower($field[CONS_XML_SQL]),"auto_increment") === false && !($this->keys[0] == "id" && $name == $this->keys[0] && count($this->keys)>1 )) { # cannot change auto_increment or main key fields
 

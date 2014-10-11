@@ -135,7 +135,7 @@
 			}
 			$core->safety = true;
 			$core->action = "profile";
-			$core->headerControl->internalFoward($this->contextfriendlyfolderlist[0]."profile.html?nocache=true");
+			$core->headerControl->internalFoward($this->bbfolder."profile.html?nocache=true");
 			return;
 		break;
 	}

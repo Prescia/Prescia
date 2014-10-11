@@ -5,7 +5,7 @@
 --*/
 # REQUIRES main.php
 
-define ("CKTemplate_version","140924"); // Build version - yes this is a date
+define ("CKTemplate_version","141008"); // Build version - yes this is a date
 
 define ("EREG_TAG","/(\{)([^\n\r]+)(\})/"); // used inside parsers, but not on tbreak
 define ("START_REPLACE", "\\"); // this string inside the limiters will generate the start limiter ({\} will output {)
@@ -70,7 +70,14 @@ class CKTemplate {
 	  $this->varToClass = $parent->varToClass;
 	}
   }
-
+  public function __clone() {
+  	$this->flushcache();
+	foreach ($this->contents as $idx => &$ct) {
+		if (is_object($ct[2])) {
+			$this->contents[$idx][2] = clone $this->contents[$idx][2]; 
+		}
+	} 
+  } 
   public function populate() { // applies tags to $str_monthlabels and $str_intervals
   	for ($c=1;$c<=12;$c++)
 		$this->str_monthlabels[$c] = $this->lang_replacer['month'.str_pad($c,2,'0',STR_PAD_LEFT)];
@@ -249,7 +256,6 @@ class CKTemplate {
 			} else if (strlen($ct[2])>0 && strpos("!?.:",$ct[2][strlen($ct[2])-1])!==false) {
 				$trailing = $ct[2][strlen($ct[2])-1];
 				$tag = substr($ct[2],0,strlen($ct[2])-1);
-				echo "yes";
 				if (isset($this->lang_replacer[$tag])) {
 					$this->contents[$idx][2] = $this->lang_replacer[$tag].$trailing;
 	  				$this->contents[$idx][0] = "";
@@ -337,7 +343,7 @@ class CKTemplate {
 	return false;
   }
 
-  public function copyfrom($outro) {
+  public function copyfrom($outro) { // more explicit than clone
   	if (!is_object($outro)) return;
 	$outro->flushcache();
 	foreach ($outro->contents as $key => $conteudo) {

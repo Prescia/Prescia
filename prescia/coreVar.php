@@ -4,7 +4,7 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","14.10.6 alpha"); // (Y.m.d) ~ last stable: n/a
+define ("AFF_BUILD","14.10.8 alpha"); // (Y.m.d) ~ last stable: n/a
 define ("AFF_VERSION",0.8);  // 1.0 conditioned to intrade release
 // Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 
@@ -36,7 +36,7 @@ define ("CONS_XML_READONLY", 18); # not editable on admin panes
 define ("CONS_XML_TWEAKIMAGES",19); # see documentation. Uses watermark/tweaker for images
 define ("CONS_XML_SPECIAL",25); # login, mail, ucase, lcase, path, google, youtube, time, cpf, cnpj, id
 define ("CONS_XML_SOURCE",27); # for URLA. Default is title, but multilanguage fields might require others
-define ("CONS_XML_SIMPLEEDITFORCE",26); # forces via PHP the simpleEdit effect. 
+define ("CONS_XML_SIMPLEEDITFORCE",26); # forces via PHP the simpleEdit effect.
 define ("CONS_XML_ISOWNER",28); # this field is considered an owner of this item (auto-checked on coreFull, if a SINGLE owner is found, even not a user, it will be set)
 # -- MODULE OPTIONS. This options are not in raw format thus are formated here, other options are directly on the options array as they come (such as autoclean)
 define ("CONS_MODULE_VOLATILE","cmv"); # (cron) This module has no link with other modules or no upload fields, thus it can be deleted with no check
@@ -115,7 +115,7 @@ class CPresciaVar {
 	var $domainTranslator = array(); # if a site has multiple domains, you can foward each domain to a separate folder with domain=>folder here (no "/" allowed)
 	var $debugFile = ''; # Set this to the HTML template to debug areas (full path)
 
-	# Filled at startup
+	# Filled at startup / action
 	var $offlineMode = false; # if true, means database is not online, and will try caches (automatic)
 	var $dbless = false; # we expect a database
 	var $domain = ""; # this domain (automatic)

@@ -264,9 +264,9 @@ class CPresciaFull extends CPrescia {
 				##############################################################
 
 				$nomecampo = strtolower($thiscampo->data[0]);
-		  		if ($campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_LINK)
+		  		if ($campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_LINK) {
 		  			array_push($relation,array($module,$nomecampo,$campos[$nomecampo][CONS_XML_MODULE]));
-				else if ($campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_SERIALIZED) {
+				} else if ($campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_SERIALIZED) {
 					// browse fields looking for links
 					foreach ($campos[$nomecampo][CONS_XML_SERIALIZEDMODEL] as $exname => &$exfield) {
 						if ($exfield[CONS_XML_TIPO] == CONS_TIPO_LINK) {
@@ -285,6 +285,7 @@ class CPresciaFull extends CPrescia {
 					if (isset($campos[$nomecampo][CONS_XML_DEFAULT]))
 						$campos[$nomecampo][CONS_XML_SQL] .= " DEFAULT '".$campos[$nomecampo][CONS_XML_DEFAULT]."'";
 				}
+				
 			}
 
 			# this module has a database (it's possible to have modules without a database)
@@ -327,6 +328,9 @@ class CPresciaFull extends CPrescia {
 																		"CONS_XML_TIPO" => CONS_TIPO_INT);
 	  				}
 					$this->modules[$module]->fields[$chave][CONS_XML_MANDATORY] = true;
+					// vc keys without case specified, force ucase
+					if ($this->modules[$module]->fields[$chave][CONS_XML_TIPO] == CONS_TIPO_VC && !isset($this->modules[$module]->fields[$chave][CONS_XML_SPECIAL]))
+						$this->modules[$module]->fields[$chave][CONS_XML_SPECIAL] = "ucase";
 	  			}
 	  			unset($x); unset($chave);
 			}
@@ -446,6 +450,9 @@ class CPresciaFull extends CPrescia {
 				if ($field[CONS_XML_TIPO] == CONS_TIPO_LINK && $field[CONS_XML_MODULE] != $mname) { // links to OTHER link not myself
 					$links++; # do not count PARENTS as links
 					$fieldsRequiredToLinks += count($this->modules[$field[CONS_XML_MODULE]]->keys); # a module can have more than one key, thus to know if this module is a linker module, we need to check if ALL THIS HAVE are the keys for 2 modules
+					// vc links that have no case specified, force to upper
+					if ($field[CONS_XML_TIPO] == CONS_TIPO_LINK && $field[CONS_XML_LINKTYPE] == CONS_TIPO_VC && !isset($field[CONS_XML_SPECIAL]))
+						$this->modules[$mname]->fields[$name][CONS_XML_SPECIAL] = "ucase";
 				}
 				if (isset($field[CONS_XML_FILTEREDBY])) {
 					foreach ($field[CONS_XML_FILTEREDBY] as $fbname) {
@@ -637,7 +644,7 @@ class CPresciaFull extends CPrescia {
 							$sql .= CONS_SQL_QUOTE.$cnome.CONS_SQL_QUOTE." ".$campo[CONS_XML_SQL].",";
 					}
 				}
-				$sql = "CREATE TABLE ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE." ( $sql PRIMARY KEY(".implode(",",$module->keys)."))";
+				$sql = "CREATE TABLE ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE." ( $sql PRIMARY KEY(".implode(",",$module->keys).")) ENGINE=MYISAM";
 				if ($this->dbo->simpleQuery($sql)) {
 					$this->dbchanged = true;
 					array_push($this->log,"Base ".$module->dbname." for ".$module->name." not detected and created!");
@@ -1034,7 +1041,7 @@ class CPresciaFull extends CPrescia {
 			case "smallint":
 				if (!isset($fields[$namefield][CONS_XML_FIELDLIMIT]))
 					$fields[$namefield][CONS_XML_FIELDLIMIT] = $tipo == "bigint" ? 20 : ( $tipo == "int" ? 10 : ( $tipo == 'smallint' ? 5 : 3));
-				$fields[$namefield][CONS_XML_SQL] = strtoupper($tipo)." (".$fields[$namefield][CONS_XML_FIELDLIMIT].") UNSIGNED";
+				$fields[$namefield][CONS_XML_SQL] = strtoupper($tipo)." (".$fields[$namefield][CONS_XML_FIELDLIMIT].")";
 				$fields[$namefield][CONS_XML_TIPO] = CONS_TIPO_INT;
 				break;
 			case "float":

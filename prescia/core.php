@@ -308,6 +308,7 @@ class CPrescia extends CPresciaVar {
 		if (!isset($this->dimconfig['_cronH'])) $this->dimconfig['_cronH'] = "0";
 		$forceCron = isset($_REQUEST['forcecron']) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] == 100; # lvl 100 tested on SessionStart
 		if ($forceCron || date("d") != $this->dimconfig['_cronD'] || date("H") != $this->dimconfig['_cronH']) { # will have cron
+			$forceCron = $forceCron?$_REQUEST['forcecron']:false; // day|hour|all
 			# should run cron, however our dimconfig is a CACHED config == reload
 			$this->loadDimconfig(true);
 			if (!isset($this->dimconfig['_cronD'])) $this->dimconfig['_cronD'] = "0";
@@ -346,6 +347,7 @@ class CPrescia extends CPresciaVar {
 		if ($this->dbo->errorRaised) $this->errorControl->raise(606,"","core",vardump($this->dbo->log));
 		$this->dbo->close();
 		if ($stop) exit();
+		else $this->template = new CKTemplate(null,CONS_PATH_INCLUDE."template/",$this->debugmode,true);
 	} # close
 #-
 	/* addPlugin
@@ -561,12 +563,19 @@ class CPrescia extends CPresciaVar {
 			}
 		} else {
 			$innertp = &$tp->get($tag);
-			$innertp = $innertp->getAllTags(true);
-			unset($innertp['_t']);
-			if (is_array($sql) && count($sql) == 3 && !isset($sql['SELECT'])) {
-				$sql = $module->get_advanced_sql($innertp,$sql[0],$sql[1],$sql[2],$cacheTAG!=''?$cacheTAG."sql":false);
-			} else
-				$sql = $module->get_advanced_sql($innertp,'','','',$cacheTAG!=''?$cacheTAG."sql":false);
+			if (!is_object($innertp)) {
+				$this->errorControl->raise(191,$tag,$module->name);
+				if (is_array($sql) && count($sql) == 3 && !isset($sql['SELECT'])) {
+					$sql = $module->get_base_sql($sql[0],$sql[1],$sql[2]);
+				}
+			} else {
+				$innertp = $innertp->getAllTags(true);
+				unset($innertp['_t']);
+				if (is_array($sql) && count($sql) == 3 && !isset($sql['SELECT'])) {
+					$sql = $module->get_advanced_sql($innertp,$sql[0],$sql[1],$sql[2],$cacheTAG!=''?$cacheTAG."sql":false);
+				} else
+					$sql = $module->get_advanced_sql($innertp,'','','',$cacheTAG!=''?$cacheTAG."sql":false);
+			}
 		}
 		return $module->runContent($tp,$sql,$tag,$usePaging,$cacheTAG,$callback);
 	} # runContent
@@ -596,7 +605,7 @@ class CPrescia extends CPresciaVar {
 		$ok = $module->runAction($action,$data,false,$mfo,$startedAt);
 
 		# log
-		if (!$module->options[CONS_MODULE_SYSTEM]) $this->errorControl->raise(($ok?300:306),$action,$module->name,"key=".($action==CONS_ACTION_INCLUDE?$this->lastReturnCode:$data[$module->keys[0]]).(isset($_SESSION[CONS_SESSION_ACCESS_USER]) && isset($_SESSION[CONS_SESSION_ACCESS_USER]['id'])?" (user ".$_SESSION[CONS_SESSION_ACCESS_USER]['id'].")":' (guest)'));
+		if (!$module->options[CONS_MODULE_SYSTEM]) $this->errorControl->raise(($ok?300:306),$action,$module->name,"key=".($action==CONS_ACTION_INCLUDE?$this->lastReturnCode:(isset($data[$module->keys[0]])?$data[$module->keys[0]]:'unknown key')).(isset($_SESSION[CONS_SESSION_ACCESS_USER]) && isset($_SESSION[CONS_SESSION_ACCESS_USER]['id'])?" (user ".$_SESSION[CONS_SESSION_ACCESS_USER]['id'].")":' (guest)'));
 
 		return $ok;
 	} # runAction
@@ -971,9 +980,28 @@ class CPrescia extends CPresciaVar {
 	 */
 	function showTemplate() {
 
+		# Header / cache
+		if ($this->action != "404" && $this->action != "403") $this->headerControl->addHeader(CONS_HC_HEADER,200);
+
+		if ($this->doctype == "xhtml" && (CONS_BROWSER != "IE" || CONS_BROWSER_VERSION > 8))
+			$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: application/xhtml+xml; charset=".$this->charset);
+		else {
+			$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: text/html; charset=".$this->charset);
+		}
+		$this->headerControl->addHeader(CONS_HC_PRAGMA,'Pragma: '.($this->layout!=2 && $this->cachetime>2000?'public':'no-cache'));
+		if (CONS_CACHE && $this->layout != 2)
+			$this->headerControl->addHeader(CONS_HC_CACHE,'Cache-Control: public,max-age='.floor($this->cachetime/1000).',s-maxage='.floor($this->cachetime/1000));
+
+		# logs 404/403 in separate error code
+		if ($this->action == '404' || $this->action == '403') $this->errorControl->raise(103,$this->context_str.$this->action,"404x403");
+
+		if (!is_object($this->template) || get_class($this->template) != "CKTemplate") {
+			return; // huh, no template? oh well
+		}
+
 		# Echo dimconfig if something should be outputed
 		$data = $this->cacheControl->getCachedContent('dimconfig_auto');
-		if ($data === false && is_object($this->template)) {
+		if ($data === false) {
 			$data = $this->dimconfig;
 			$dimconfigMD = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_dimconfig.dat"));
 			foreach ($data as $name => $content) {
@@ -1034,106 +1062,90 @@ class CPrescia extends CPresciaVar {
 			}
 			$this->cacheControl->addCachedContent('dimconfig_auto',$data,true);
 		}
-		if (is_object($this->template)) $this->template->fill($data);
+		$this->template->fill($data);
 
-		# Header / cache
-		if ($this->action != "404" && $this->action != "403") $this->headerControl->addHeader(CONS_HC_HEADER,200);
-		
-		if ($this->doctype == "xhtml" && (CONS_BROWSER != "IE" || CONS_BROWSER_VERSION > 8))
-			$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: application/xhtml+xml; charset=".$this->charset);
-		else {
-			$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: text/html; charset=".$this->charset);
-		}
-		$this->headerControl->addHeader(CONS_HC_PRAGMA,'Pragma: '.($this->layout!=2 && $this->cachetime>2000?'public':'no-cache'));
-		if (CONS_CACHE && $this->layout != 2)
-			$this->headerControl->addHeader(CONS_HC_CACHE,'Cache-Control: public,max-age='.floor($this->cachetime/1000).',s-maxage='.floor($this->cachetime/1000));
+		$this->template->constants['CHARSET'] = $this->charset;
+		if ($this->doctype == "html" || (CONS_BROWSER == "IE" && CONS_BROWSER_VERSION < 9)) $this->template->assign("_DOCTYPEXML");
 
-		if (is_object($this->template)) {
-			$this->template->constants['CHARSET'] = $this->charset;
-			if ($this->doctype == "html" || (CONS_BROWSER == "IE" && CONS_BROWSER_VERSION < 9)) $this->template->assign("_DOCTYPEXML");
+		# metadata - fill default values if not set yet (plugins can set)
+		$this->addMeta("\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />"); // render in the most recent engine for IE
+		if ($this->layout != 2) {
+			if ((!isset($this->template->constants['METAKEYS']) || $this->template->constants['METAKEYS'] == '') && $this->dimconfig['metakeys'] != '') {
+				$this->template->constants['METAKEYS'] = $this->dimconfig['metakeys'];
+			}
+			if ((!isset($this->template->constants['METADESC']) || $this->template->constants['METADESC'] == '') && $this->dimconfig['metadesc'] != '') {
+				$this->template->constants['METADESC'] = $this->dimconfig['metadesc'];
+			}
 
-			# metadata - fill default values if not set yet (plugins can set)
-			$this->addMeta("\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />"); // render in the most recent engine for IE
-			if ($this->layout != 2) {
-				if ((!isset($this->template->constants['METAKEYS']) || $this->template->constants['METAKEYS'] == '') && $this->dimconfig['metakeys'] != '') {
-					$this->template->constants['METAKEYS'] = $this->dimconfig['metakeys'];
-				}
-				if ((!isset($this->template->constants['METADESC']) || $this->template->constants['METADESC'] == '') && $this->dimconfig['metadesc'] != '') {
-					$this->template->constants['METADESC'] = $this->dimconfig['metadesc'];
-				}
+			// METAS
+			if ($this->template->constants['CANONICAL'] == '') {
+				$this->template->constants['CANONICAL'] = "http://".$this->domain.$this->context_str.$this->action.".html";
+				if (isset($_REQUEST['id']))
+					$this->template->constants['CANONICAL'] .= "?id=".$_REQUEST['id'];
+			}
+			$metadata = $this->template->constants['METATAGS'];
+			if (CONS_PATH_PAGES.$_SESSION['CODE']."/template/_meta.xml")
+				$metadata .= cReadFile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/_meta.xml");
+			$metadata .= "\t<link rel=\"canonical\" href=\"".$this->template->constants['CANONICAL']."\" />\n";
+			if ($this->template->constants['METAKEYS'] != '')
+				$metadata .= "\t<meta name=\"keywords\" content=\"".str_replace("\"","",$this->template->constants['METAKEYS'])."\"/>\n";
+			if ($this->template->constants['METADESC'] != '') {
+				$metadata .= "\t<meta name=\"description\" content=\"".str_replace("\"","",$this->template->constants['METADESC'])."\"/>\n";
+				$metadata .= "\t<meta property=\"og:description\" content=\"".str_replace("\"","",$this->template->constants['METADESC'])."\"/>\n";
+			}
+			$metadata .= "\t<meta property=\"og:type\" content=\"website\" />\n";
+			$metadata .= "\t<meta property=\"og:title\" content=\"".str_replace("\"","",$this->template->constants['PAGE_TITLE'])."\" />\n";
+			$metadata .= "\t<meta property=\"og:url\" content=\"".$this->template->constants['CANONICAL']."\" />\n";
+			if (isset($this->template->constants['METAFIGURE']) && $this->template->constants['METAFIGURE'] != "") {
+				$metadata .= "\t<meta property=\"og:image\" content=\"/files/".$this->template->constants['METAFIGURE']."\" />\n";
+				$metadata .= "\t<link rel=\"image_src\" href=\"/files/".$this->template->constants['METAFIGURE']."\" />\n";
+			}
 
-				// METAS
-				if ($this->template->constants['CANONICAL'] == '') {
-					$this->template->constants['CANONICAL'] = "http://".$this->domain.$this->context_str.$this->action.".html";
-					if (isset($_REQUEST['id']))
-						$this->template->constants['CANONICAL'] .= "?id=".$_REQUEST['id'];
-				}
-				$metadata = $this->template->constants['METATAGS'];
-				if (CONS_PATH_PAGES.$_SESSION['CODE']."/template/_meta.xml")
-					$metadata .= cReadFile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/_meta.xml");
-				$metadata .= "\t<link rel=\"canonical\" href=\"".$this->template->constants['CANONICAL']."\" />\n";
-				if ($this->template->constants['METAKEYS'] != '')
-					$metadata .= "\t<meta name=\"keywords\" content=\"".str_replace("\"","",$this->template->constants['METAKEYS'])."\"/>\n";
-				if ($this->template->constants['METADESC'] != '') {
-					$metadata .= "\t<meta name=\"description\" content=\"".str_replace("\"","",$this->template->constants['METADESC'])."\"/>\n";
-					$metadata .= "\t<meta property=\"og:description\" content=\"".str_replace("\"","",$this->template->constants['METADESC'])."\"/>\n";
-				}
-				$metadata .= "\t<meta property=\"og:type\" content=\"website\" />\n";
-				$metadata .= "\t<meta property=\"og:title\" content=\"".str_replace("\"","",$this->template->constants['PAGE_TITLE'])."\" />\n";
-				$metadata .= "\t<meta property=\"og:url\" content=\"".$this->template->constants['CANONICAL']."\" />\n";
-				if (isset($this->template->constants['METAFIGURE']) && $this->template->constants['METAFIGURE'] != "") {
-					$metadata .= "\t<meta property=\"og:image\" content=\"/files/".$this->template->constants['METAFIGURE']."\" />\n";
-					$metadata .= "\t<link rel=\"image_src\" href=\"/files/".$this->template->constants['METAFIGURE']."\" />\n";
-				}
-
-				$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
+			$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
+			if (locateFile($favfile,$ext)) {
+				$favfile = CONS_INSTALL_ROOT.$favfile;
+				$metadata .= "\t<link rel=\"shortcut icon\" href=\"/favicon.".$ext."\" />\n";
+			} else if (CONS_DEFAULT_FAVICON) {
+				$favfile = "favicon";
 				if (locateFile($favfile,$ext)) {
 					$favfile = CONS_INSTALL_ROOT.$favfile;
 					$metadata .= "\t<link rel=\"shortcut icon\" href=\"/favicon.".$ext."\" />\n";
-				} else if (CONS_DEFAULT_FAVICON) {
-					$favfile = "favicon";
-					if (locateFile($favfile,$ext)) {
-						$favfile = CONS_INSTALL_ROOT.$favfile;
-						$metadata .= "\t<link rel=\"shortcut icon\" href=\"/favicon.".$ext."\" />\n";
-					}
 				}
-
-				$this->template->constants['METATAGS'] = $metadata;
 			}
 
-			$this->removeAutoTags();
-
-			if (count($this->log)>0) {
-				$output = "";
-				$haveWarning = false;
-				foreach ($this->log as $saida) {
-					$output .= $saida."\n<br/>";
-					if ($saida[strlen($saida)-1] == "!") $haveWarning =  true;
-				}
-				$file = $this->debugFile;
-				if ($this->debugFile == '' || !is_file($file)) {
-					if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html"))
-						$file = CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html";
-					else
-						$file = CONS_PATH_SETTINGS."defaults/_debugarea.html";
-				}
-				$tp = new CKTemplate($this->template);
-				$tp->fetch($file);
-				$tp->assign("CORE_DEBUG",$output);
-				$tp->assign("CORE_DEBUGWARNING",$haveWarning ? "1" : "0");
-				$this->template->constants['CORE_DEBUG'] = $tp->techo();
-				unset($tp);
-			}
-
-			// print version
-			if ($this->template->get("printver") == '') {
-				$printVersion = arrayToString($_GET,array("layout"));
-				$printVersion .= "&layout=1";
-				$this->template->assign("printver",$this->action.".html?".$printVersion);
-			}
+			$this->template->constants['METATAGS'] = $metadata;
 		}
 
-		if ($this->action == '404' || $this->action == '403') $this->errorControl->raise(103,$this->context_str.$this->action,"404x403");
+		$this->removeAutoTags();
+
+		if (count($this->log)>0) {
+			$output = "";
+			$haveWarning = false;
+			foreach ($this->log as $saida) {
+				$output .= $saida."\n<br/>";
+				if ($saida[strlen($saida)-1] == "!") $haveWarning =  true;
+			}
+			$file = $this->debugFile;
+			if ($this->debugFile == '' || !is_file($file)) {
+				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html"))
+					$file = CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html";
+				else
+					$file = CONS_PATH_SETTINGS."defaults/_debugarea.html";
+			}
+			$tp = new CKTemplate($this->template);
+			$tp->fetch($file);
+			$tp->assign("CORE_DEBUG",$output);
+			$tp->assign("CORE_DEBUGWARNING",$haveWarning ? "1" : "0");
+			$this->template->constants['CORE_DEBUG'] = $tp->techo();
+			unset($tp);
+		}
+
+		// print version
+		if ($this->template->get("printver") == '') {
+			$printVersion = arrayToString($_GET,array("layout"));
+			$printVersion .= "&layout=1";
+			$this->template->assign("printver",$this->action.".html?".$printVersion);
+		}
 
 		return $this->template->techo();
 	} # showTemplate

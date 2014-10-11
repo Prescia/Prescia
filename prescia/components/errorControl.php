@@ -18,7 +18,10 @@ define ("CONS_ERROR_FATAL_NOLOG",23); # Fatal error, will abort script immediatl
 define ("CONS_ERROR_FATAL_MAIL",24); # Fatal error, will abort script immediatly but will send mail to admin first
 define ("CONS_ERROR_NOTIFYMAIL",25); # Not an error but really important, will log in highest level AND send a mail to admin, but not abort the script
 
-define ("CONS_MAX_ERRORS",100); # Number of maximum allowed errors in one single script before a hard-abort (to prevent a loop)
+if (CONS_DEVELOPER)
+	define ("CONS_MAX_ERRORS",500); # Number of maximum allowed errors in one single script before a hard-abort (to prevent a loop)
+else
+	define ("CONS_MAX_ERRORS",100); 
 define ("CONS_MAX_LOGFILESIZE",100000); # Maximum size of a DAILY error log
 
 class CErrorControl {
@@ -87,7 +90,7 @@ class CErrorControl {
 								142 => CONS_ERROR_WARNING_SHOW, # No SQL on update!
 								143 => CONS_ERROR_WARNING_SHOW, # Unable to delete item
 								144 => CONS_ERROR_NOTICESTOP, # Possible SQL injection or exploit search - aborting
-								145 => CONS_ERROR_ERROR_SHOW, # FREE ERROR CODE
+								145 => CONS_ERROR_NOTICE_SHOW, # User tryed to change a restricted field (field not changed)
 								146 => CONS_ERROR_WARNING_SHOW, # SQL error on SELECT
 								147 => CONS_ERROR_WARNING, # Slow query
 								148 => CONS_ERROR_WARNING_SHOW, # SELECT command with no key
@@ -127,6 +130,7 @@ class CErrorControl {
 								188 => CONS_ERROR_WARNING_SHOW, # error while performing unserialize on a serialized field
 								189 => CONS_ERROR_WARNING_SHOW, # error processing a serialized array (input) into a serialized field
 								190 => CONS_ERROR_WARNING_SHOW, # Unable to parse HTML to make it simplified on module (CONS_XML_SIMPLEEDITFORCE)
+								191 => CONS_ERROR_ERROR_SHOW, # Tag not found on runContent (smart sql generation)
 
 								# upload and validation errors
 								200 => CONS_ERROR_MESSAGE, # Upload error 0
@@ -160,7 +164,7 @@ class CErrorControl {
 								502 => CONS_ERROR_ERROR, # Unable to reuse authentication cookie (bi_auth)
 								503 => CONS_ERROR_ERROR_SHOW, # Login or password have invalid characters (bi_auth)
 								504 => CONS_ERROR_ERROR_SHOW, # Unexpected error logging in on session manager or main table (bi_auth)
-								505 => CONS_ERROR_ERROR_SHOW, # Unable to log inv (bi_auth)
+								505 => CONS_ERROR_ERROR_SHOW, # Unable to log in (bi_auth)
 								506 => CONS_ERROR_MESSAGE, # Folder created (bi_xmladm)
 								507 => CONS_ERROR_NOTICE_SHOW, # Folder deleted (bi_xmladm)
 								508 => CONS_ERROR_WARNING_SHOW, # Quota Exceeded (bi_xmladm)

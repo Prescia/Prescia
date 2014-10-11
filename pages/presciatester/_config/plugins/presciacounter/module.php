@@ -77,9 +77,9 @@ class mod_presciacounter extends CscriptedModule  {
 	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNofity =false) {
 		# notify followup for this field (happens before standard notify)
 		# this is called TWICE: one BEFORE (earlyNotify) and one AFTER the action. Delete parsers should always focus on the earlyNotify pass
-		if ($module->name == 'presciator' && isset($data['id'])) {
+		if (!$earlyNofity && $module->name == 'presciator' && isset($data['alpha']) && isset($data['beta'])) {
 			$myobj = $this->parent->loaded($this->moduleRelation);
-			$sql = "UPDATE ".$myobj->dbname." SET changeintor=changeintor+1 WHERE id_tor=".$data['id'];
+			$sql = "UPDATE ".$myobj->dbname." SET changesintor=changesintor+1 WHERE id_tor='".$data['alpha']."' AND id_tor_beta='".$data['beta']."'";
 			if ($this->parent->dbo->simpleQuery($sql))
 				$this->parent->log[] = "We got that change alright!";
 			else

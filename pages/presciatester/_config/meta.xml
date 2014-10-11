@@ -13,7 +13,7 @@
 	<manualurl urlaformat="{title}-{alpha}-{date|date|Ymd}">vc</manualurl>
 	<ignoreme ignorenedit="true" default="something">vc</ignoreme>
 	<sosmall>tinyint</sosmall>
-	<id_someome merge="left">USERS</id_someome>
+	<id_someone merge="left">USERS</id_someone>
 	<id_author mandatory="true" owner="true">USERS</id_author>
 	<onlyonchave size="20" conditional="alpha=key">vc</onlyonchave>
 	<readmeonly default='ha' readonly="true">ENUM:'ha','he','hu'</readmeonly>
@@ -39,6 +39,7 @@
 	<ID_TOR mandatory="true">PRESCIATOR</ID_TOR>
 	<hithere>vc</hithere>
 	<changesintor readonly="true">int</changesintor>
+	<someimage filetypes="jpg,png" filemaxsize='1024000' thumbnails="400,300|100,100" tweakimages="|croptofit">file</someimage>
 </PRESCIAMKEY>
 <PRESCIALINKER dbname="dbl" linker="true" title="id_a">
 	<ID_A mandatory="true">PRESCIAALPHA</ID_A>

@@ -1,10 +1,10 @@
 <?/* -------------------------------- Prescia Cron
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
-  | NOTE: forcecron=true only works if you are logged as master
+  | NOTE: forcecron=day|hour|true only works if you are logged as master
 -*/
 
-if ($forceCron || date("d") != $this->dimconfig['_cronD']) { // Daily cron
+if ($forceCron=='day' || $forceCron=='all' || date("d") != $this->dimconfig['_cronD']) { // Daily cron
 	$this->loadAllmodules();
 
 	$isMasterDomain = CONS_MASTERDOMAINS == "" || strpos(CONS_MASTERDOMAINS,$_SESSION['DOMAIN'])!==false || !CONS_ONSERVER;
@@ -55,6 +55,7 @@ if ($forceCron || date("d") != $this->dimconfig['_cronD']) { // Daily cron
 	// auto clean
 	foreach ($this->modules as $name => &$module) {
 		if (isset($module->options[CONS_MODULE_AUTOCLEAN]) && $module->options[CONS_MODULE_AUTOCLEAN] != "" && (strpos($module->options[CONS_MODULE_AUTOCLEAN],"DAY") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"WEEK") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"MONTH") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"YEAR") !== false)) {
+			
 			# daily only runs autocleans with DAY, WEEK, MONTH or YEAR
 			if ($module->options[CONS_MODULE_VOLATILE]) {
 				$sql = "DELETE FROM ".$module->dbname." WHERE ".$module->options[CONS_MODULE_AUTOCLEAN];
@@ -114,10 +115,10 @@ if ($forceCron || date("d") != $this->dimconfig['_cronD']) { // Daily cron
 		}
 	}
 
-	if (!$forceCron) return; // Hourly cron will run on another hit
+	if ($forceCron != 'all') return; // Hourly cron will run on another hit
 }
 
-if ($forceCron || $this->dimconfig['_cronH'] != date("H")) {
+if ($forceCron=='hour' || $forceCron=='all' || $this->dimconfig['_cronH'] != date("H")) {
 	// Hourly cron
 
 
@@ -125,6 +126,7 @@ if ($forceCron || $this->dimconfig['_cronH'] != date("H")) {
 	$this->loadAllmodules();
 	foreach ($this->modules as $name => &$module) {
 		if (isset($module->options[CONS_MODULE_AUTOCLEAN]) && $module->options[CONS_MODULE_AUTOCLEAN] != "" && (strpos($module->options[CONS_MODULE_AUTOCLEAN],"HOUR") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"MINUTE") !== false)) {
+
 			# hourly only runs autocleans with HOUR or MINUTE
 			if ($module->options[CONS_MODULE_VOLATILE]) {
 				$sql = "DELETE FROM ".$module->dbname." WHERE ".$module->options[CONS_MODULE_AUTOCLEAN];

@@ -11,10 +11,10 @@
 
 	if (CONS_ONSERVER) { // <-- settings for your online "final" server
 		define("CONS_INSTALL_ROOT","/"); // if Prescia is installed in other than the ROOT folder, fill this (must end and start with /)	
-		define("CONS_DB_HOST",""); // leave empty if not using a database. The framework will enter dbless mode
-		define("CONS_DB_BASE","");
-		define("CONS_DB_USER","");
-		define("CONS_DB_PASS","");
+		define("CONS_DB_HOST","186.202.152.192"); // leave empty if not using a database. The framework will enter dbless mode
+		define("CONS_DB_BASE","daisuki11");
+		define("CONS_DB_USER","daisuki11");
+		define("CONS_DB_PASS","mwlP2110");
 		// If this site has multiple domains AND we want each domain to foward to a different FOLDER, translate domain=>folder here:
 		$this->domainTranslator = array(#'www.prescia.net' => 'prescia',
 										#'prescia.daisuki.com.br' => 'prescia',

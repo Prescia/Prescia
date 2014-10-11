@@ -138,7 +138,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 								$bestResult[1] = true;
 								$bestResult[3] = $idG;
 							}
-						} else if ((!isset($myData[$ownerLink]) || $myData[$ownerLink] == '' || $myData[$ownerLink] == '0') &&  $module->fields[$ownerLink][CONS_XML_DEFAULT] == "%UID%" && isset($_SESSION[CONS_SESSION_ACCESS_USER]['id'])) {
+						} else if ((!isset($myData[$ownerLink]) || $myData[$ownerLink] == '' || $myData[$ownerLink] == '0') &&  isset($module->fields[$ownerLink][CONS_XML_DEFAULT]) && $module->fields[$ownerLink][CONS_XML_DEFAULT] == "%UID%" && isset($_SESSION[CONS_SESSION_ACCESS_USER]['id'])) {
 							// no need to continue, can't get better than this, field is empty and we will set as outself
 							return array(true,true,false,$_SESSION[CONS_SESSION_ACCESS_USER]['id_group']); // me
 						}
@@ -424,7 +424,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 			}
 			# checkPermission always returns the Owner on FALSE FALSE FALSE except on error, which means I can't determine here either
 			$groupModule = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
-			if ($this->parent->dbo->fetch("SELECT level FROM ".$groupModule->dbname." WHERE id=".$owner[2],$this->parent->debugmode) > $_SESSION[CONS_SESSION_ACCESS_LEVEL]) {
+			if ($this->parent->dbo->fetch("SELECT level FROM ".$groupModule->dbname." WHERE id=".$owner[3],$this->parent->debugmode) > $_SESSION[CONS_SESSION_ACCESS_LEVEL]) {
 				$p = false; # your level is BELOW the level of whoever owns you are trying to change
 				$this->parent->errorControl->raise(154,'checkPermissions',CONS_AUTH_GROUPMODULE);
 			} # if check level
