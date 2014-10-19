@@ -8,7 +8,7 @@
 define ("C_XHTML_AUTOTAB","DIV,FORM,TABLE,TD,TR,SELECT,BODY,HEAD,OBJECT"); # these tags will cause tabulation (formating)
 define ("C_XHTML_AUTOCLOSE","IMG,BR,INPUT,META,LINK,HR,PARAM"); # This tags can be auto-closed (<.../>)
 define ("C_XHTML_CODE","SCRIPT,STYLE,PRE"); # These are codes, ignore whatever is inside
-define ("C_XHTML_SIMPLE","B,I,EM,STRONG,UL,LI,OL,DIV,P,SPAN,BLOCKQUOTE,BR,HR,H1,H2,H3,H4,H5,H6"); # these are the only allowed tags on simple HTML formating
+define ("C_XHTML_SIMPLE","B,I,EM,STRONG,UL,LI,OL,DIV,P,SPAN,BLOCKQUOTE,BR,HR,H1,H2,H3,H4,H5,H6,CODE,KBR,PRE"); # these are the only allowed tags on simple HTML formating
 # NOTE: will automatically break line (\n) after br/
 
 # These are the indexes for the parsedContent array if fetchData is enabled

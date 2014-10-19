@@ -4,6 +4,7 @@ define("CONS_HC_HEADER",0);
 define("CONS_HC_PRAGMA",1);
 define("CONS_HC_CACHE",2);
 define("CONS_HC_CONTENTTYPE",3);
+define("CONS_X_UA_Compatible",4); // system will automaticaly set IE on edge engine
 
 class CHeaderControl {
 

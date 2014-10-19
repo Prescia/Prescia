@@ -71,10 +71,7 @@
 			if ($install_root != "/" && preg_match("@^(".$install_root.")(.*)\$@",$uri,$regs)) {
 				$uri = "/".$regs[2];
 			}
-			/*
-			if ($install_root != "/" && substr($uri,1,strlen($install_root)) == $install_root)
-				$uri = substr($uri,strlen($install_root));
-			*/
+
 			$uri = explode("/",str_replace("//","/",$uri));
 		} else
 			$uri = array("/");
@@ -87,7 +84,7 @@
 		$action = array_pop($context);
 		$original_action = $action;
 		$ext = "";
-		if ($action == "") $$action = 'index';
+		if ($action == "") $action = 'index';
 		else if (strpos($action,".")!==false) {
 			$action = explode(".",$action);
 			$ext = array_pop($action);

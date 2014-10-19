@@ -123,8 +123,8 @@ class CCacheControl {
 		$this->parent->storage['CORE_CACHECONTROL'][] = CONS_PM_MINTIME; // actual cache
 		$this->parent->storage['CORE_CACHECONTROL'][] = 0.5; // factor
 		if (!CONS_ONSERVER) {
-			$this->parent->cachetime = 1000;
-			$this->parent->cachetimeObj = 1000;
+			$this->parent->cachetime = 100000;
+			$this->parent->cachetimeObj = 100000;
 			return;
 		}
 		// load default in case we fail to load cachecontrol.dat

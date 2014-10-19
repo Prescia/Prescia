@@ -64,8 +64,6 @@ class mod_bi_dev extends CscriptedModule  {
 							$this->log[] = "Updatestamp (DATE only) in LINK field? $mname.$name";
 						if (isset($field[CONS_XML_TIMESTAMP]))
 							$this->log[] = "Timestamp (DATE only) in LINK field? $mname.$name";
-						if (isset($field[CONS_XML_SPECIAL]))
-							$this->log[] = "Special (VC only) in LINK field? $mname.$name";
 						if (isset($field[CONS_XML_FIELDLIMIT]))
 							$this->log[] = "Size (VC only) in LINK field? $mname.$name";
 						if (isset($field[CONS_XML_HTML ]))

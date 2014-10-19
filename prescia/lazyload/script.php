@@ -10,10 +10,16 @@
 	// function addScript($scriptname,$parameters) {
 	switch (strtolower($scriptname)) {
 		case "bootstrap":
-			
+
 			if (strpos($this->template->constants['METATAGS'],"bootstrap/js/bootstrap.min.js")!== false) return; # no double ads
-			
-			if (isset($parameters['setViewport'])) $this->addMeta("\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />");
+
+
+			if (!isset($parameters['setViewport'])) {
+				$parameters['setViewport'] = 992;
+			}
+
+			$this->addMeta("\t<meta name=\"viewport\" content=\"width=".$parameters['setViewport'].", initial-scale=1\" />");
+
 			$this->addLink("bootstrap/css/bootstrap.min.css");
 			if (CONS_BROWSER == "IE" && CONS_BROWSER_VERSION < 9) {
 				$this->addMeta("\t<script src=\"https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js\"></script>");
@@ -21,12 +27,12 @@
 			}
 			$this->addLink("jquery-2.1.1.min.js");
 			$this->addLink("bootstrap/js/bootstrap.min.js");
-			
+
 		break;
 		case "shadowbox":
-			
+
 			if (strpos($this->template->constants['HEADUSERTAGS'],"<script type=\"text/javascript\"><!--\nShadowbox.init(")!== false) return; # no double ads
-			
+
 			$this->addLink("shadowbox/shadowbox.css");
 			$this->addLink("shadowbox/shadowbox.js");
 			$params = array();
@@ -36,7 +42,7 @@
 			}
 			$params = implode(",\n",$params)."\n";
 			$this->template->constants['HEADUSERTAGS'] .= "\n<script type=\"text/javascript\"><!--\nShadowbox.init({\n".$params."});\n//--></script>";
-			
+
 		break;
 	}
 

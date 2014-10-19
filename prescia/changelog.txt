@@ -1,5 +1,9 @@
 TODO list is on site/github
 
+14.10.18 BETA 0.8 (getting warmer)
+	emergency update due to extreme bug on caching. This error was there problably on 2+ year old "aff" versions! 
+	text with "{" were being parsed as template and stored as such in cached versions of objects!
+	The problem was inside the tc.php PARSING the contents of a literal when you used the get() function ... why would I want to parse the literal?
 14.10.11 BETA 0.8 (very stable)
     general optimizations
 	fixed very serious bug on bi_dev foreign key orphan detector fixed

@@ -9,6 +9,7 @@
 	function checkHTML($source) {
   		$mandatoryTagsPresent = array(false,false); // HTML, BODY
   		$EID = array();
+		$FORMNAME = array();
   		$l = strlen($source);
     	$buffer = "";
     	$intag = false;
@@ -74,13 +75,20 @@
   							array_pop($intags);
   						}
   						if ($tag == "form") {
-	  						if (preg_match("/(name|id)=(\"|')([^\"']+)(\"|')/i",$buffer,$regs)) {
-								if (in_array(strtolower($regs[3]),$EID)) {
+	  						if (preg_match("/name=(\"|')([^\"']+)(\"|')/i",$buffer,$regs)) {
+								if (in_array(strtolower($regs[3]),$FORMNAME)) {
 									$log[]= "Duplicated Form named: ".$regs[3];
+								}
+								$FORMNAME[] = strtolower($regs[2]);
+							}
+  						} else {
+  							if (preg_match("/id=(\"|')([^\"']+)(\"|')/i",$buffer,$regs)) {
+								if (in_array(strtolower($regs[2]),$EID)) {
+									$log[]= "Duplicated Element ID: ".$regs[2];
 								}
 								$EID[] = strtolower($regs[2]);
 							}
-  						}
+						}
   					}
   					$buffer = "";
   				} else {
@@ -118,7 +126,6 @@
   			$log[] = "Mandatory HTML tag not present";
   		if (!$mandatoryTagsPresent[1])
   			$log[] = "Mandatory BODY tag not present";
-
   		return $log;
 
   	}

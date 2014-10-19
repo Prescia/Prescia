@@ -15,10 +15,10 @@
 	  foreach ($array as $name => $conteudo) {
 	    if ( !in_array($name,$excludethese)) {
 	      if (!is_array($conteudo)) {
-	        if ($conteudo != "" && strlen($conteudo)<250 && strpos($conteudo,"\"")===false) $p_qs .= $name."=".$conteudo."&";
+	        if ($conteudo != "" && strlen($conteudo)<250 && strpos($conteudo,"\"")===false) $p_qs .= $name."=".$conteudo."&amp;";
 	      } else if (!$noArrays){
 	        foreach($conteudo as $anome => $aconteudo) {
-	          if ($aconteudo != "" && strlen($aconteudo)<250 && strpos($aconteudo,"\"")===false) $p_qs .= $name."[]=".$aconteudo."&";
+	          if ($aconteudo != "" && strlen($aconteudo)<250 && strpos($aconteudo,"\"")===false) $p_qs .= $name."[]=".$aconteudo."&amp;";
 	        }
 	      }
 	    }

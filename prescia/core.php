@@ -347,7 +347,7 @@ class CPrescia extends CPresciaVar {
 		if ($this->dbo->errorRaised) $this->errorControl->raise(606,"","core",vardump($this->dbo->log));
 		$this->dbo->close();
 		if ($stop) exit();
-		else $this->template = new CKTemplate(null,CONS_PATH_INCLUDE."template/",$this->debugmode,true);
+		else if (defined("CKTemplate_version"))	$this->template = new CKTemplate(null,CONS_PATH_INCLUDE."template/",$this->debugmode,true);
 	} # close
 #-
 	/* addPlugin
@@ -982,6 +982,10 @@ class CPrescia extends CPresciaVar {
 
 		# Header / cache
 		if ($this->action != "404" && $this->action != "403") $this->headerControl->addHeader(CONS_HC_HEADER,200);
+		
+		# Let's face it, we want IE to render on edge
+		if (CONS_BROWSER == "IE")
+			$this->headerControl->addHeader(CONS_X_UA_Compatible,"X-UA-Compatible: IE=edge"); // dont add chrome=1 here please ... PLEASE ... IE is IE, Chrome is Chrome, no point on forcing IE to run Chrome plugin 
 
 		if ($this->doctype == "xhtml" && (CONS_BROWSER != "IE" || CONS_BROWSER_VERSION > 8))
 			$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: application/xhtml+xml; charset=".$this->charset);
@@ -1068,7 +1072,6 @@ class CPrescia extends CPresciaVar {
 		if ($this->doctype == "html" || (CONS_BROWSER == "IE" && CONS_BROWSER_VERSION < 9)) $this->template->assign("_DOCTYPEXML");
 
 		# metadata - fill default values if not set yet (plugins can set)
-		$this->addMeta("\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\" />"); // render in the most recent engine for IE
 		if ($this->layout != 2) {
 			if ((!isset($this->template->constants['METAKEYS']) || $this->template->constants['METAKEYS'] == '') && $this->dimconfig['metakeys'] != '') {
 				$this->template->constants['METAKEYS'] = $this->dimconfig['metakeys'];

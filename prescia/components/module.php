@@ -1113,7 +1113,9 @@ class CModule {
 					if (isset($field[CONS_XML_HTML]) && !isset($field[CONS_XML_CUSTOM])) {
 						$data[$name] = str_replace("&#160;"," ",trim($data[$name]));
 						if (isset($field[CONS_XML_SIMPLEEDITFORCE]) && $data[$name]!='') {
-							if (!function_exists('xmlParamsParser')) include CONS_PATH_INCLUDE."xmlHander.php";
+							if (!defined('C_XHTML_AUTOTAB')) {
+								include CONS_PATH_INCLUDE."xmlHandler.php";
+							}
 							$data[$name] = parseHTML($data[$name],true);
 							if ($data[$name]===false) {
 								$this->parent->errorControl->raise(190,$name,$this->name);
@@ -1725,7 +1727,8 @@ class CModule {
 		}
 		if ($n!==false&&($n==1&&$tag=="")) $n = $this->parent->lastReturnCode;
 		if ($cacheTAG !== false && $tag != '' && $n!==false) { # store cache
-			$this->parent->cacheControl->addCachedContent($cacheTAG,array('payload'=>$tp->get($tag),'count'=>$n,'lfs' => $this->parent->lastFirstset, 'lrc' => $this->parent->lastReturnCode),true);
+			$gt = $tp->get($tag);
+			$this->parent->cacheControl->addCachedContent($cacheTAG,array('payload'=>$gt,'count'=>$n,'lfs' => $this->parent->lastFirstset, 'lrc' => $this->parent->lastReturnCode),true);
 		}
 		unset ($this->templateParans['grouping']);
 		return $n;

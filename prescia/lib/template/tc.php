@@ -5,7 +5,7 @@
 --*/
 # REQUIRES main.php
 
-define ("CKTemplate_version","141008"); // Build version - yes this is a date
+define ("CKTemplate_version","141018"); // Build version - yes this is a date
 
 define ("EREG_TAG","/(\{)([^\n\r]+)(\})/"); // used inside parsers, but not on tbreak
 define ("START_REPLACE", "\\"); // this string inside the limiters will generate the start limiter ({\} will output {)
@@ -303,10 +303,13 @@ class CKTemplate {
 	foreach ($this->contents as $key => $conteudo) {
 	  if ($conteudo[0] == $nome) {
 		if (!is_object($conteudo[2])) { // literal
-		  $temp = new CKTemplate($this);
+		  /*$temp = new CKTemplate($this);
+		  // COMENTADO PORQUE ... PORQUE EU QUERO QUEBRAR? VAI RETORNAR ALGO DIFERENTE DO QUE REALMENTE É! Por exemplo, um texto com { vai virar template! (bug: forum posts with { being CACHED as template
 		  $temp->tbreak($conteudo[2]);
 		  $this->cache = $conteudo[2];
 		  return $temp;
+		  */
+		  return $conteudo[2];
 		} else {
 		  $this->cache = $this->contents[$key][2]; // not $conteudo[2] because I might require the link if it's an object
 		  return $this->cache;
@@ -956,7 +959,7 @@ class CKTemplate {
 		$pgStart = $pgEnd - ($numberOfPagesToShow-1);
 	}
 
-	$qs = "&".arrayToString(false,array("p_init","CKFinder_Path","HTTPDSESSID","akr_returning","session_visited"));
+	$qs = "&amp;".arrayToString(false,array("p_init","CKFinder_Path","HTTPDSESSID","akr_returning","session_visited"));
 	$contentTAG->assign("qs",$qs);
 	$temp = "";
 	$temp .= $loopTAG->techo(array("qs" => $qs, "p_number" => $pgStart, "current_page" => $pgStart == $pL[2] ? "1": "0", "p_init" => ($pgStart-1) * ($p_size)));

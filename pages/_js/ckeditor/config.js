@@ -51,7 +51,7 @@ CKEDITOR.editorConfig = function( config )
         ['NumberedList','BulletedList','-','Outdent','Indent','Blockquote'],
         ['Cut','Copy','Paste','PasteText','PasteFromWord','RemoveFormat'],
         ['Undo','Redo','-','Find','Replace','SelectAll'],
-        ['Image',/*'Flash',*/'Table','HorizontalRule'],
+        ['Image','Table','HorizontalRule'],
         ['Link','Unlink'],
         ['About'],
         '/',
@@ -71,8 +71,10 @@ CKEDITOR.editorConfig = function( config )
     config.toolbar_PubToolbar =
         [
             ['Maximize','-','Cut','Copy','Paste','PasteText','PasteFromWord','RemoveFormat'],
-            ['Undo','Redo','-','Find','Replace','SelectAll'],
-            ['FontSize','TextColor'],
+            ['Undo','Redo'],
+            ['FontSize','TextColor','Styles'],
             ['Link','Unlink','-','Bold','Italic','Strike'],
+            ['Outdent','Indent','Blockquote'],
+            ['Source']
         ];
 };
