@@ -13,6 +13,7 @@
 		return;
 	}
 
+	$_REQUEST['nocache'] = true; // no caches on actions
 
 	// ok let's get to work
 	switch ($_POST['bbaction']) {
@@ -84,9 +85,12 @@
 							  'id_author' => $_SESSION[CONS_SESSION_ACCESS_USER]['id'],
 							  'props' => serialize(array()));
 			$ok = $core->runAction('forumpost',CONS_ACTION_INCLUDE,$postData);
-			if ($ok)
+			if ($ok) {
+				// kill cache for the post, it changed!
+				$core->cacheControl->killCache("postsforidt".$_POST['id_forumthread']."idf".$_POST['id_forum']."*"); // thread view
+				$core->cacheControl->killCache("threadsfor".$_POST['id_forumthread']."p*"); // forum view
 				$core->headerControl->internalFoward($_POST['url']."?lastpage=true");
-			else {
+			} else {
 				// fail to post comment but thread created ... destroy thread
 				if ($_POST['bbaction'] =='tpost') $core->simpleQuery("DELETE FROM bb_thread WHERE id=".$_POST['id_forumthread']);
 				$core->log[] = "Error adding Post";
@@ -108,17 +112,16 @@
 		case "profile":
 			if ($core->logged()) $up = $_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'];
 			else $up = array();
-			$up['pfim'] = $_POST['ipp'];
-			$up['lang'] = $_POST['lang'];
+			if (isset($_POST['ipp'])) $up['pfim'] = $_POST['ipp'];
+			if (isset($_POST['lang'])) $up['lang'] = $_POST['lang'];
 			$data = array(
 				'name' => $_POST['name'],
-				'email' => $_POST['email'],
+				'email' => isset($_POST['email'])?$_POST['email']:'',
 				'login'=> isset($_POST['ulogin'])?$_POST['ulogin']:'',
 				'password' => $_POST['upassword'],
 				'userprefs' => serialize($up),
 				'id_group' => $this->registrationGroup
 				);
-			$core->safety = false; // allow to register at all costs
 			if ($core->logged()) {
 				$data['id'] = $_SESSION[CONS_SESSION_ACCESS_USER]['id'];
 				unset($data['id_group']);
@@ -126,16 +129,19 @@
 				if ( $_POST['upassword'] == '') unset($_POST['upassword']);
 				$ok = $core->runAction('users',CONS_ACTION_UPDATE,$data);
 			} else {
-				$ok = $core->runAction('users',CONS_ACTION_INCLUDE,$data);
-				if ($ok) {
-					$id = $core->lastReturnCode;
-					$core->authControl->logUser($id,CONS_AUTH_SESSION_NEW);
+				if ($core->tCaptcha('captcha',true)) {
+					$core->safety = false; // allow to register at all costs
+					$ok = $core->runAction('users',CONS_ACTION_INCLUDE,$data);
+					$core->safety = true;
+					if ($ok) {
+						$id = $core->lastReturnCode;
+						$core->authControl->logUser($id,CONS_AUTH_SESSION_NEW);
+					}
+					else $core->authControl->logsGuest();
 				}
-				else $core->authControl->logsGuest();
 			}
-			$core->safety = true;
 			$core->action = "profile";
-			$core->headerControl->internalFoward($this->bbfolder."profile.html?nocache=true");
+			if ($ok) $core->headerControl->internalFoward($this->bbfolder."profile.html?nocache=true");
 			return;
 		break;
 	}

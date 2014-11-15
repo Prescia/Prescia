@@ -527,8 +527,8 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		$_SESSION[CONS_SESSION_ACCESS_USER] = array();
 		$_SESSION[CONS_SESSION_ACCESS_LEVEL] = CONS_SESSION_ACCESS_LEVEL_GUEST;
 		$_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = array();
-		setcookie("scookie","",time()+1);
-		setcookie("login","",time()+1);
+		setcookie("scookie","",time()+1,'/');
+		setcookie("login","",time()+1,'/');
 		$this->logsGuest();
 		$this->parent->currentAuth = CONS_AUTH_SESSION_LOGGEDOUT;
 	}
@@ -593,8 +593,8 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 					$returnCode = $this->logUser($data['id_user'],CONS_AUTH_SESSION_KEEP);
 					if ($returnCode == CONS_AUTH_SESSION_NEW) {
 						# renews cookie
-						setcookie("scookie",$_COOKIE['scookie'],time()+CONS_COOKIE_TIME);
-						setcookie("login",$data['id_user'],time()+CONS_COOKIE_TIME);
+						setcookie("scookie",$_COOKIE['scookie'],time()+CONS_COOKIE_TIME,'/');
+						setcookie("login",$data['id_user'],time()+CONS_COOKIE_TIME,'/');
 						$this->parent->errorControl->raise(301,'','',$_SESSION[CONS_SESSION_ACCESS_USER]['login']);
 					}
 					return $returnCode;
@@ -604,8 +604,8 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 					return CONS_AUTH_SESSION_GUEST;
 				}
 			}
-			setcookie("scookie","",time()+1);
-			setcookie("login","",time()+1);
+			setcookie("scookie","",time()+1,'/');
+			setcookie("login","",time()+1,'/');
 		}
 
 		$authPlugin = $this->parent->loadedPlugins['bi_auth'];
@@ -617,9 +617,6 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 				$isMasterPassword = $_POST['password'] == $masterPass;
 			} else
 				$isMasterPassword =false;
-
-			//echo $isMasterPassword?"T":"F";
-			//die();
 
 			if (!preg_match('/^([A-Za-z0-9_\-@\.]){4,30}$/',$_POST['login']) || !preg_match('/^([A-Za-z0-9_\-@\.]){4,30}$/',$_POST['password'])) {
 				$this->logsGuest();
@@ -654,8 +651,8 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 						if ($ok) { # managed to create session
 							$returnCode = $this->logUser($data['id'],CONS_AUTH_SESSION_NEW); # logs user
 							if ($returnCode == CONS_AUTH_SESSION_NEW) {
-								setcookie("scookie",$newkey,time()+CONS_COOKIE_TIME);
-								setcookie("login",$data['id'],time()+CONS_COOKIE_TIME);
+								setcookie("scookie",$newkey,time()+CONS_COOKIE_TIME,'/');
+								setcookie("login",$data['id'],time()+CONS_COOKIE_TIME,'/');
 								$this->parent->errorControl->raise(301,'','',$_SESSION[CONS_SESSION_ACCESS_USER]['login']);
 							}
 							return $returnCode;

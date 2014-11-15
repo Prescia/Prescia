@@ -55,7 +55,7 @@
 
 	## ENTRY PAGES ##
 	$statspath = $core->loaded('statspath');
-	$sql = "SELECT sum(count) as hits, page FROM ".$statspath->dbname." WHERE pagefoward='$page' AND data >= '$dataini' AND data < '$datafim' GROUP BY page ORDER BY hits DESC";
+	$sql = "SELECT sum(hits) as hits, page FROM ".$statspath->dbname." WHERE pagefoward='$page' AND data >= '$dataini' AND data < '$datafim' GROUP BY page ORDER BY hits DESC";
 	$core->dbo->query($sql,$r,$n);
 	$graphObj = $core->template->get("_pg");
 	$output = "";

@@ -49,8 +49,6 @@
 
 	foreach ($core->dimconfig as $data['name'] => $data['value']) {
 
-		if (is_array($data['value'])) continue; // not supported
-
 		if (!isset($dimconfigMD[$data['name']])) {
 			$fieldType = CONS_TIPO_VC;
 			$dimconfigMD[$data['name']] = array(CONS_XML_TIPO => CONS_TIPO_VC);
@@ -63,10 +61,16 @@
 		else if ($fieldType == CONS_TIPO_DATETIME && isset($data['value']))
 			$data['value'] = fd($data['value'],"H:i:s ".$core->intlControl->getDate());  // format in language mode
 
-		if (isset($dimconfigMD[$data['name']][CONS_XML_RESTRICT]) && $dimconfigMD[$data['name']][CONS_XML_RESTRICT]>$_SESSION[CONS_SESSION_ACCESS_LEVEL]) continue;
+		$forceRO = isset($dimconfigMD[$data['name']][CONS_XML_RESTRICT]) && $dimconfigMD[$data['name']][CONS_XML_RESTRICT]>$_SESSION[CONS_SESSION_ACCESS_LEVEL] ||
+				   $data['name'][0] == "_" || 
+				   isset($dimconfigMD[$data['name']][CONS_XML_READONLY]);
 
-		if (((!isset($dimconfigMD[$data['name']][CONS_XML_READONLY]) && $data['name'][0] != "_") || $_SESSION[CONS_SESSION_ACCESS_LEVEL]==100) && strpos($data['name'],'_pluginStarter')===false) { // masters can edit it
-
+		
+		if ((!$forceRO || $_SESSION[CONS_SESSION_ACCESS_LEVEL]==100) && !is_array($data['value']) && strpos($data['name'],'_pluginStarter')===false) {
+			// forceRO will display as editable for master
+			// arrays are never editable
+			// _pluginStarter neither
+					
 			$fillDT = array('field' => $data['name'],
 							'width' => '99%');
 			switch($fieldType) {
@@ -247,13 +251,15 @@
 							 'title' => $data['name']
 			);
 
-			if ($data['name'][0] == '_') // at the start
+			if ($data['name'][0] == '_') // at the end
 				$tempOutput .= $using->techo($outdata);
 			else
 				$tempOutput = $using->techo($outdata).$tempOutput; // at the end
 
-		} else if ($data['name'] != '_forced' && strpos($data['name'],'_pluginStarter')===false) #else can't edit
+		} else if ($data['name'] != '_forced' && strpos($data['name'],'_pluginStarter')===false) { # this are not even displayed on hidden
+			if (is_array($data['value'])) $data['value'] = vardump($data['value']); 
 			$temp .= $objh->techo($data);
+		}
 	} # loop ---
 	$core->template->assign("_FORM_field",$tempOutput);
 

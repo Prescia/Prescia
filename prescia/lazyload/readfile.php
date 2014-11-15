@@ -29,6 +29,7 @@
    	header("Content-Disposition: ".($attachMode?"attachment":"inline")."; filename=\"".$filetitle."\""); // estava como attachment
    	$this->close(false); # disconnects from DB
    	usleep(10);
+	$this->headerControl->softHeaderSent = true;
 	readfile($file);
 	usleep(10);
 	if ($exit) die();

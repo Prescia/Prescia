@@ -1,6 +1,7 @@
 <? /* EDIT PANEL TOC (you can search these strings):
- *
- *
+ * CONSTANTS AND VARIABLES
+ * CALLBACK
+ * USER PREFERENCES
 -*/
 
 
@@ -277,12 +278,16 @@
 	// show search field open? are we already filtering stuff?
 	$core->template->assign("searchFieldOn",isset($_REQUEST['searchFieldOn'])?1:0);
 
+	// if we do not have edit pane, remove them
 	if (in_array("edit",$module->options[CONS_MODULE_NOADMINPANES])===true) {
 		$core->template->assign("_editbtn");
 		$core->template->assign("_can_multiple");
+		$core->template->assign("_mup");
 	}
+	
+	// if set CONS_MODULE_DISALLOWMULTIPLE or multi-key, remove can_multiple
+	if (isset($module->options[CONS_MODULE_DISALLOWMULTIPLE]) || count($module->keys)>1) $core->template->assign("_can_multiple"); 
 
-	if (count($module->keys)>1) $core->template->assign("_can_multiple");
 	if (!isset($module->fields[CONS_FIELD_ORDER])) $core->template->assign("_can_reorder");
 	if (!$hasOrder || count($module->keys)>1) $core->template->assign("_hasOrder","");
 	if (isset($_REQUEST['order'])) $core->template->assign('order',$_REQUEST['order']);
@@ -977,8 +982,9 @@
 										$laFields[] = $possibleField;
 										unset($tp);
 									}
-									break; # from while
-								}
+								} else
+									$core->log[] = 'unable to process item '.$field; 
+								break; # from while
 							}
 						}
 					}

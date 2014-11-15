@@ -103,7 +103,7 @@
 	<DATA mandatory="true">DATE</DATA>
 	<PAGE size="72">VC</PAGE>
 	<PAGEFOWARD size="72">VC</PAGEFOWARD>
-	<COUNT default="1">SMALLINT</COUNT>
+	<HITS default="1">SMALLINT</HITS>
 </STATSPATH>
 <STATSQUERY dbname="stats_query"
 			keys="data,engine,query,entrypage"

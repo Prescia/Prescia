@@ -11,7 +11,7 @@
 
 			{CONTENTMAN}
 
-			<form class="form-horizontal" action="bbaction.php" id="profileform" method="post" onsubmit="return checkprofile(this)" enctype="multipart/form-data">
+			<form class="form-horizontal" action="bbaction.php" id="profileform" method="post" onsubmit="return fillfeedback(this)" enctype="multipart/form-data">
 			<input type="hidden" name="haveinfo" value="1"/>
 			<input type="hidden" name="bbaction" value="profile"/>
 			<input type="hidden" name="MAX_FILE_SIZE" value="500000" />
@@ -55,7 +55,7 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="col-md-2 text-right" style="line-height:30px;">{_t}password{/t} <spam class="glyphicon glyphicon-envelope"></spam></div>
+				<div class="col-md-2 text-right" style="line-height:30px;">{_t}email{/t} <spam class="glyphicon glyphicon-envelope"></spam></div>
 				<div class="col-md-9">
 					<div class="form-group  has-feedback">
 						<input type="text" onblur="fillfeedback(this.form)" class="form-control" placeholder="{_t}email{/t}" value="{email}" name="email"/>
@@ -87,22 +87,22 @@
 				<div class="col-md-2 text-right" style="line-height:50px;">{_t}avatar{/t} <spam class="glyphicon glyphicon-picture"></spam></div>
 				<div class="col-md-9" style="line-height:50px;">
 					<div class="pull-left">
-						{_imageyes}<img style="width:28px;height:auto" src="/{image}" alt="User Avatar" class="img-rounded"/>{/imageyes}
+						{_imageyes}<img style="width:28px;height:auto" src="/{image}?r={r}" alt="User Avatar" class="img-rounded"/>{/imageyes}
 						{_imageno}<spam class="glyphicon glyphicon glyphicon-user"></spam>{/imageno}
 					</div>
-					<input type="file" class="form-control" placeholder="{_t}avatar{/t}" style="margin-left:40px" name="image"/>
+					<input type="file" style="margin:0px -15px;width:100%" class="form-control" placeholder="{_t}avatar{/t}" name="image"/>
 				</div>
 			</div>
 			{_GUEST}
-			<div class="row">
+			<div class="row" style="margin-top:5px">
 				<div class="col-md-2 text-right" style="line-height:30px;">{_t}captcha{/t} <spam class="glyphicon glyphicon-list-alt"></spam></div>
-				<div class="col-md-5">
+				<div class="col-md-3">
 					<div class="form-group has-feedback">
 						<input type="text" onblur="fillfeedback(this.form)" class="form-control" placeholder="{_t}captcha{/t}" value="" name="captcha"/>
 						<span class="glyphicon form-control-feedback"></span>
 					</div>
 				</div>
-				<div class="col-md-5">
+				<div class="col-md-5" style="padding-top:5px">
 					&laquo; {captcha}
 				</div>
 			</div>
@@ -124,17 +124,17 @@
 
 	function fillfeedback(frm) {
 		// color/spans
-		setSuccess(frm.name,frm.name.value.length > 10?2:(frm.name.value.length > 3?1:0));
-		{_GUEST}setSuccess(frm.ulogin,isLogin(frm.ulogin.value)?2:0);
-		setSuccess(frm.upassword,isLogin(frm.upassword.value)?(frm.upassword.value==frm.ulogin.value?1:2):0);
+		setSuccess(frm.name,frm.name.value.length > 10);
+		{_GUEST}setSuccess(frm.ulogin,isLogin(frm.ulogin.value));
+		setSuccess(frm.upassword,isLogin(frm.upassword.value) && (frm.upassword.value!=frm.ulogin.value));
 		{/GUEST}
 		{_LOGGED}
-		setSuccess(frm.upassword,frm.upassword.value == '' || isLogin(frm.upassword.value)?(frm.upassword.value=='{USER_LOGIN}'?1:2):0);
+		setSuccess(frm.upassword,frm.upassword.value == '' || (isLogin(frm.upassword.value) && (frm.upassword.value!='{USER_LOGIN}')));
 		{/LOGGED}
-		setSuccess(frm.upassword2,frm.upassword2.value == frm.upassword.value?2:1);
-		setSuccess(frm.email,isMail(frm.email.value)?2:0);
-		setSuccess(frm.ipp,isnumber(frm.ipp.value,false) && frm.ipp.value>4?(frm.ipp.value>15?2:1):0);
-		{_GUEST}setSuccess(frm.captcha,(isnumber(frm.captcha.value,false) && frm.captcha.value.length==4)?2:1);{/GUEST}
+		setSuccess(frm.upassword2,frm.upassword2.value == frm.upassword.value);
+		setSuccess(frm.email,isMail(frm.email.value));
+		setSuccess(frm.ipp,isnumber(frm.ipp.value,false) && frm.ipp.value>4);
+		{_GUEST}setSuccess(frm.captcha,(isnumber(frm.captcha.value,false) && frm.captcha.value.length==4));{/GUEST}
 		// messages
 		var failed = false;
 		if (frm.name.value.length<10) {
@@ -176,8 +176,6 @@
 		if (!isnumber(frm.ipp.value,false) || frm.ipp.value<5) {
 			$(frm.ipp).next('span').prop('title', '{_t}ipp{/t} {_t}must_be_number_larger_4{/t}');
 			failed = true;
-		} else if (frm.ipp.value < 15) {
-			$(frm.ipp).next('span').prop('title', '{_t}ipp{/t} {_t}could_be_larger{/t}');
 		}
 		{_GUEST}
 		if (!isnumber(frm.captcha.value,false) || frm.captcha.value.length != 4) {
@@ -188,22 +186,16 @@
 		return !failed;
 	}
 
-	function checkprofile(frm) {
-		return fillfeedback(frm);
-	}
-
 	function setSuccess(el,level) {
 		var sp = $(el).next('span');
 		sp.removeClass('glyphicon-ok');
-		sp.removeClass('glyphicon-warning-sign');
 		sp.removeClass('glyphicon-remove');
-		if (level !== false) sp.addClass(level==2?'glyphicon-ok':(level==1?'glyphicon-warning-sign':'glyphicon-remove'));
+		sp.addClass(level?'glyphicon-ok':'glyphicon-remove');
 		sp.prop('title', 'ok');
 		var pt = $(el).parent();
-		pt.removeClass('has-warning');
 		pt.removeClass('has-error');
 		pt.removeClass('has-success');
-		if (level !== false) pt.addClass(level==2?'has-success':(level==1?'has-warning':'has-error'));
+		pt.addClass(level?'has-success':'has-error');
 	}
 
 

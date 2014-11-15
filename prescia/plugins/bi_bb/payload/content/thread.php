@@ -1,6 +1,11 @@
 <?
 
-	$ipp = 2; // itens per page
+	$up = isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])?$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']:false;
+	if ($up !== false) {
+		if (!is_array($up)) $up = @unserialize($up);
+		$ipp = $up['pfim'];
+	} else
+		$ipp = 15; 
 
 	if (!isset($core->storage['friendlyurldata']) ||
 	    !isset($core->storage['friendlyurlmodule'])) $core->fastClose(404);

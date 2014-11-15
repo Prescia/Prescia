@@ -4,8 +4,8 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","14.10.8 alpha"); // (Y.m.d) ~ last stable: n/a
-define ("AFF_VERSION",0.8);  // 1.0 conditioned to intrade release
+define ("AFF_BUILD","14.11.07 beta RC"); // (Y.m.d) ~ last stable: n/a
+define ("AFF_VERSION",0.9);  // 1.0 conditioned
 // Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 
 # -- XML parameter
@@ -44,6 +44,7 @@ define ("CONS_MODULE_SYSTEM","cmadmsys"); # (adm) this is a system module and sh
 define ("CONS_MODULE_AUTOCLEAN","cmac"); # (cron) WHERE statement with date handling to when this database should be cleaned (cron)
 define ("CONS_MODULE_PARENT","cmtp"); # If the module defines a tree structure, which field defines the tree parenthood (usually id_parent)
 define ("CONS_MODULE_META","cmadmmeta"); # (adm) If the module defines a meta description, this is it
+define ("CONS_MODULE_NOUNDO","cmnu"); # (undo)  disable undo system in a module
 # -- logging levels
 define ("CONS_LOGGING_NOTICE",0); // normal "info"
 define ("CONS_LOGGING_WARNING",1); // low-level "warning"

@@ -5,15 +5,15 @@
 		$idF = isset($_REQUEST['id_forum'])?$_REQUEST['id_forum']:'';
 		$lang = isset($_REQUEST['lang'])?$_REQUEST['lang']:$_SESSION[CONS_SESSION_LANG];
 
-		$sql = "SELECT f.id,f.title,f.urla,
+		$sql = "SELECT forum.id,forum.title,forum.urla,forum.id_parent,
 				count(distinct t.id) as t,count(distinct post.id) as p
-				FROM bb_forum as f
-				LEFT JOIN bb_thread as t ON t.id_forum = f.id
-				LEFT JOIN bb_post as post ON post.id_forum = f.id AND post.id_forumthread = t.id
-				WHERE ".($idF!=''?"f.id_parent=$idF AND ":"")."
-					  f.lang='".$lang."'
-				GROUP BY f.id
-				ORDER BY f.ordem ASC";
+				FROM bb_forum as forum
+				LEFT JOIN bb_thread as t ON t.id_forum = forum.id
+				LEFT JOIN bb_forum as fp ON fp.id = forum.id_parent
+				LEFT JOIN bb_post as post ON post.id_forum = forum.id AND post.id_forumthread = t.id
+				WHERE ".($idF!=''?"forum.id_parent=$idF AND ":"")."
+					  forum.lang='".$lang."'
+				GROUP BY forum.id"; // order auto-filled by tree system
 
 		function mycallback(&$template, &$params, $data, $processed=false) {
 			if ($processed) return $data;
@@ -51,6 +51,12 @@
 			return $data;
 		}
 
-		$core->runContent('forum',$core->template,$sql,"_forum",false,"presciaforum".$_SESSION[CONS_SESSION_LANG],"mycallback");
+		$forumObj = $core->loaded('forum');
+		$tree = $forumObj->getContents("","urla","/","",$sql,true,'mycallback'); // perform the sql, but get it back in a tree style
+		
+		$core->template->getTreeTemplate("_forum","_subforum",$tree,0); // echo in tree style
+
+
+		 
 
 	}

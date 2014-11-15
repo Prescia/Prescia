@@ -41,6 +41,7 @@ class CPrescia extends CPresciaVar {
 			if (isset($_COOKIE['prescia_cls'])) { # we have a domain set, use it
 				$_SESSION['CODE'] = $_COOKIE['prescia_cls'];
 				$_SESSION['DOMAIN'] = $this->domain;
+				setcookie('prescia_cls',$_COOKIE['prescia_cls'],time()+3600); // renew cookie for at least an hour
 			}
 		}
 		if (!isset($_SESSION['CODE']) || !isset($_SESSION['DOMAIN']) || $_SESSION['DOMAIN'] != $this->domain || (isset($_REQUEST['nocache']) && !isset($_COOKIE['prescia_cls']))) { # no data, different domain or forced reload
@@ -189,7 +190,7 @@ class CPrescia extends CPresciaVar {
 					$this->readfile("robotssm.txt","txt",true,"robots.txt");
 				else
 					$this->readfile("robots.txt","txt",true,"robots.txt");
-			} else if ($this->action == "favicon") {
+			} else if ($this->action == "favicon" || $this->action == "apple-touch-icon") {
 				$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
 				# favicon requested, regardless of what extension was requested, serve the one we have
 				if (locateFile($favfile,$ext,"png,jpg,gif,ico"))
@@ -198,8 +199,9 @@ class CPrescia extends CPresciaVar {
 					$favfile = "favicon";
 					if (locateFile($favfile,$ext))
 						$this->readfile($favfile,$ext,true);
-				} else
+				} else {
 					$this->fastClose(404);
+				}
 			} else if ($this->original_action == "sitemap.xml" || $this->original_action == "sitemap.xml") {
 				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml"))
 					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml","txt",true,"sitemap.xml");
@@ -821,8 +823,9 @@ class CPrescia extends CPresciaVar {
 #-
 	/* setLog
 	 * sets Log level depending on the request
+	 * CONS_LOGGING_SUCCESS, CONS_LOGGING_WARNING, CONS_LOGGING_ERROR, CONS_LOGGING_NOTICE
 	*/
-	function setLog($level,$force=false) {
+	function setLog($level,$optionalLog="",$force=false) {
 		if ($force) $this->loglevel = $level;
 		else {
 			switch ($level) {
@@ -838,6 +841,7 @@ class CPrescia extends CPresciaVar {
 				// CONS_LOGGING_NOTICE: no action, is the default level and should not replace others
 			}
 		}
+		if ($optionalLog) $this->log[] = $optionalLog;
 	}
 #-
 	/* saveConfig
@@ -980,24 +984,46 @@ class CPrescia extends CPresciaVar {
 	 */
 	function showTemplate() {
 
-		# Header / cache
-		if ($this->action != "404" && $this->action != "403") $this->headerControl->addHeader(CONS_HC_HEADER,200);
-		
-		# Let's face it, we want IE to render on edge
-		if (CONS_BROWSER == "IE")
-			$this->headerControl->addHeader(CONS_X_UA_Compatible,"X-UA-Compatible: IE=edge"); // dont add chrome=1 here please ... PLEASE ... IE is IE, Chrome is Chrome, no point on forcing IE to run Chrome plugin 
+		if (!$this->headerControl->softHeaderSent) { // we know headers already sent and can't be resent
+			# Header / cache
+			if ($this->action != "404" && $this->action != "403") $this->headerControl->addHeader(CONS_HC_HEADER,200);
 
-		if ($this->doctype == "xhtml" && (CONS_BROWSER != "IE" || CONS_BROWSER_VERSION > 8))
-			$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: application/xhtml+xml; charset=".$this->charset);
-		else {
-			$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: text/html; charset=".$this->charset);
+			# Let's face it, we want IE to render on edge
+			if (CONS_BROWSER == "IE")
+				$this->headerControl->addHeader(CONS_X_UA_Compatible,"X-UA-Compatible: IE=edge"); // dont add chrome=1 here please ... PLEASE ... IE is IE, Chrome is Chrome, no point on forcing IE to run Chrome plugin
+
+			if ($this->doctype == "xhtml" && (CONS_BROWSER != "IE" || CONS_BROWSER_VERSION > 8))
+				$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: application/xhtml+xml; charset=".$this->charset);
+			else {
+				$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: text/html; charset=".$this->charset);
+			}
+			$this->headerControl->addHeader(CONS_HC_PRAGMA,'Pragma: '.($this->layout!=2 && $this->cachetime>2000?'public':'no-cache'));
+			if (CONS_CACHE && $this->layout != 2)
+				$this->headerControl->addHeader(CONS_HC_CACHE,'Cache-Control: public,max-age='.floor($this->cachetime/1000).',s-maxage='.floor($this->cachetime/1000));
 		}
-		$this->headerControl->addHeader(CONS_HC_PRAGMA,'Pragma: '.($this->layout!=2 && $this->cachetime>2000?'public':'no-cache'));
-		if (CONS_CACHE && $this->layout != 2)
-			$this->headerControl->addHeader(CONS_HC_CACHE,'Cache-Control: public,max-age='.floor($this->cachetime/1000).',s-maxage='.floor($this->cachetime/1000));
 
 		# logs 404/403 in separate error code
-		if ($this->action == '404' || $this->action == '403') $this->errorControl->raise(103,$this->context_str.$this->action,"404x403");
+		if ($this->action == '404' || $this->action == '403') $this->errorControl->raise(103,$this->context_str.$this->action,"404x403",vardump($this->warning));
+
+		if (count($this->log)>0) {
+			$output = "";
+			foreach ($this->log as $saida) {
+				$output .= $saida."\n<br/>";
+			}
+			$file = $this->debugFile;
+			if ($this->debugFile == '' || !is_file($file)) {
+				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html"))
+					$file = CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html";
+				else
+					$file = CONS_PATH_SETTINGS."defaults/_debugarea.html";
+			}
+			$tp = new CKTemplate($this->template);
+			$tp->fetch($file);
+			$tp->assign("CORE_DEBUG",$output);
+			$tp->assign("CORE_DEBUGWARNING",$this->loglevel); // CONS_LOGGING_...
+			$this->template->constants['CORE_DEBUG'] = $tp->techo();
+			unset($tp);
+		}
 
 		if (!is_object($this->template) || get_class($this->template) != "CKTemplate") {
 			return; // huh, no template? oh well
@@ -1120,28 +1146,6 @@ class CPrescia extends CPresciaVar {
 		}
 
 		$this->removeAutoTags();
-
-		if (count($this->log)>0) {
-			$output = "";
-			$haveWarning = false;
-			foreach ($this->log as $saida) {
-				$output .= $saida."\n<br/>";
-				if ($saida[strlen($saida)-1] == "!") $haveWarning =  true;
-			}
-			$file = $this->debugFile;
-			if ($this->debugFile == '' || !is_file($file)) {
-				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html"))
-					$file = CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html";
-				else
-					$file = CONS_PATH_SETTINGS."defaults/_debugarea.html";
-			}
-			$tp = new CKTemplate($this->template);
-			$tp->fetch($file);
-			$tp->assign("CORE_DEBUG",$output);
-			$tp->assign("CORE_DEBUGWARNING",$haveWarning ? "1" : "0");
-			$this->template->constants['CORE_DEBUG'] = $tp->techo();
-			unset($tp);
-		}
 
 		// print version
 		if ($this->template->get("printver") == '') {

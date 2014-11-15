@@ -6,15 +6,29 @@
 
 	{_forum}
 	<div class="panel panel-info">
-		<div class="panel-heading"><a href="{vdir|/}{BBROOT_PATH}{_toggle_urla}{urla}/{/toggle_urla}forum.html?id={id}"><spam class="glyphicon glyphicon-th-list"></spam> {title}</a></div>
+		<div class="panel-heading"><a href="{vdir|/}{BBROOT_PATH}{urla}/"><spam class="glyphicon glyphicon-th-list"></spam> {title}</a></div>
 		<div class="panel-body">
 			<div class="row">
-				<div class="col-sm-5">{_t}last_thread{/t} <a href="{vdir|/}{BBROOT_PATH}{_toggle_urla}{urla}/{/toggle_urla}{lt_urla}.html">{lt_title|truncate|20|…}</a><br/><small> {_t}by{/t} {lt_author} {lt_date|past|true} {_t}ago{/t}</small></div>
-				<div class="col-sm-5">{_t}last_post{/t} <a href="{vdir|/}{BBROOT_PATH}{_toggle_urla}{urla}/{/toggle_urla}{lp_urla}.html">{lp_title|truncate|20|…}</a><br/><small> {_t}by{/t} {lp_author} {lp_date|past|true} {_t}ago{/t}</small></div>
+				<div class="col-sm-5">{_t}last_thread{/t} <a href="{vdir|/}{BBROOT_PATH}{urla}/{lt_urla}.html">{lt_title|truncate|20|…}</a><br/><small> {_t}by{/t} {lt_author} {lt_date|past|true} {_t}ago{/t}</small></div>
+				<div class="col-sm-5">{_t}last_post{/t} <a href="{vdir|/}{BBROOT_PATH}{urla}/{lp_urla}.html">{lp_title|truncate|20|…}</a><br/><small> {_t}by{/t} {lp_author} {lp_date|past|true} {_t}ago{/t}</small></div>
 				<div class="col-sm-1">{t}<br/><small>{_t}threads{/t}</small></div>
 				<div class="col-sm-1">{p}<br/><small>{_t}posts{/t}</small></div>
 			</div>
 		</div>
 	</div>
+	{_insubdirs}{subdirs}{/insubdirs}
 	{/forum}
+	{_subforum}
+	<div class="panel panel-info" style="margin-left:{level|math|*50}px">
+		<div class="panel-heading"><a href="{vdir|/}{BBROOT_PATH}{tree}/{urla}/"><spam class="glyphicon glyphicon-th-list"></spam> {title}</a></div>
+		<div class="panel-body">
+			<div class="row">
+				<div class="col-sm-5">{_t}last_thread{/t} <a href="{vdir|/}{BBROOT_PATH}{tree}/{urla}/{lt_urla}.html">{lt_title|truncate|20|…}</a><br/><small> {_t}by{/t} {lt_author} {lt_date|past|true} {_t}ago{/t}</small></div>
+				<div class="col-sm-5">{_t}last_post{/t} <a href="{vdir|/}{BBROOT_PATH}{tree}/{urla}/{lp_urla}.html">{lp_title|truncate|20|…}</a><br/><small> {_t}by{/t} {lp_author} {lp_date|past|true} {_t}ago{/t}</small></div>
+				<div class="col-sm-1">{t}<br/><small>{_t}threads{/t}</small></div>
+				<div class="col-sm-1">{p}<br/><small>{_t}posts{/t}</small></div>
+			</div>
+		</div>
+	</div>
+	{/subforum}
 </div>

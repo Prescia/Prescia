@@ -21,6 +21,22 @@
 	    return $removeBOM?str_replace("\xef\xbb\xbf", '', $output):$output; # Remove possible BOM HEADER
 	  }
 	}
+	function print_ro($object,$alsoIgnore=array(),$tab=0) { // prints an object/array, but removes the $parent, and anything inside alsoIgnore
+		$pad = "";
+		if (!in_array('parent',$alsoIgnore)) $alsoIgnore[] = "parent";
+		for ($c=0;$c<$tab;$c++) $pad .= "\t";
+		foreach ($object as $key=>$value) {
+			if (!is_numeric($key) && in_array($key,$alsoIgnore)) 
+				echo $pad.$key." => *HIDDEN*\n";
+			else if (is_Array($value) || is_Object($value)) {
+				if (is_Array($value)) echo "$pad$key => Array (\n";
+				else echo "$pad$key => Object (\n";
+				print_ro($value,$alsoIgnore,$tab+1);
+				echo $pad.")\n";
+			} else
+				echo $pad.$key." => ".$value."\n";
+		}
+	}
 	function cWriteFile($ofile,$conteudo,$append=false,$binary=false) {
 	  $fd =@fopen ($ofile, ($append?"a":"w").($binary?"b":""));
 	  if ($fd) {

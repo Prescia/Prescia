@@ -8,9 +8,10 @@
 	define("CONS_POSSIBLE_LANGS","pt-br,en"); // which languages can be selected for this site, comma separated (ex.: "pt-br,en") (if CONS_USE_I18N)
 		// if you add multiple languages, remember to disable $this->forceLang
 	define("CONS_DEFAULT_FAVICON",true); // if TRUE will use default favicon if none found
+	define("CONS_CRONDBBACKUP_MAIL",''); // if set, will mail a zipped backup of the database when cron backup runs
 
 	if (CONS_ONSERVER) { // <-- settings for your online "final" server
-		define("CONS_INSTALL_ROOT","/"); // if Prescia is installed in other than the ROOT folder, fill this (must end and start with /)	
+		define("CONS_INSTALL_ROOT","/"); // if Prescia is installed in other than the ROOT folder, fill this (must end and start with /)
 		define("CONS_DB_HOST","186.202.152.192"); // leave empty if not using a database. The framework will enter dbless mode
 		define("CONS_DB_BASE","daisuki11");
 		define("CONS_DB_USER","daisuki11");
@@ -24,7 +25,7 @@
 
 		// You should have this enabled to help you while creating/debbuging the site, then disable it for performance, or keep only on production
 		$dev = $this->addPlugin('bi_dev');
-		
+
 
 	} else { // <------------- settings for your local production machine
 		define("CONS_INSTALL_ROOT","/"); // if Prescia is installed in other than the ROOT folder, fill this (must end and start with /)
@@ -39,7 +40,7 @@
 
 		// you should have this enabled to help you while creating the site, then disable it for performance, or keep only on production (a.k.a. right here =p)
 		$dev = $this->addPlugin('bi_dev');
-		
+
 	}
 
 	// which is the front page of this site (usefull when frames change it or an error wants to foward to the front page, or this site is inside a frameset)

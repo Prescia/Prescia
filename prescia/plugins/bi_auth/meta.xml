@@ -22,6 +22,7 @@
 		order="name+"
 		plugins="bi_groups,bi_permissions"
 		listing="name,#users,level,active"
+		disallowmultiple="true"
 		>
 	<NAME mandatory="true" size="64" restrict="50">VC</NAME>
 	<PERMISSIONS restrict="50" custom="true">TEXT</PERMISSIONS>

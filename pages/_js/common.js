@@ -9,6 +9,7 @@ try {
 	scriptaculousAvail = false;
 }
 // -- this block will make available: is_moz, is_webkit, is_ie, is_op, is_safari, is_firefox, is_chrome, agt_txt, is_legacy (old, might not run some scripts,specially ie)
+// -- updated 2014.10.22, now detects IE 11+ too
 var agt=navigator.userAgent.toLowerCase();
 var agt_major = parseInt(navigator.appVersion);
 var is_chrome = (agt.indexOf("chrome") != -1);
@@ -23,12 +24,12 @@ if (is_firefox) {
 	agt_major = parseInt(agt.substring(verOffset+8));
 }
 var is_webkit = (agt.indexOf('webkit') != -1);
-var is_ie = ((agt.indexOf("msie") != -1) && (agt.indexOf("opera") == -1)) && (document.all);
+var is_ie = ((agt.indexOf("trident/") != -1) || ((agt.indexOf("msie") != -1) && (agt.indexOf("opera") == -1))); // IE 11+ too
 if (is_ie) {
 	try {
-		MyRegExp = new RegExp("msie ([0-9]*)");
+		MyRegExp = new RegExp("(msie |rv:)([0-9]*)"); // works for all IE versions
 		r = MyRegExp.exec(agt);
-		agt_major = r[1];
+		agt_major = r[2];
 	} catch (ee) {
 		agt_major = 5;
 	}
@@ -51,6 +52,13 @@ var agt_txt = is_ie?"Internet Explorer ":
 				)
 		) + agt_major;
 var is_mobile = agt.indexOf("mobile") != -1;
+if (is_ie && agt_major < 9) { // IE8- doesn't have Array.isArray
+	if (!Array.isArray) {
+ 		Array.isArray = function(arg) {
+			return Object.prototype.toString.call(arg) === '[object Array]';
+		};
+	}
+}
 
 //-- following functions mimic prototype/jquery functions for when you are not sure if they are available (or need only them and don't want to add the library)
 function getElement(x) { // use this instead of $ to guarantee prototype/jquery compatibility

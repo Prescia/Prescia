@@ -18,10 +18,13 @@
 		$userLang = $_SESSION[CONS_SESSION_LANG];
 		$core->template->assign("_imageyes");
 		$core->tCaptcha('captcha');
+		$core->template->fill($_POST);
+		if (isset($_POST['ulogin'])) $core->template->assign("login",$_POST['ulogin']);
 	}
-	
+
 	$output ="";
 	foreach (explode(",",CONS_POSSIBLE_LANGS) as $lang) {
 		$output .= "<option value='$lang'".($lang==$userLang?' selected="selected"':"").">".$core->langOut($lang)." ($lang)</option>";
 	}
 	$core->template->assign("langout",$output);
+	$core->template->assign("r",rand(0,999)); // force images to always be refreshed

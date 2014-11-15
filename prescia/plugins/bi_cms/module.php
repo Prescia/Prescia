@@ -179,16 +179,17 @@ class mod_bi_cms extends CscriptedModule  {
 					}
 				}
 				$c=2;
-				while ($c<10) {
+				while (true) { // we are insane =p
 					if (strpos($content,"{CONTENTMAN".$c."}") !== false) {
 						$sql = "SELECT page FROM ".$cm->dbname." WHERE code=$c AND page=\"/$filewoext\"";
 						$id = $this->parent->dbo->fetch($sql);
 						if ($id === false) {
 							foreach ($possibleLangs as $lang)
 								if ($lang != '')
-									$this->parent->dbo->simpleQuery("INSERT INTO ".$cm->dbname." SET code=$c,page=\"/$filewoext\",title=\"$filewoext $c\",content=\"Content Manager\", lang='".$lang."'");
+									$this->parent->dbo->simpleQuery("INSERT INTO ".$cm->dbname." SET code=$c,page=\"/$filewoext\",title=\"$filewoext $c\",content=\"Content Manager ($filewoext $c)\", lang='".$lang."'");
 						}
-					}
+					} else
+						break; // nah, not insane
 					$c++;
 				}
 			}

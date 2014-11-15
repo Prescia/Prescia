@@ -8,7 +8,7 @@
 define ("CONS_ADM_BASESKIN","base"); // which skin is the default skin if none set?
 define ("CONS_ADM_ACTIVESKINS","base"); // which skins are active? If the user is using another, will reset to baseskin
 
-define("CONS_FIELD_ORDER","ordem"); // which field can be used to re-order a list
+define("CONS_FIELD_ORDER","ordem"); // which field can be used to re-order a list (can't be order because of order mysql keyword)
 // for the module options
 define ("CONS_MODULE_MERGE","cmadmmerge"); # (adm) merge these modules as PART and not RELATED to this module
 define ("CONS_MODULE_PUBLIC", "cmadmpublic"); # (adm) If the module have a public site to go, this is the page
@@ -21,6 +21,7 @@ define ("CONS_MODULE_LISTADD","cmadmla"); # (adm) allows simple list adds on the
 define ("CONS_MODULE_NOADMINPANES","cmadmnap"); # (adm) blocks access to edit or list pane
 define ("CONS_MODULE_LISTBUTTONS","cmadmnlb"); # (adm) buttons to show on the admin list pante
 define ("CONS_MODULE_CALLBACK","cmadmncb"); # (adm) buttons to show on the admin list pante
+define ("CONS_MODULE_DISALLOWMULTIPLE",'cmdm'); # (adm) Prevents the "edit multiple" action
 
 						 	 // variable, tag XML, strtolower?, if is an array, what separates it
 $this->moduleOptions[] = array('cmadmmerge','merge',true,","); // strtolower,array separated by ,

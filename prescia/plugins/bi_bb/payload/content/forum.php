@@ -1,10 +1,16 @@
 <?
 
 	$p = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])?$_REQUEST['p_init']:0; // item starting this page
-	$ipp = 30; // itens per page
+	
+	$up = isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])?$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']:false;
+	if ($up !== false) {
+		if (!is_array($up)) $up = @unserialize($up);
+		$ipp = $up['pfim'];
+	} else
+		$ipp = 15; 
 
-	$fdata = $core->runContent('forum',$core->template,$_REQUEST['id']); // numeric id tested at default.php
-	$id = $fdata['id'];
+	$fdata = $core->runContent('forum',$core->template,$_REQUEST['id_forum']); // filled by udm
+	$id = $_REQUEST['id_forum'];
 	if ($fdata['id_parent'] > 0) $core->template->assign("separator","‒");
 
 	$sql = "SELECT t.id, t.title, t.image as image,t.date, t.urla as turla, t.lastupdate, a.login as author_login,

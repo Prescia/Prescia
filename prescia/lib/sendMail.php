@@ -40,7 +40,7 @@
 	  		$header .= "Content-Type:text/plain; charset=utf-8\n";
 	  }
 	  $header .= "MIME-Version: 1.0\n";
-	  $header .= "x-mailer: NekoiMailer\n";
+	  $header .= "x-mailer: PresciaMailer\n";
 	  $mail->assign("IP",CONS_IP);
 	  $mail->assign("HOUR",date("H:i"));
 	  $mail->assign("DATA",date("d/m/Y"));

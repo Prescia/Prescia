@@ -2,7 +2,6 @@
 
 if (CONS_DB_HOST=='') $this->errorControl->raise(4,'bi_undo','UNDO module requires database');
 
-
 class mod_bi_undo extends CscriptedModule  {
 
 
@@ -200,7 +199,7 @@ class mod_bi_undo extends CscriptedModule  {
 	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNotify=false) {
 		# notify followup for this field (happens before standard notify)
 
-		if ($module === false || $module->options[CONS_MODULE_SYSTEM]) return;
+		if ($module === false || $module->options[CONS_MODULE_SYSTEM] || isset($module->options[CONS_MODULE_NOUNDO])) return;
 		$ws = "";$ka = array();
 		if ($action != CONS_ACTION_INCLUDE) {
 			if ($earlyNotify) {

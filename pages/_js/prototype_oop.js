@@ -238,12 +238,12 @@ var Class = (function() {
 		if (Type(object) !== OBJECT_TYPE) { throw new TypeError(); }
 		var results = [];
 		for (var property in object) {
-			if (_hasOwnProperty.call(object, property))
+			if (Object.prototype.hasOwnProperty.call(object, property))
 				results.push(property);
 		}
 		if (IS_DONTENUM_BUGGY) {
 			for (var i = 0; property = DONT_ENUMS[i]; i++) {
-				if (_hasOwnProperty.call(object, property))
+				if (Object.prototype.hasOwnProperty.call(object, property))
 					results.push(property);
 			}
 		}

@@ -8,8 +8,8 @@
 	define("CONS_POSSIBLE_LANGS","pt-br,en"); // which languages can be selected for this site, comma separated (ex.: "pt-br,en") (if CONS_USE_I18N)
 		// if you add multiple languages, remember to disable $this->forceLang
 	define("CONS_DEFAULT_FAVICON",true); // if TRUE will use default favicon if none found
-	
-	
+	define("CONS_CRONDBBACKUP_MAIL",''); // if set, will mail a zipped backup of the database when cron backup runs
+
 	if (CONS_ONSERVER) { // <-- settings for your online "final" server
 		define("CONS_INSTALL_ROOT","/"); // if Simpla is installed in other than the ROOT folder, fill this (must end and start with /)
 		define("CONS_DB_HOST","localhost"); // leave empty if not using a database. The framework will enter dbless mode
@@ -52,13 +52,13 @@
 	$advadm = $this->addPlugin('bi_adm'); // Administrative pane
 		#$advadm->admFolder = "adm";
 		#$advadm->admRestrictionLevel = 10; // minimum level to access admin
-		
+
 	#$bb = $this->addPlugin('bi_bb'); // Bulleting Board
 		#$bb->bbfolder = "bb";
 		#$bb->registrationGroup = 4;
 		#$bb->areaname = "community";
 		#$bb->homename = "Home";
-		
+
 	#$this->addPlugin('bi_cms'); // suggest to leave later so it's also the last to handle 404
 	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
 		#$stats->admFolder = "adm";

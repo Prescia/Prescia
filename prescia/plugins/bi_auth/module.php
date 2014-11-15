@@ -227,7 +227,7 @@ class mod_bi_auth extends CscriptedModule  {
 				$output .= "<option value='$p'".($p==$up['init']?' selected="selected"':"").">".(isset($this->parent->modules[$p])?$this->parent->langOut('list')." ":"").$this->parent->langOut($p)."</option>";
 			}
 			$output .= "</select></div></div>";
-			// pfim
+			// pfim (ipp - itens per page)
 			$output .= "<div style='height:32px'><div style='width:100px;float:left;height:20px'>".$this->parent->langOut('pfimsize')."</div><div style='height:20px'>";
 			$output .= "<input type='text' style='width:50px;margin:0px' name='user_prefs_pfim' value='".$up['pfim']."'/> ".$this->parent->langOut('itens')."</div></div>";
 			// smart filter

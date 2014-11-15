@@ -1,4 +1,5 @@
 <?	# -------------------------------- Prescia cache control
+	# NOTE: all caches automatically add LANGUAGE and USER ID (if not common)
 
 class CCacheControl {
 
@@ -14,10 +15,10 @@ class CCacheControl {
 
 	function cacheFile() {
 		# Returns which cache file should be used for this page
-		$keyOne = $this->parent->original_context_str.$this->parent->original_action.$this->cacheseed;
+		$keyOne = $this->parent->original_context_str.$this->parent->original_action.$this->cacheseed.$this->cacheuid();
 		$keyTwo = arrayToString($_GET,array("__utma","__utmb","__utmc","__utmz","__atuvc","PHPSESSID"),true); # Remove Google big-brother shit
-		$keyOne = md5($keyOne);
-		$keyTwo = md5($keyTwo);
+		$keyOne = md5($keyOne); // shorten and standardize a little
+		$keyTwo = md5($keyTwo); 
 		return $this->cachepath.$keyOne.$keyTwo.".cache";
 	} # cacheFile
 #-
@@ -65,16 +66,21 @@ class CCacheControl {
 
 	} # dumpTemplatecaches
 #-
+	function cacheuid($shared=false) { // returns a string with a unique cache key for the most common differences among users
+		return $_SESSION[CONS_SESSION_LANG].(!$shared && $this->parent->logged()?$_SESSION[CONS_SESSION_ACCESS_USER]['id']:'x');
+	}
+#-
 	function getCachedContent($tag,$expiration=-1) { // $expiration=0 to ignore expiration alltogether
 		if (isset($_REQUEST['nocache']) || !CONS_CACHE) return false;
 		if ($expiration==-1) $expiration = $this->parent->cachetimeObj/1000;
-		$tag = removeSimbols($_SESSION[CONS_SESSION_LANG].$tag,true,false);
-		if (isset($_SESSION[CONS_SESSION_CACHE]) && isset($_SESSION[CONS_SESSION_CACHE][$tag])) {
-			$passedSeconds = time_diff(date("Y-m-d H:i:s"),$_SESSION[CONS_SESSION_CACHE][$tag]['time']);
+		$tag = removeSimbols($this->cacheuid(true).$tag,true,false);
+		$tag_ns = removeSimbols($this->cacheuid(false).$tag,true,false);
+		if (isset($_SESSION[CONS_SESSION_CACHE]) && isset($_SESSION[CONS_SESSION_CACHE][$tag_ns])) { // in the session is not shared
+			$passedSeconds = time_diff(date("Y-m-d H:i:s"),$_SESSION[CONS_SESSION_CACHE][$tag_ns]['time']);
 			if (($expiration==0 || $expiration>$passedSeconds)) {
-				return $_SESSION[CONS_SESSION_CACHE][$tag]['payload'];
+				return $_SESSION[CONS_SESSION_CACHE][$tag_ns]['payload'];
 			}
-		} else if (is_file(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache")) {
+		} else if (is_file(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache")) { // in file is shared cache
 			$fileContent = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache"));
 			if ($expiration != 0) {
 				$passedSeconds = time_diff(date("Y-m-d H:i:s"),$fileContent['time']);
@@ -88,11 +94,11 @@ class CCacheControl {
 		return false;
 	}
 #-
-	function addCachedContent($tag,$content,$common=false) {
+	function addCachedContent($tag,$content,$shared=false) {
 		if ($content == '' || $content === false) return; // we don't take empty caches, sorry
-		$tag = removeSimbols($_SESSION[CONS_SESSION_LANG].$tag,true,false);
-		// feel free to use memcached on the $common mode instead of files ;)
-		if ($common) {
+		$tag = removeSimbols($this->cacheuid($shared).$tag,true,false);
+		// feel free to use memcached on the $shared mode instead of files ;)
+		if ($shared) {
 			$file = CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache";
 			$data = array('time' => date("Y-m-d H:i:s"), 'payload' => $content);
 			if (!is_dir(CONS_PATH_CACHE.$_SESSION['CODE']."/caches/"))
@@ -105,11 +111,12 @@ class CCacheControl {
 	}
 #-
 	function cacheAge($tag) { // returns data in ms
-		$tag = removeSimbols($_SESSION[CONS_SESSION_LANG].$tag,true,false);
-		if (isset($_SESSION[CONS_SESSION_CACHE]) && isset($_SESSION[CONS_SESSION_CACHE][$tag])) {
-			$passedSeconds = time_diff(date("Y-m-d H:i:s"),$_SESSION[CONS_SESSION_CACHE][$tag]['time']);
+		$tag = removeSimbols($this->cacheuid(true).$tag,true,false);
+		$tag_ns = removeSimbols($this->cacheuid(false).$tag,true,false);
+		if (isset($_SESSION[CONS_SESSION_CACHE]) && isset($_SESSION[CONS_SESSION_CACHE][$tag_ns])) { // not shared
+			$passedSeconds = time_diff(date("Y-m-d H:i:s"),$_SESSION[CONS_SESSION_CACHE][$tag_ns]['time']);
 			return $passedSeconds*1000;
-		} else if (is_file(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache")) {
+		} else if (is_file(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache")) { // shared
 			$fileContent = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache"));
 			$passedSeconds = time_diff(date("Y-m-d H:i:s"),$fileContent['time']);
 			return $passedSeconds*1000;
@@ -122,9 +129,9 @@ class CCacheControl {
 		$this->parent->storage['CORE_CACHECONTROL'] = array();
 		$this->parent->storage['CORE_CACHECONTROL'][] = CONS_PM_MINTIME; // actual cache
 		$this->parent->storage['CORE_CACHECONTROL'][] = 0.5; // factor
-		if (!CONS_ONSERVER) {
-			$this->parent->cachetime = 100000;
-			$this->parent->cachetimeObj = 100000;
+		if (!CONS_ONSERVER) { // local, we want to see up-to-date, so force 1s caches
+			$this->parent->cachetime = 1000;
+			$this->parent->cachetimeObj = 1000;
 			return;
 		}
 		// load default in case we fail to load cachecontrol.dat
@@ -166,6 +173,33 @@ class CCacheControl {
 		array_unshift($newCC,$average);
 		cWriteFile(CONS_PATH_CACHE."cachecontrol.dat",serialize($newCC));
 		if (CONS_FREECPU && $cmod >= 0.9) usleep(50);
+	}
+	function killCache($tag) { // kills all caches for this tag (supports a * at the end)
+		$lazymatch = false;
+		if ($tag[strlen($tag)-1] == "*") {
+			$lazymatch = true;
+			$tag =substr($tag,0,strlen($tag)-1);
+		}
+		// shared caches
+		$tags = removeSimbols($this->cacheuid(true).$tag,true,false);
+		if ($lazymatch) {
+			$files = listFiles(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/","/^".$tags."/");
+			foreach ($files as $file) {
+				@unlink($file);
+			}
+		} else {
+			$file = CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache";
+			@unlink($file);
+		}
+		
+		$tagns = removeSimbols($this->cacheuid(false).$tag,true,false);
+		if ($lazymatch) {
+			$size = strlen($tagns);
+			foreach ($_SESSION[CONS_SESSION_CACHE] as $key => $cache) {
+				if (substr($key,$size) == $tag) unset($_SESSION[CONS_SESSION_CACHE][$key]);
+			}
+		} else
+			unset($_SESSION[CONS_SESSION_CACHE][$tagns]);
 	}
 	function logCacheThrottle() {
 		if (!isset($this->parent->storage['CORE_CACHECONTROL'])) return;

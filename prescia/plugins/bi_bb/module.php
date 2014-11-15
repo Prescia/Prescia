@@ -6,7 +6,7 @@ if (!isset($this->loadedPlugins['bi_adm'])) $this->errorControl->raise(4,'bi_bb'
 class mod_bi_bb extends CscriptedModule  {
 
 	########################
-	var $bbfolder = "/bb/";//  If the forum works at the root, just leave "". If you want more than one, use SEO plugin to redirect them here
+	var $bbfolder = "/bb/"; //  If the forum works at the root, just leave "". If you want more than one, use SEO plugin to redirect them here
 	var $registrationGroup = 4; # when a new user register, he is put into this group
 	var $ignoreTagsSmallerThen = 3; # tags smaller than this number of characters are ignored
 	var $bbpage = "forum"; # TEMPLATE to use as a bb forum (list of threads)
@@ -55,7 +55,7 @@ class mod_bi_bb extends CscriptedModule  {
 
 			$this->parent->template->constants['IMG_BBPATH'] = CONS_INSTALL_ROOT.CONS_PATH_PAGES."_common/files/bb/";
 			$this->parent->template->constants['BBROOT_PATH'] = substr($this->bbfolder,1);
-
+			/*
 			$ok = $this->parent->udm(array(array('module' => 'forum',
 								 'key' => 'urla',
 								 'convertquery' => 'id_forum', // if the URL is the key, put keys this $_REQUEST
@@ -64,9 +64,9 @@ class mod_bi_bb extends CscriptedModule  {
 								)
 							) // we can have multiple folders, just put in descending order
 					,true); // true, trash all others, we don't care about them (false would cause 404)
-
+			*/
 			if (is_file(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/default.php")) { // default?
-				include_once CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/default.php"; // will load template
+				include_once CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/default.php";
 			}
 
 			if ($this->bbfolder != '/') $this->parent->virtualFolder = false; // or we will 404 or serve root data (after default because we handle UDM there)
@@ -92,7 +92,9 @@ class mod_bi_bb extends CscriptedModule  {
 			$sname = $this->name;
 
 			if ($this->parent->layout != 2) { // cannot use core::frame because we want the full path to avoid loading default files
-				if (is_file(CONS_PATH_SYSTEM."plugins/$sname/payload/template/basefile.html")) {
+				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$this->bbfolder."basefile.html")) {
+					$frame = CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$this->bbfolder."basefile.html";
+				} else if (is_file(CONS_PATH_SYSTEM."plugins/$sname/payload/template/basefile.html")) {
 					$frame = CONS_PATH_SYSTEM."plugins/$sname/payload/template/basefile.html";
 				} else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/basefile.html")) {
 					$frame = CONS_PATH_PAGES.$_SESSION['CODE']."/template/basefile.html";
@@ -108,7 +110,9 @@ class mod_bi_bb extends CscriptedModule  {
 
 			if (($this->parent->layout == 0 || $this->parent->layout == 3) && $this->parent->nextContainer != '') {
 
-				if (is_file(CONS_PATH_SYSTEM."plugins/$sname/payload/template/frame.html")) {
+				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$this->bbfolder."frame.html")) {
+					$frame = CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$this->bbfolder."frame.html";
+				} else if (is_file(CONS_PATH_SYSTEM."plugins/$sname/payload/template/frame.html")) {
 					$frame = CONS_PATH_SYSTEM."plugins/$sname/payload/template/frame.html";
 				} else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/frame.html")) {
 					$frame = CONS_PATH_PAGES.$_SESSION['CODE']."/template/frame.html";

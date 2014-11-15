@@ -150,6 +150,7 @@
 			$core->fastClose(404);
 		}
 		$core->template->assign("multipleCount",$valid_msi);
+
 		// get all the id/names of the items being edited:
 
 		# TODO: not working for multiple keys!
@@ -443,13 +444,15 @@
 							if ($mod->options[CONS_MODULE_PARENT]) {
 
 								$field_sel = $core->template->get("_selecttree_field");
+
 								$using = clone $field_sel;
 
 								$sql = $mod->get_base_sql();
 								if (isset($data[$name]))
 									$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."='".$data[$name]."',1,0) as selected";
+								$sql['SELECT'][] = $mod->name.".".$mod->title." as treetitle";
 
-								$tree = $mod->getContents("","","","\\",$sql);
+								$tree = $mod->getContents("","treetitle","","\\",$sql);
 								$using->getTreeTemplate("_sdirs","_ssubdirs",$tree);
 
 							} else {

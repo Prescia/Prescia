@@ -1,7 +1,28 @@
 TODO list is on site/github
 
+14.11.14 BETA 0.9 (still waiting presciatester to be complete)
+	new CONS_CRONDBBACKUP_MAIL constant to send a zipped backup of the database when it runs on cron (set day to 0 to daily)
+	new bdstats.ajax "backdoor" statistics
+	handles apple stupid retarded favicon (apple-touch-icon) 
+	some tweaking on bb_bi
+	fixes ...
+14.10.28 BETA 0.9 (waiting presciatester to release 0.9, meanwhile we improve!)
+	improved/fixed logging display to better display error/warning/notice/succes
+	added a killcache switch so you can kill specific caches when you update something
+	huge improvement on both friendlyurl and udm modules
+	added cute print_ro function
+	CMS now accepts infinite CMS tags, not only 10
+	and yes, bug fixes
+14.10.22 BETA 0.8 (pretty stable, waiting presciatester to release 0.9)
+	added better header control
+	added better dimConfig display/control on admin
+	cache now handles every tag autolatically inserting language and user ID
+	added IE 11 detection fix (IE 11 changed it's own user agent ... lame), on both PHP and Javascript.
+	changed bootstrap jquery call from latest jquery to 1.11.1
+	added stupid shiv/responsive scripts for IE 8
+	you know, other minor error fixes ...
 14.10.18 BETA 0.8 (getting warmer)
-	emergency update due to extreme bug on caching. This error was there problably on 2+ year old "aff" versions! 
+	emergency update due to extreme bug on caching. This error was there problably on 2+ year old "aff" versions!
 	text with "{" were being parsed as template and stored as such in cached versions of objects!
 	The problem was inside the tc.php PARSING the contents of a literal when you used the get() function ... why would I want to parse the literal?
 14.10.11 BETA 0.8 (very stable)

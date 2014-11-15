@@ -24,6 +24,9 @@ function isDate (value, canDate, canTime, datePattern) { // supports d/m/Y and m
 	return ok;
 }
 function getNumber(pv) {
+	if (pv.length==0) return 0;
+	if (pv.charAt(0) == '.' || pv.charAt(0) == ',') return parseFloat('0' + pv);
+	if (pv.length>1 && pv.charAt(0) == '0' && (pv.charAt(1) == '.' || pv.charAt(1) == ',')) return parseFloat(pv); 
 	temPonto = pv.indexOf('.')>-1;
 	temVirgula = pv.indexOf(',')>-1;
 	if (temPonto || temVirgula) {

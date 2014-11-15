@@ -74,10 +74,10 @@ class CKTemplate {
   	$this->flushcache();
 	foreach ($this->contents as $idx => &$ct) {
 		if (is_object($ct[2])) {
-			$this->contents[$idx][2] = clone $this->contents[$idx][2]; 
+			$this->contents[$idx][2] = clone $this->contents[$idx][2];
 		}
-	} 
-  } 
+	}
+  }
   public function populate() { // applies tags to $str_monthlabels and $str_intervals
   	for ($c=1;$c<=12;$c++)
 		$this->str_monthlabels[$c] = $this->lang_replacer['month'.str_pad($c,2,'0',STR_PAD_LEFT)];
@@ -253,13 +253,6 @@ class CKTemplate {
   			if (isset($this->lang_replacer[$ct[2]])) {
 	  			$this->contents[$idx][2] = $this->lang_replacer[$ct[2]];
 	  			$this->contents[$idx][0] = "";
-			} else if (strlen($ct[2])>0 && strpos("!?.:",$ct[2][strlen($ct[2])-1])!==false) {
-				$trailing = $ct[2][strlen($ct[2])-1];
-				$tag = substr($ct[2],0,strlen($ct[2])-1);
-				if (isset($this->lang_replacer[$tag])) {
-					$this->contents[$idx][2] = $this->lang_replacer[$tag].$trailing;
-	  				$this->contents[$idx][0] = "";
-				}
 			}
   		}
   	}
@@ -538,7 +531,7 @@ class CKTemplate {
   			else return "";
 		case "day": // same as above, with day
 			$d = date('w',$content);
-			if ($d !== false) return $this->$str_daylabels[$d]; 			
+			if ($d !== false) return $this->$str_daylabels[$d];
   			else return "";
 		case "past": // how long has passed, in i18n. Send "true" as a parameter to short the past time in one leter
 			$sdif = time_diff(date("Y-m-d H:i:s"),$content);
@@ -558,6 +551,26 @@ class CKTemplate {
 				return $date;
   			} else
 				return fd($content,$this->std_datetime);
+		case "math": // simple math
+			if (isset($params[0]) && strlen($params[0])>1) { // first char is the operator, rest is the number
+				$op = $params[0][0];
+				$value = substr($params[0],1);
+				switch ($op) {
+					case "+":
+						return $content+$value;
+					case "-":
+						return $content-$value;
+					case "*":
+						return $content*$value;
+					case "/":
+						return $content/$value;
+					case "%":
+						return $content%$value;
+					default:
+						return $content;
+				}
+			} else
+				return $content;
 		default:
 			if ($this->externalClasses !== false)
 				return $this->externalClasses->runclass($function, $params, $content,$arrayin);
@@ -757,12 +770,14 @@ class CKTemplate {
   }
 
   public function assign($mkey, $valor="") {
+  	if ($mkey == '') return;
 	if (is_object($valor)) {
 	  $x = new CKTemplate($valor,$valor->path, $valor->debugmode);
 	  $x->copyfrom($valor);
-	  $this->internal_cache[$mkey] = $x; // 100% via cache now =D
+	  $this->internal_cache[$mkey] = $x; 
 	} else
-	  $this->internal_cache[$mkey] = $valor; // 100% via cache now =D
+	  $this->internal_cache[$mkey] = $valor; 
+	if ($mkey[0] = "_") $this->flushcache(); // all sorts of wrong if we don't apply content-tags immediatly
   }
 
 
@@ -858,7 +873,7 @@ class CKTemplate {
 
   //
   public function getTreeTemplate($dt,$sdt,&$tree,$startingId = 0) {
-  	if ($this->iec>10) die("<br/><br/>Seems you have a serious loop here. <br/><br/>dt was: $dt<br/>sdt was: $sdt<br/>Tree was:".print_r($tree,true));
+  	if ($this->iec>10) die("<br/><br/>Seems you have a serious loop here, 10 levels?. <br/><br/>dt was: $dt<br/>sdt was: $sdt<br/>Tree was:".print_r($tree,true));
   	if (!is_object($tree)) {
   		$this->iec++;
   		echo "CKTemplate:getTreeTemplate tree is not a CTree<br/>";
@@ -902,7 +917,7 @@ class CKTemplate {
 		$tparent->assign("id_parent",$parent == 0 ? $branch->data['id'] : $parent);
 		$tparent->assign("id",$branch->data['id']);
 		$tparent->assign("fulldir",$fulldir.$branch->data['id']);
-		$tparent->assign("chields",$branch->total());
+		$tparent->assign("children",$branch->total());
 		$subs = $this->getTreeTemplate_ex($dt,$sdt,$branch,$level+1,$branch->data['id'],$fulldir.$branch->data['id']."/");
 		if ($subs != "") {
 	  		$tparent->assign("subdirs",$subs);

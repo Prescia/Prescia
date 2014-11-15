@@ -5,7 +5,7 @@
 		<div class="ladm_logocliente"><a onclick="waitWhileLoad();" href="index.php">{CLIENT_LOGO}</a></div>
 
 		<div class="ladm_loggeduser">
-			<div class="ladm_loggedimage"></div>
+			<div class="ladm_loggedimage">{_imageyes}<img src="/{LOGGED_USERIMAGE}" style="width:28px" alt="User avatar"/>{/imageyes}</div>
 			<a class="ladm_loggedusername" href="edit.php?module=users&id={LOGGED_USERID}">{LOGGED_USER|truncate|22|…}</a>
 			<a class="ladm_loggeduserprofile" href="edit.php?module=users&id={LOGGED_USERID}">Perfil</a>
 			<a class="ladm_loggedusersettings" href="options.php">Opções</a>
@@ -38,7 +38,7 @@
 			</div>
 			<div class="ladm_menuline">&nbsp;</div>
 			{_dirs}
-			<div class="ladm_menuitem" onclick="menuClick('{id}','{chields}','{link}','{level}');">
+			<div class="ladm_menuitem" onclick="menuClick('{id}','{children}','{link}','{level}');">
 				<img src="{SKIN_PATH}notification/ico_{icon|onnull|list}.png" alt="" />{title}
 			</div>
 		   	{_insubdirs}<div class="ladm_menusubitem_holder" id="menu{id}" style="display:none">
@@ -49,7 +49,7 @@
 			{/dirs}
 
 			{_dirs_subdirs}
-				<div class="ladm_menusubitem_l{level}" onclick="menuClick('{id}','{chields}','{link}','{level}');">{title}</div>
+				<div class="ladm_menusubitem_l{level}" onclick="menuClick('{id}','{children}','{link}','{level}');">{title}</div>
 		   		{_insubdirs}<div id="menu{id}" style="display:none">{subdirs}</div>{/insubdirs}
 			{/dirs_subdirs}
 

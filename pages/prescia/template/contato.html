@@ -1,0 +1,45 @@
+<div class="container">
+	<section>
+		<header>
+			<h1>{_t}contato{/t}</h1>
+		</header>
+	
+	<div>
+		
+		<div style="margin:10px">{CONTENTMAN}</div>
+			
+		<form name="frmcontato" id="frmcontato" action="contatogo.php" method="post">
+			<input type="hidden" name="gcf" value="1"/>
+			<input type="hidden" name="haveinfo" value="1"/>
+			
+			<label for="nome">{_t}your_name{/t}</label><br/>
+			<input type="text" name="nome" class="form-control" id="nome" /><br/>
+			
+			<label for="email">{_t}your_email{/t}</label><br/>
+			<input type="text" name="email" class="form-control" id="email" /><br/>
+			
+			<label for="mensagem">{_t}your_message{/t}</label><br/>
+			<textarea name="mensagem" class="form-control" id="mensagem" rows="10"></textarea><br/>
+			
+			<label for="safetycode">{_t}please_type_safetycode{/t}:</label><br/>
+			{_t}type{/t} {safetycode} &raquo; <input type="text" class="form-control safetycode" name="safetycode" id="safetycode"/>
+
+			<div style="float:right;margin-right:20px"><input type="submit" value="{_t}submit{/t}" /></div>	
+		</form>
+		
+	</div>
+	
+	</section>
+	<div class="text-right" style="clear:both">
+		<a href="#" style="margin-right:30px">
+		  <span class="glyphicon glyphicon-arrow-up"></span> Top
+		</a>
+		
+		<a href="{vdir}index.html">
+		  <span class="glyphicon glyphicon-home"></span> Home
+		</a>
+	</div>
+
+</div>
+
+

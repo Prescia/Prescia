@@ -4,3 +4,6 @@ body {
 	padding-bottom: 10px;
 	background: #ffffff url('/pages/prescia/files/mm/presciabg.jpg') no-repeat top left;
 }
+.safetycode {
+	width:50px !important;
+}

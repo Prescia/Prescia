@@ -151,7 +151,7 @@ class CModule {
 	var $linker = false; # this module is a linker module (have only 2 fields, which are links)
 	var $options = array();
 	var $fields = array();
-	var $freeModule = false; # this module does not link to a user or group, thus controled ALWAYS by "World" area of permission string
+	var $freeModule = false; # this module does not link to a user or group, thus controled ALWAYS by "World" area of permission string. Also helps with caching
 	var $loaded = false;
 
 	function __construct(&$parent, $name,$dbname="") {
@@ -179,8 +179,8 @@ class CModule {
 	 * returns the contents in an array (avoid using it). It's better used on TREE structure modules, where it will actually build the tree and return it instead
 	 * will return normal query if there is no field defined as parent (parent='field') on the meta.xml
 	 */
-	function getContents($order = "", $treeTitle = "", $where = "",$treeSeparator="\\",$originalSQL="") {
-		# This is used on bi_adm::edit.php
+	function getContents($order = "", $treeTitle = "", $where = "",$treeSeparator="\\",$originalSQL="",$ignoreSelfOnTitle=false,$callback=false) {
+		# This is used on bi_adm::edit.php too
 		$output = array();
 		if ($this->options[CONS_MODULE_PARENT] != '') {
 			if ($order == "" && $this->order != "") {
@@ -206,25 +206,27 @@ class CModule {
 				}
 				$order = implode(",",$odb);
 			}
-			if ($originalSQL == "") // build SQL, will use where provided
+			if ($originalSQL == "") // built SQL, will use where provided
 				$sql = $this->get_base_sql($where,$this->name.".".$this->options[CONS_MODULE_PARENT]." ASC".($order != ''?','.$order:''));
 			else { // give a full SQL, will just add proper order and treetitle
 				$sql = $originalSQL;
 				if (!is_array($sql)) $sql = $this->parent->dbo->sqlarray_break($sql);
 				$sql['ORDER'] = explode(",",$this->name.".".$this->options[CONS_MODULE_PARENT]." ASC".($order != ''?','.$order:''));
 			}
-			if (!isset($this->fields['treetitle']))
-				$sql['SELECT'][] = $this->name.".".($treeTitle==''?$this->title:$treeTitle)." as treetitle";
-			$this->parent->dbo->query($sql,$r,$n);
+			if (!$this->parent->dbo->query($sql,$r,$n)) {
+				$this->parent->errorControl->raise(146,$this->parent->dbo->log[count($this->parent->dbo->log)-1],$this->name,'on getContents');
+			}
+			$this->parent->templateParams['core'] = &$this->parent;
+			$this->parent->templateParams['module'] = &$this;
 			for ($c=0;$c<$n;$c++) {
 				$tmpData = $this->parent->dbo->fetch_assoc($r);
-				$params = array('module'=>$this);
+				if ($callback !== false) $tmpData = $callback($this->parent->template,$this->parent->templateParams,$tmpData);
 				$tmpData['#'] = $c;
-				$tmpData = prepareDataToOutput($this->parent->template,$params,$tmpData);
+				$tmpData = prepareDataToOutput($this->parent->template,$this->parent->templateParams,$tmpData);
 				$output[] = $tmpData;
 			}
 			$treeObj = new ttree();
-			$treeObj->arrayToTree($output,$treeSeparator,$this->options[CONS_MODULE_PARENT],$treeTitle==''?$this->title:$treeTitle);
+			$treeObj->arrayToTree($output,$treeSeparator,$this->options[CONS_MODULE_PARENT],$treeTitle==''?$this->title:$treeTitle,$ignoreSelfOnTitle);
 			return $treeObj;
 		} else {
 			$sql = $this->get_base_sql('',$order);
@@ -450,7 +452,7 @@ class CModule {
 				if ($cremote_nome != $remodeModule->keys[0]) {
 				  # do not add main key (this module should have it anyway)
 				  $rmod_nome = $tablecast;
-				  
+
 				  # TODO: WTF is this?
 				  /*
 				  $trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
@@ -468,7 +470,7 @@ class CModule {
 					# mandatory key to myself (parent)?
 					$extrakey[]= $tablecast.".".$cremote_nome."=".$this->name.".".$this->keys[0]; # TODO: WTF?
 				  else if (in_array($cremote_nome,$remodeModule->keys) &&
-						   in_array($cremote_nome,$this->keys)) { // we are linking the same things oO 
+						   in_array($cremote_nome,$this->keys)) { // we are linking the same things oO
 					$extrakey[]= $tablecast.".".$cremote_nome."=".$this->name.".".$cremote_nome; # TODO: is this necessary? who cares we have keys to the same things?
 				  }
 				}
@@ -843,7 +845,7 @@ class CModule {
 			# perform upload
 			$thisFilename = $path.$filename."1";
 			//$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes); # <----------------- upload happens here
-			$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes,true); # <----------------- use this (note the true) for full debug 
+			$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes,true); # <----------------- use this (note the true) for full debug
 
 			$arquivo = explode(".",$thisFilename);
 			$ext = strtolower(array_pop($arquivo)); # <-- ext for the file
@@ -1014,7 +1016,7 @@ class CModule {
 								$this->parent->errorControl->raise(128,$name,$this->name,"Initial parent was = ".$data[$name]);
 								$data[$name] = 0;
 								if (isset($field[CONS_XML_MANDATORY])) return false;
-							} 
+							}
 						}
 					}
 					$output = $encapsulation.$data[$name].$encapsulation;
@@ -1126,7 +1128,7 @@ class CModule {
 						if ($this->invalidHTML($data[$name])) { # external editors garbage that can break HTML
 							$this->parent->errorControl->raise(135,$name,$this->name);
 						}
-						
+
 					}
 					if (!isset($field[CONS_XML_CUSTOM])) {
 						$data[$name] = cleanString($data[$name],isset($field[CONS_XML_HTML]),$_SESSION[CONS_SESSION_ACCESS_LEVEL]==100);
@@ -1584,8 +1586,9 @@ class CModule {
 #-
 	function runContent(&$tp,$sql="",$tag="",$usePaging=false, $cacheTAG = false,$callback = false) {
 		# callback function parameters: &template, &params, data AND returns data (if returns FALSE, will skip this item)
-		# will return and set the $this->parent->lastReturnCode to a number (TOTAL possible, not just those listed) or the returned item (one item returned)
+		# will return and set the $this->parent->lastReturnCode to a number (TOTAL possible, not just those listed) or the returned item (one item returned and NO TAG set)
 		# usePaging true will use 30 as default if no p_size comes in on templateParams, or $usePaging can be the actual page size number
+		# to disable automatic parse of images and toggles, set [$core]->parent->templateParams['noOutputParse'] = true
 
 		$this->parent->lastReturnCode = 0;
 		$this->parent->lastFirstset = false;
@@ -1609,7 +1612,7 @@ class CModule {
 			$this->parent->templateParams['p_size'] = 1; # select only one (after testing if $sql is an array, will set LIMIT=1 to fast things up)
 			$usePaging = false;
 		}
-	  	if (is_numeric($usePaging) && $usePaging > 0) { # enable pading if one is specified
+	  	if (is_numeric($usePaging) && $usePaging > 0) { # enable paging if one is specified
 	  		$this->parent->templateParams['p_size'] = $usePaging;
 	  		$usePaging = true;
 	  	}
@@ -1621,9 +1624,15 @@ class CModule {
 	  	  			$this->parent->templateParams['p_init'] = 0;
 	  	  	}
 	  	  	if (!isset($this->parent->templateParams['p_size']) || !is_numeric($this->parent->templateParams['p_size']) || $this->parent->templateParams['p_size']<0) {
-				if (isset($_REQUEST['p_size']) && is_numeric($_REQUEST['p_size']) && $_REQUEST['p_size']>=0)
+				if (isset($_REQUEST['p_size']) && is_numeric($_REQUEST['p_size']) && $_REQUEST['p_size']>=0) # came numeric value
 					$this->parent->templateParams['p_size'] = $_REQUEST['p_size'];
-				else
+				else if (isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])) { # non numeric, try user preferences
+					$up = is_array($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])?$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']:unserialize($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']);
+					if (isset($up['pfim']) && is_numeric($up['pfim']) && $up['pfim']>0)
+						$this->parent->templateParams['p_size'] = $up['pfim'];
+					else
+						$this->parent->templateParams['p_size'] = CONS_DEFAULT_PAGESIZE;
+				} else # user preferences fail fallback
 					$this->parent->templateParams['p_size'] = CONS_DEFAULT_PAGESIZE;
 	  	  	}
 	  	}
@@ -1699,7 +1708,7 @@ class CModule {
 				$this->parent->lastFirstset = $tp->firstReturnedSet;
 			$n = $total; #<-- will be used for paging display
 
-  		} else {
+  		} else { # can't use fast paging ... normal (slower) then
 
 			if (!$this->parent->dbo->query($sql,$r,$n,$this->parent->debugmode) && $this->parent->debugmode)
 				$this->parent->errorControl->raise(146,$this->parent->dbo->log[count($this->parent->dbo->log)-1],$this->name);
@@ -1728,7 +1737,7 @@ class CModule {
 		if ($n!==false&&($n==1&&$tag=="")) $n = $this->parent->lastReturnCode;
 		if ($cacheTAG !== false && $tag != '' && $n!==false) { # store cache
 			$gt = $tp->get($tag);
-			$this->parent->cacheControl->addCachedContent($cacheTAG,array('payload'=>$gt,'count'=>$n,'lfs' => $this->parent->lastFirstset, 'lrc' => $this->parent->lastReturnCode),true);
+			$this->parent->cacheControl->addCachedContent($cacheTAG,array('payload'=>$gt,'count'=>$n,'lfs' => $this->parent->lastFirstset, 'lrc' => $this->parent->lastReturnCode),$this->freeModule); # note how freeModule defines shared or not cache
 		}
 		unset ($this->templateParans['grouping']);
 		return $n;
@@ -1791,12 +1800,13 @@ class CModule {
  		}
 	} #notifyEvent
 
+
 	function generateBackup($echo=false) {
-		$maxLine = 5000;
+		$maxLine = 5000; // largest line size
 		$bck = CONS_PATH_BACKUP.$_SESSION['CODE']."/".$this->dbname.".sql";
 		if (!is_dir(CONS_PATH_BACKUP.$_SESSION['CODE']."/")) makeDirs(CONS_PATH_BACKUP.$_SESSION['CODE']."/");
 		if (is_file($bck)) @unlink($bck);
-		$fd = fopen ($bck, "a");
+		$fd = fopen ($bck, "wb");
 		if ($fd) {
 			$sql = "SELECT * FROM ".$this->dbname;
 			$this->parent->dbo->query($sql,$r,$n);

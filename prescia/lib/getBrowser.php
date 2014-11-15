@@ -9,8 +9,9 @@
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto
   | Free to use, change and redistribute, but please keep the above disclamer.
   | Uses: -
-  | Revision: 2014.09.15
-  | Latest versions at revision: CH=37, FF=32, SA=7, OP=24, IE=11
+  | Revision: 2014.10.22
+  | Latest versions at revision: CH=38, FF=33, SA=8, OP=25, IE=11
+ 
 -*/
 
 	# List of supported browsers:
@@ -69,7 +70,7 @@
 						);
 		$legacy = false; // non w3c // ccs3+ sufficiently compliant
 		if ($browser == "") return array("UNKNOWN/",true,false,$so,"UN",0);
-		if (strpos($browser,"MSIE") !== false || strpos($browser,"Opera")!== false) { # Old OPERAs reported as MSIE
+		if (strpos($browser,"MSIE") !== false || strpos($browser,"Opera")!== false) { # Old OPERAs reported as MSIE, IE 10- reported as MSIE
 			if (strpos($browser,"Opera")!== false) {
 				if (preg_match("@Opera/([0-9\.]*)@",$browser,$regs)==1) {
 					$browser = "Opera ".$regs[1];
@@ -89,7 +90,7 @@
 					$vi = explode(".",$regs[1]);
 					$v = $vi[0]; // w/o dot
 					if (isset($vi[1])) $v .= ".".$vi[1];
-					if ($v < 9) $legacy = true; 								/* IE-VERSION */
+					if ($v < 9) $legacy = true; 								/* old IE-VERSION */
 				} else {
 					$browser = "Internet Explorer";
 					$legacy = true;
@@ -97,6 +98,19 @@
 				}
 				return array($browser,$legacy,$ismob,$so,"IE",$v);
 			}
+		} else if (strpos($browser,"Trident/")!== false) {
+			if (preg_match("@rv:([0-9\.]*)@",$browser,$regs)==1) {
+				$browser = "Internet Explorer ".$regs[1];
+				$vi = explode(".",$regs[1]);
+				$v = $vi[0]; // w/o dot
+				if (isset($vi[1])) $v .= ".".$vi[1];
+				$legacy = false;													/* IE-VERSION 11+ */
+			} else {
+				$browser = "Internet Explorer";
+				$legacy = true;
+				$v = 0;
+			}
+			return array($browser,$legacy,$ismob,$so,"IE",$v);
 		} else if (strpos($browser,"Firefox")!== false || strpos($browser,"Gecko/20") !== false) {
 			if (preg_match("@Firefox/([0-9\.]*)@",$browser,$regs)==1) {
 				$browser = "Firefox ".$regs[1];
@@ -160,7 +174,7 @@
 	}
 
 	# set browser constants
-	if (isset($_SESSION['CONS_BROWSER'])) { // if I have the browser, I have the rests
+	if (!isset($_REQUEST['nocache']) && isset($_SESSION['CONS_BROWSER'])) { // if I have the browser, I have the rests
 		define ("CONS_BROWSER", $_SESSION['CONS_BROWSER']);
 		define ("CONS_BROWSER_VERSION", $_SESSION['CONS_BROWSER_VERSION']);
 		define ("CONS_BROWSER_ISMOB", $_SESSION['CONS_BROWSER_ISMOB']);
@@ -176,3 +190,4 @@
 		$_SESSION['CONS_BROWSER_ISMOB'] = CONS_BROWSER_ISMOB;
 		$_SESSION['CONS_BROWSER_SO'] = CONS_BROWSER_SO;
 	}
+

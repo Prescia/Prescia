@@ -189,11 +189,11 @@ class CPresciaFull extends CPrescia {
 						case "key":
 						case "keys":
 							# will use default auto_increment "id" if none specified. If you specify more than one, none will be auto_increment and the system will use auto-numbering
-					   		$this->modules[$module]->keys = explode(",",$pcontent);
-					   	break;
-					   	case "title":
-					   		$this->modules[$module]->title = strtolower($pcontent);
-					   	break;
+								$this->modules[$module]->keys = explode(",",$pcontent);
+							break;
+							case "title":
+								$this->modules[$module]->title = strtolower($pcontent);
+							break;
 						case "volatile":
 							# this module can be deleted as a stand-alone volatile item
 							$this->modules[$module]->options[CONS_MODULE_VOLATILE] = strtolower($pcontent)=="true";
@@ -203,8 +203,8 @@ class CPresciaFull extends CPrescia {
 			  			break;
 			  			case "plugins":
 						case "plugin":
-			  		   		$this->modules[$module]->plugins = explode(",",strtolower($pcontent));
-			  		   	break;
+			  					$this->modules[$module]->plugins = explode(",",strtolower($pcontent));
+			  				break;
 			  			case "order":
 			  				$this->modules[$module]->order = trim(strtolower($pcontent));
 			  			break;
@@ -212,10 +212,10 @@ class CPresciaFull extends CPrescia {
 			  				if (strlen($pcontent)>=9)
 			  					$this->modules[$module]->permissionOverride = substr(strtolower($pcontent),0,9);
 			  			break;
-			  		   	case "linker":
-			  		   		$this->modules[$module]->linker = true;
-			  		   	break;
-			  		   	case "systemmodule":
+			  				case "linker":
+			  					$this->modules[$module]->linker = true;
+			  				break;
+			  				case "systemmodule":
 							$this->modules[$module]->options[CONS_MODULE_SYSTEM] = true;
 						break;
 						case "autoclean":
@@ -224,23 +224,34 @@ class CPresciaFull extends CPrescia {
 						case "meta":
 							$this->modules[$module]->options[CONS_MODULE_META] = $pcontent;
 						break;
-			  		   	default:
-			  		   		if ($pkey != "name" && $pkey != "dbname") {
-			  		   			$isMO = false;
-			  		   			foreach ($this->moduleOptions as $mo) {
-			  		   				if ($mo[1] == $pkey) {
-			  		   					$isMO = true;
-			  		   					if ($mo[2]) $pcontent = strtolower($pcontent);
-			  		   					if ($mo[3] != '') $pcontent = explode($mo[3],$pcontent);
-			  		   					$this->modules[$module]->options[$mo[0]] = $pcontent;
-			  		   					break;
-			  		   				}
-			  		   			}
-			  		   			if (!$isMO) {
-			  		   				$this->modules[$module]->options[$pkey] = $pcontent;
-			  		   			}
-			  		   		}
-			  		   	break;
+						case "disallowmultiple":
+							if (strtolower($pcontent) == "true")
+								$this->modules[$module]->options[CONS_MODULE_DISALLOWMULTIPLE] = true;
+							else
+								unset($this->modules[$module]->options[CONS_MODULE_DISALLOWMULTIPLE]);
+						break;
+						case "noundo":
+							if (strtolower($pcontent) == "true")
+								$this->modules[$module]->options[CONS_MODULE_NOUNDO] = true;
+							else
+								unset($this->modules[$module]->options[CONS_MODULE_NOUNDO]);
+			  				default:
+			  					if ($pkey != "name" && $pkey != "dbname") {
+			  						$isMO = false;
+			  						foreach ($this->moduleOptions as $mo) {
+			  							if ($mo[1] == $pkey) {
+			  								$isMO = true;
+			  								if ($mo[2]) $pcontent = strtolower($pcontent);
+			  								if ($mo[3] != '') $pcontent = explode($mo[3],$pcontent);
+			  								$this->modules[$module]->options[$mo[0]] = $pcontent;
+			  								break;
+			  							}
+			  						}
+			  						if (!$isMO) {
+			  							$this->modules[$module]->options[$pkey] = $pcontent;
+			  						}
+			  					}
+			  				break;
 					}
 				} #foreach
 				unset($pkey); unset($pcontent);
@@ -1067,7 +1078,7 @@ class CPresciaFull extends CPrescia {
 				$fields[$namefield][CONS_XML_SQL]= "MEDIUMTEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci ";
 				$fields[$namefield][CONS_XML_TIPO] = CONS_TIPO_SERIALIZED;
 				$fields[$namefield][CONS_XML_SERIALIZEDMODEL] = $this->getSerializedModel($thiscampo->branchs,$module);
-			break;
+				break;
 			case "txt":
 			case "text": // 64k
 				$fields[$namefield][CONS_XML_SQL]= "TEXT CHARACTER SET utf8 COLLATE utf8_unicode_ci ";

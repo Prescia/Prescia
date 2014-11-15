@@ -19,5 +19,10 @@
 "download" => "Download",
 "reference" => "Reference",
 "quick_reference" => "Quick Reference Guide",
-"community" => "Community"
+"community" => "Community",
+"your_name" => "Your Name",
+"your_email" => "Your  E-mail",
+"your_message" => "Your message/comment/suggestion/criticism/yadda yadda",
+"please_type_safetycode" => "Please copy the safety code",
+"type" => "Type"
 );

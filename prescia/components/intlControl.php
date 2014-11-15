@@ -184,21 +184,17 @@ class CintlControl {
 	 * Returns the translation given the current i18n (if enabled) of a hash string
 	 */
 	function langOut($tag) {
-		#searches the template language replacer for this tag. Will ignore trailing ! ? . :
+		#searches the template language replacer for this tag.
 		$ltag = strtolower($tag);
 		$trailing = "";
-		if (strlen($tag)>1 && strpos("!?.:",$tag[strlen($tag)-1])!==false) {
-			$trailing = strlen($tag)>0?$tag[strlen($tag)-1]:'';
-			$ltag = substr($tag,0,strlen($tag)-1);
-		}
 		if (isset($this->parent->template->lang_replacer[$ltag]))
-			return $this->parent->template->lang_replacer[$ltag].$trailing;
+			return $this->parent->template->lang_replacer[$ltag];
 		else if (strpos($ltag,"_") !== false) {
 			$etag = explode("_",$ltag);
 			array_shift($etag);
 			$etag = implode("_",$etag);
 			if (isset($this->parent->template->lang_replacer[$etag]))
-				return $this->parent->template->lang_replacer[$etag].$trailing;
+				return $this->parent->template->lang_replacer[$etag];
 		}
 		return $tag;
 	} # langOut

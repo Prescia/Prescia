@@ -18,13 +18,13 @@
   simgoff.src = '{SKIN_PATH}sfolder_minus.gif';
   simgon = new Image;
   simgon.src = '{SKIN_PATH}sfolder_plus.gif';
-  function colapptible(dir,fulldir,chields,issafe) {
+  function colapptible(dir,fulldir,children,issafe) {
     if (dir == "") return; // evita loop infinito em caso de erro
 	if (fulldir != lastFolder) {
 		if (!showFolder(fulldir))
 			return; // cannot change now
 	}
-    if (chields == 0) {
+    if (children == 0) {
       // dir is THIS item, run whatever code for a LEAF
       return;
     }

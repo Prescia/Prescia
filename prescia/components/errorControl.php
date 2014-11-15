@@ -1,27 +1,27 @@
 <?	# -------------------------------- Prescia error control
 
 # Level 0 (lowest level, might not even be logged)
-define ("CONS_ERROR_NOTICE",0); # Hidden notice
-define ("CONS_ERROR_NOTICE_SHOW",1); # Shown notice
-define ("CONS_ERROR_MESSAGE",2); # Just show to user, no log
+define ("CONS_ERROR_NOTICE",0); # Hidden notice CONS_LOGGING_NOTICE
+define ("CONS_ERROR_NOTICE_SHOW",1); # Shown notice CONS_LOGGING_NOTICE
+define ("CONS_ERROR_MESSAGE",2); # Just show to user, no log CONS_LOGGING_NOTICE
 # Level 1 (errors or low level hack attempts, always logged)
-define ("CONS_ERROR_WARNING",10); # Hidden Warning (a notice that should be checked by admins)
-define ("CONS_ERROR_WARNING_SHOW",11); # Shown Warning
-define ("CONS_ERROR_SEC",12);
-define ("CONS_ERROR_SEC_SHOW",13);
-define ("CONS_ERROR_NOTICESTOP",15); # Just a notice (shows to user), but should stop the script
+define ("CONS_ERROR_WARNING",10); # Hidden Warning (a notice that should be checked by admins) CONS_LOGGING_WARNING
+define ("CONS_ERROR_WARNING_SHOW",11); # Shown Warning CONS_LOGGING_WARNING
+define ("CONS_ERROR_SEC",12); //CONS_LOGGING_WARNING
+define ("CONS_ERROR_SEC_SHOW",13); //CONS_LOGGING_WARNING
+define ("CONS_ERROR_NOTICESTOP",15); # Just a notice (shows to user), but should stop the script CONS_LOGGING_ERROR
 # Level 2
-define ("CONS_ERROR_ERROR",20); # Hidden error
-define ("CONS_ERROR_ERROR_SHOW",21); # Shown error
-define ("CONS_ERROR_FATAL",22); # Fatal error, will abort script immediatly
-define ("CONS_ERROR_FATAL_NOLOG",23); # Fatal error, will abort script immediatly, but won't log
-define ("CONS_ERROR_FATAL_MAIL",24); # Fatal error, will abort script immediatly but will send mail to admin first
-define ("CONS_ERROR_NOTIFYMAIL",25); # Not an error but really important, will log in highest level AND send a mail to admin, but not abort the script
+define ("CONS_ERROR_ERROR",20); # Hidden error CONS_LOGGING_ERROR
+define ("CONS_ERROR_ERROR_SHOW",21); # Shown error CONS_LOGGING_ERROR
+define ("CONS_ERROR_FATAL",22); # Fatal error, will abort script immediatly CONS_LOGGING_ERROR
+define ("CONS_ERROR_FATAL_NOLOG",23); # Fatal error, will abort script immediatly, but won't log CONS_LOGGING_ERROR
+define ("CONS_ERROR_FATAL_MAIL",24); # Fatal error, will abort script immediatly but will send mail to admin first CONS_LOGGING_ERROR
+define ("CONS_ERROR_NOTIFYMAIL",25); # Not an error but really important, will log in highest level AND send a mail to admin, but not abort the script CONS_LOGGING_ERROR
 
 if (CONS_DEVELOPER)
 	define ("CONS_MAX_ERRORS",500); # Number of maximum allowed errors in one single script before a hard-abort (to prevent a loop)
 else
-	define ("CONS_MAX_ERRORS",100); 
+	define ("CONS_MAX_ERRORS",100);
 define ("CONS_MAX_LOGFILESIZE",100000); # Maximum size of a DAILY error log
 
 class CErrorControl {
@@ -131,6 +131,7 @@ class CErrorControl {
 								189 => CONS_ERROR_WARNING_SHOW, # error processing a serialized array (input) into a serialized field
 								190 => CONS_ERROR_WARNING_SHOW, # Unable to parse HTML to make it simplified on module (CONS_XML_SIMPLEEDITFORCE)
 								191 => CONS_ERROR_ERROR_SHOW, # Tag not found on runContent (smart sql generation)
+								192 => CONS_ERROR_WARNING, # Headers already sent, cannot re-send (hard error, if you know they were sent and wants to avoid, set headerControl->softHeaderSent)
 
 								# upload and validation errors
 								200 => CONS_ERROR_MESSAGE, # Upload error 0
@@ -203,6 +204,7 @@ class CErrorControl {
 
 								# 10xx Debug notification
 								1000 => CONS_ERROR_NOTICE, # Debugmode: recreating metacache
+								1001 => CONS_ERROR_NOTIFYMAIL, # Use this for debug purposes (will mail th admin)
 
 					);
 
@@ -263,7 +265,7 @@ class CErrorControl {
 		$redWarning = $this->ERRORS[$errCode] != CONS_ERROR_NOTICE_SHOW && $this->ERRORS[$errCode] != CONS_ERROR_NOTICE && !$actionLog; # These are logs that, once displayed to the users, should be in red (actual errors)
 
 		#--
-		$errstr = $this->parent->langOut('e'.$errCode)." (e$errCode) $module $parameter $extended".($redWarning?"!":"");
+		$errstr = $this->parent->langOut('e'.$errCode)." (e$errCode) $module $parameter $extended";
 		$errstrfull = $errCode."|".$module."|".$parameter."|".$extended."|".implode("|",$this->parent->log);
 		# Error file:
 		# date|client|uri|errCode|module|parameters|extended parameters|log[|...]
@@ -271,7 +273,11 @@ class CErrorControl {
 		# YmdHismodule|parameter|extended parameters
 
 		$status = date("d/m/Y H:i:s")."|".(isset($_SESSION['CODE'])?$_SESSION['CODE']:'?')."|".$_SERVER['REQUEST_URI'];
-		if ($showToUser) $this->parent->log[] = $errstr;
+		if ($showToUser) {
+			$this->parent->setLog(
+				($redWarning?(($highLog||$stopScript)?CONS_LOGGING_ERROR:CONS_LOGGING_WARNING):($errCode==300?CONS_LOGGING_SUCCESS:CONS_LOGGING_NOTICE)),
+				$errstr);
+		}
 		if ($storeInWarning) $this->parent->warning[] = $errstr;
 		if ($lowLog || $securityLog || $highLog) {
 			if (isset($_SESSION['CODE'])) {

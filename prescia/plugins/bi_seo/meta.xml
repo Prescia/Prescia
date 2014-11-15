@@ -2,6 +2,7 @@
 	 plugins="bi_seo"
 	 title="alias"
 	 order="alias"
+	 disallowmultiple="true"
 	 >
 	<PAGE restricted="90" mandatory="true">VC</PAGE>
 	<ALIAS restricted="90" special="path" mandatory="true" unique="true">VC</ALIAS>

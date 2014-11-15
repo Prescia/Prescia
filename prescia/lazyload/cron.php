@@ -55,7 +55,7 @@ if ($forceCron=='day' || $forceCron=='all' || date("d") != $this->dimconfig['_cr
 	// auto clean
 	foreach ($this->modules as $name => &$module) {
 		if (isset($module->options[CONS_MODULE_AUTOCLEAN]) && $module->options[CONS_MODULE_AUTOCLEAN] != "" && (strpos($module->options[CONS_MODULE_AUTOCLEAN],"DAY") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"WEEK") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"MONTH") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"YEAR") !== false)) {
-			
+
 			# daily only runs autocleans with DAY, WEEK, MONTH or YEAR
 			if ($module->options[CONS_MODULE_VOLATILE]) {
 				$sql = "DELETE FROM ".$module->dbname." WHERE ".$module->options[CONS_MODULE_AUTOCLEAN];
@@ -165,6 +165,8 @@ if ($forceCron=='hour' || $forceCron=='all' || $this->dimconfig['_cronH'] != dat
 	}
 
 	if (CONS_CRONDBBACKUP && !$this->nearTimeLimit() && ($this->dimconfig['_scheduledCronDay'] == 0 || date("d") == $this->dimconfig['_scheduledCronDay']) && $this->dimconfig['_scheduledCronDayHour'] == date("H")) {
+
+
 		// special optimization and backup
 		$this->errorControl->raise(113);
 		$mods = array();
@@ -186,7 +188,24 @@ if ($forceCron=='hour' || $forceCron=='all' || $this->dimconfig['_cronH'] != dat
 					if ($this->nearTimeLimit()) break;
 				}
 			}
+		}
 
+		if (CONS_CRONDBBACKUP_MAIL != '' && !$this->nearTimeLimit()) {
+			$bfile = CONS_PATH_BACKUP.$_SESSION['CODE']."/backup.zip";
+			if (is_file($bfile)) @unlink($bfile);
+			$files = listFiles(CONS_PATH_BACKUP.$_SESSION['CODE']."/",'/.*\.sql/');
+			if (count($files) == 0) return;
+			$zip = new ZipArchive();
+			$zip->open($bfile, ZipArchive::CREATE);
+			foreach ($files as $file) {
+				$zip->addFile(CONS_PATH_BACKUP.$_SESSION['CODE']."/".$file,$file);
+			}
+			$zip->close();
+			unset($zip);
+			$mail = "BACKUP PERFORMED AT ".date("Y-m-d H:i:s");
+			$tmail = new CKTemplate();
+			$tmail->tbreak($mail);
+			sendmail(CONS_CRONDBBACKUP_MAIL,"backup ".$_SESSION['CODE'],$tmail,CONS_MASTERMAIL,'',true,$bfile);
 		}
 	}
 

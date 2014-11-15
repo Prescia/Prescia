@@ -4,6 +4,7 @@
 			parent="id_parent"
 			listing="parent_title,page,title,lang"
 			order="id_parent+,ordem+,title+"
+			disallowmultiple="true"
 			>
 	<ID_PARENT default='0'>CONTENTMAN</ID_PARENT>
 	<CODE mandatory="true" default="1">TINYINT</CODE>

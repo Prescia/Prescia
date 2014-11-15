@@ -37,9 +37,9 @@ class mod_bi_stats extends CscriptedModule  {
 	}
 
 	function onCheckActions() {
-		if ($this->parent->layout == 2 && $this->parent->context_str == "/" && $this->parent->action == "setres") {
+		if ($this->parent->layout == 2 && $this->parent->context_str == "/" && ($this->parent->action == "setres" || $this->parent->action == "bdstats")) {
 			$this->doNotLogMe = true; // no point loging this
-			if (isset($_REQUEST['res']) && strlen($_REQUEST['res'])>6) {
+			if ($this->parent->action == "setres" && isset($_REQUEST['res']) && strlen($_REQUEST['res'])>6) { // set resolution
 				echo "ok";
 				$_SESSION[CONS_USER_RESOLUTION] = $_REQUEST['res'];
 				$visits = $this->parent->dbo->fetch("SELECT hits FROM ".$this->parent->modules['statsres']->dbname." WHERE data='".date("Y-m-d")."' AND resolution=\"".$_SESSION[CONS_USER_RESOLUTION]."\"");
@@ -48,6 +48,37 @@ class mod_bi_stats extends CscriptedModule  {
 				} else { # second+ visit
 					$this->parent->dbo->simpleQuery("UPDATE ".$this->parent->modules['statsres']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND resolution=\"".$_SESSION[CONS_USER_RESOLUTION]."\"");
 				}
+			} else if ($this->parent->action == "bdstats") { // backdoor browser statistics (last year)
+				$output = $this->parent->cacheControl->getCachedContent('bdstats');
+				if ($output === false) {
+					$sql = "SELECT sum(hits), browser FROM stats_browser WHERE data>NOW() - INTERVAL 1 YEAR GROUP BY browser";
+					$output = array('IE' => 0,'FF' => 0, 'SA' => 0, 'OP' => 0, 'CH' => 0, 'UN' => 0, 'mob' =>0,'total' =>0);
+					if ($this->parent->dbo->query($sql,$r,$n) && $n>0) {
+						for ($c=0;$c<$n;$c++) {
+							list($h,$b) = $this->parent->dbo->fetch_row($r);
+							if (strpos($b,"Internet")!==false) $output['IE'] += $h;
+							else if (strpos($b,"Firefox")!==false) $output['FF'] += $h;
+							else if (strpos($b,"Chrome")!==false) $output['CH'] += $h;
+							else if (strpos($b,"Opera")!==false) $output['OP'] += $h;
+							else if (strpos($b,"Safari")!==false) $output['SA'] += $h;
+							else $output['UN'] += $h;
+							if (strpos($b,"(mob)")!==false) $output['mob'] += $h;
+							$output['total'] += $h;
+						}
+					}
+					if ($output['total'] >0) {
+						$output['IE'] = ceil(10000*$output['IE']/$output['total'])/100;
+						$output['FF'] = ceil(10000*$output['FF']/$output['total'])/100;
+						$output['CH'] = ceil(10000*$output['CH']/$output['total'])/100;
+						$output['OP'] = ceil(10000*$output['OP']/$output['total'])/100;
+						$output['SA'] = ceil(10000*$output['SA']/$output['total'])/100;
+						$output['UN'] = ceil(10000*$output['UN']/$output['total'])/100;
+						$output['mob'] = ceil(10000*$output['mob']/$output['total'])/100;
+					}
+					$this->parent->cacheControl->addCachedContent('bdstats',serialize($output),true);
+				} else
+					$output = unserialize($output);
+				print_r($output);
 			} else
 				echo "err";
 			$this->parent->close(true);
@@ -147,11 +178,13 @@ class mod_bi_stats extends CscriptedModule  {
 		if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
 
 		$core = &$this->parent;
-		if (isset($core->dimconfig['nostats']) && strpos(',/rss,'.$core->dimconfig['nostats'],','.$pageToBelogged.$core->action) !== false) {
-			$this->doNotLogMe = true;
-		}
-		if (isset($core->dimconfig['nostats']) && strpos(','.$core->dimconfig['nostats'],','.$pageToBelogged) !== false) {
-			$this->doNotLogMe = true;
+		if ($pageToBelogged != '') {
+			if (isset($core->dimconfig['nostats']) && strpos(',/rss,'.$core->dimconfig['nostats'],','.$pageToBelogged.$core->action) !== false) {
+				$this->doNotLogMe = true;
+			}
+			if (isset($core->dimconfig['nostats']) && strpos(','.$core->dimconfig['nostats'],','.$pageToBelogged) !== false) {
+				$this->doNotLogMe = true;
+			}
 		}
 		if ($core->action == '404' || $core->action == '403') $this->doNotLogMe = true;
 
@@ -292,7 +325,7 @@ class mod_bi_stats extends CscriptedModule  {
 					$referer = str_replace("https://","",$referer);
 				}
 				$whatToSave = CONS_BROWSER_ISMOB?"MO":CONS_BROWSER;
-				$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsrt']->dbname." SET ip='".CONS_IP."', page=\"".$pageToBelogged."\", agent=\"".$browser."\", agentcode=\"".$whatToSave."\", fullpath=\"".$pageToBelogged.",\", data=NOW(), data_ini=NOW(), referer=\"$referer\"");
+				$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsrt']->dbname." SET ip='".CONS_IP."', page=\"".$pageToBelogged."\", agent=\"".$browser."\", agentcode=\"".$whatToSave."\", fullpath=\"".$pageToBelogged.",\", data=NOW(), data_ini=NOW(), referer=\"$referer\"",true);
 			} else { # second+ visit
 				list($page,$fullpath) = $core->dbo->fetch_row($r);
 				if ($page != $pageToBelogged)
@@ -300,11 +333,11 @@ class mod_bi_stats extends CscriptedModule  {
 				$core->dbo->simpleQuery("UPDATE ".$core->modules['statsrt']->dbname." SET page=\"".$pageToBelogged."\", pagelast=\"$page\", data=NOW(), fullpath=\"$fullpath\" WHERE ip='".CONS_IP."'");
 
 				# -- STATS PATH --
-				$count = $core->dbo->fetch("SELECT count FROM ".$core->modules['statspath']->dbname." WHERE data='".date("Y-m-d")."' AND page=\"$page\" AND pagefoward=\"".$pageToBelogged."\"");
+				$count = $core->dbo->fetch("SELECT hits FROM ".$core->modules['statspath']->dbname." WHERE data='".date("Y-m-d")."' AND page=\"$page\" AND pagefoward=\"".$pageToBelogged."\"");
 				if ($count === false) {
-					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statspath']->dbname." SET data='".date("Y-m-d")."', page=\"$page\", pagefoward=\"".$pageToBelogged."\", count=1");
+					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statspath']->dbname." SET data='".date("Y-m-d")."', page=\"$page\", pagefoward=\"".$pageToBelogged."\", hits=1");
 				} else {
-					$core->dbo->simpleQuery("UPDATE ".$core->modules['statspath']->dbname." SET count=count+1 WHERE data='".date("Y-m-d")."' AND page=\"$page\" AND pagefoward=\"".$pageToBelogged."\"");
+					$core->dbo->simpleQuery("UPDATE ".$core->modules['statspath']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND page=\"$page\" AND pagefoward=\"".$pageToBelogged."\"");
 				}
 				# -- end STATS PATH --
 			}

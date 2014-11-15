@@ -24,7 +24,7 @@ class mod_bi_seo extends CscriptedModule  {
 	}
 
 	function onCheckActions() {
-		$this->loadSEO();
+		$this->loadSEO(); // loads data into template so the seo tag works
 		$context_for_seo = substr($this->parent->context_str,1); // no initial /
 		if (isset($this->parent->dimconfig['_seoManager']) && !is_array($this->parent->dimconfig['_seoManager']))
 				$this->parent->dimconfig['_seoManager'] = explode(",",$this->parent->dimconfig['_seoManager']);
@@ -131,7 +131,7 @@ class mod_bi_seo extends CscriptedModule  {
 	}
 
 	function loadSEO() { // called by checkActions (which BTW is the function that will check SEO redirects)
-		# loads session SEO cache (for outgoing data)
+		# loads session SEO cache (for output data)
 		if (isset($this->parent->dimconfig['_seoManager'])) {
 			if (isset($_SESSION[CONS_SEO_LOADED]) && !isset($_REQUEST['lang']))
 				$this->parent->template->constants = array_merge($this->parent->template->constants,$_SESSION[CONS_SEO_LOADED]);

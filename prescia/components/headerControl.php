@@ -11,6 +11,7 @@ class CHeaderControl {
 	var $parent = null;
 	var $headers = array();
 	var $baseHeader = 200;
+	var $softHeaderSent = false; // set to true if you KNOW headers were sent and wants to avoid error 192
 
 	function __construct(&$parent) {
 		$this->parent = &$parent;
@@ -67,7 +68,12 @@ class CHeaderControl {
 	function showHeaders($limit = false) {
 		# shows the header. shows CONS_HC_HEADER first always
 		# limit prevents other headers from showing
-
+		if ($this->softHeaderSent) return false;
+		if (headers_sent($filename, $linenum)) {
+			$this->parent->errorControl->raise(192,'','showHeaders',"Headers sent from $filename at $linenum");
+			return false;
+		}
+		
 		$currentBaseHeader = $this->getHeader(CONS_HC_HEADER,true);
 		if ($currentBaseHeader !== false)
 			header($_SERVER["SERVER_PROTOCOL"]." ".$currentBaseHeader." ".$this->baseTranslation($currentBaseHeader));
@@ -76,11 +82,17 @@ class CHeaderControl {
 		if (!$limit)
 			foreach ($this->headers as $header)
 				header($header[1]);
+		return true;
 
 	} # showHeaders
 
 	function internalFoward($location,$redirmode = "200") {
 		if (CONS_FOWARDER) {
+			if ($this->softHeaderSent) return false;
+			if (headers_sent($filename, $linenum)) {
+				$this->parent->errorControl->raise(192,$location,'internalFoward',"Headers sent from $filename at $linenum");
+				return false;
+			}
 			$_SESSION[CONS_SESSION_LOG] = $this->parent->log;
 			$this->parent->dbo->close();
 			ob_end_clean();
@@ -90,6 +102,7 @@ class CHeaderControl {
 			die("<html><head><title>$redirmode ".$this->baseTranslation($redirmode)."</title></head><body>Content moved to $location ".$this->baseTranslation($redirmode)." - your browser should automatically move for such location, if not, click on the link below<br/><br/><a href=\"$location\">$location</a></body></html>");
 		} else
 			$this->parent->errorControl->raise(115);
+		
 	}
 
 }

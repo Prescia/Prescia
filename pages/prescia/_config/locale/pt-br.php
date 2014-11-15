@@ -19,5 +19,10 @@
 "download" => "Download",
 "reference" => "Referência",
 "quick_reference" => "Guia de referência rápida",
-"community" => "Comunidade"
+"community" => "Comunidade",
+"your_name" => "Seu nome",
+"your_email" => "Seu E-mail",
+"your_message" => "Sua mensagem/comentário/sugestão/crítica/ladainha",
+"please_type_safetycode" => "Por favor copie o código de segurança",
+"type" => "Digite"
 );

@@ -46,11 +46,11 @@ foreach ($m as $moduletxt) {
 	if (isset($param['queryfilter'])) {
 		$param['queryfilter'] = explode(",",$param['queryfilter']);
 		foreach ($param['queryfilter'] as $field) {
-			$filterName = str_replace("_",".",$field);
-			$queryName = str_replace(".","_",$field);
-			if (isset($_REQUEST[$queryName])) {
-				if (!isset($param['filter'])) $param['filter'] = $filterName."=\"".$this->checkHackAttempt($_REQUEST[$queryName])."\"";
-				else $param['filter'] .= " AND ".$filterName."=\"".$this->checkHackAttempt($_REQUEST[$queryName])."\"";
+			/*$filterName = str_replace("_",".",$field);
+			$queryName = str_replace(".","_",$field);*/
+			if (isset($_REQUEST[$field])) {
+				if (!isset($param['filter'])) $param['filter'] = $field."=\"".$this->checkHackAttempt($_REQUEST[$field])."\"";
+				else $param['filter'] .= " AND ".$field."=\"".$this->checkHackAttempt($_REQUEST[$field])."\"";
 			}
 		}
 	} # queryfilter
@@ -70,6 +70,7 @@ foreach ($m as $moduletxt) {
 	}
 	if (isset($param['filter']))
 		$sql['WHERE'][] = $param['filter'];
+
 
 	if ($this->dbo->query($sql,$r,$n) && $n>0) { // found!
 		$this->action = $param['page'];
