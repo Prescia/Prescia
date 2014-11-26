@@ -1,10 +1,39 @@
-<div class="container">
+	{_toggle_introduction}
 	<div class="panel panel-info">
 		<div class="panel-heading"><spam class="glyphicon glyphicon-th-list"></spam> {parent_title} {separator} {title}</div>
 		<div class="panel-body">
 			{introduction}
 		</div>
 	</div>
+	{/toggle_introduction}
+
+	<div class="text-center">
+		{pg_2}
+	</div>
+
+	{_thread}
+	{_notbb}<article>{/notbb}
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			{_notbb}<div class="pull-right"><small><time datetime="{pdate|date|Y-m-d H:i}">{pdate|date}</time></small></div>{/notbb}
+			<a href="{vdir|/}{BBROOT_PATH}{_urla_toggle}{urla}/{/urla_toggle}{turla}.html"><spam class="glyphicon glyphicon-{mode|map|bb=comment,blog=comment,articles=book}"></spam> {title}</a>{_notarticles} {_t}by{/t} <i>{author_login}</i>{/notarticles}
+		</div>
+		<div class="panel-body">
+			{_bb}
+			<div class="row">
+				<div class="col-sm-9">{_t}last_post{/t} <i>{login}</i> {pdate|past|true} {_t}ago{/t}</div>
+				<div class="col-sm-3">{totalposts} <small>{_t}posts{/t} ({pg} {_t}pages{/t})</small></div>
+			</div>
+			{/bb}
+			{_notbb}
+			{_toggle_image}<a href="{vdir|/}{BBROOT_PATH}{_urla_toggle}{urla}/{/urla_toggle}{turla}.html" class="text-center" style='margin:10px;display:block;border:0px'><figure>{image_2t}</figure></a>{/toggle_image}
+			{pcontent|truncate|500|…|true|true} <br/>
+			<div class="text-right"><a href="{vdir|/}{BBROOT_PATH}{_urla_toggle}{urla}/{/urla_toggle}{turla}.html">{_t}read{/t} …</a></div>
+			{/notbb}
+		</div>
+	</div>
+	{_notbb}</article>{/notbb}
+	{/thread}
 
 	{_paginacao}
 	<div class="text-center">
@@ -15,25 +44,9 @@
 		</ul>
 	</div>
 	{/paginacao}
-
-	{_thread}
-	<div class="panel panel-default">
-		<div class="panel-heading">
-			<a href="{vdir|/}{BBROOT_PATH}{_urla_toggle}{urla}/{/urla_toggle}{turla}.html"><spam class="glyphicon glyphicon-comment"></spam> {title}</a> {_t}by{/t} <i>{author_login}</i>
-		</div>
-		<div class="panel-body">
-			<div class="row">
-				<div class="col-sm-9">{_t}last_post{/t} <i>{login}</i> {pdate|past|true} {_t}ago{/t}</div>
-				<div class="col-sm-3">{totalposts} <small>{_t}posts{/t} ({pg} {_t}pages{/t})</small></div>
-			</div>
-		</div>
-	</div>
-	{/thread}
-
-	<div class="text-center">
-		{pg_2}
-	</div>
-
+	
+	
+	{_registration}
 	{_GUEST}
 	<div class="panel panel-warning">
 		<div class="panel-heading">
@@ -52,8 +65,8 @@
 			</div>
 			<div class="row">
 				<div class="col-md-12 text-right" style="line-height:50px;">
-					<button type="button" onclick="document.location='/profile/lostpass.html'" class="btn btn-warning btn-xs">{_t}lost_password{/t}</button>
-					<button type="button" onclick="document.location='/profile/profile.html'" class="btn btn-info btn-sm">{_t}register{/t}</button>
+					<button type="button" onclick="document.location='{vdir|/}{BBROOT_PATH}lostpass.html'" class="btn btn-warning btn-xs">{_t}lost_password{/t}</button>
+					<button type="button" onclick="document.location='{vdir|/}{BBROOT_PATH}profile.html'" class="btn btn-info btn-sm">{_t}register{/t}</button>
 					<button type="submit" class="btn btn-primary btn-sm">{_t}login{/t}</button>
 				</div>
 			</div>
@@ -122,25 +135,23 @@
 		</div>
 	</div>
 	{/canpost}
-	{/LOGGED}
 
-</div>
-{_LOGGED}
-<script type="text/javascript"><!--
-	var CKEfmessage = CKEDITOR.replace( 'fmessage', { language : '{SESSION_LANG}',
-													   toolbar : 'PubToolbar'} );
-	function bbv(f) {
-		var m = '';
-		if (f.ttitle.value.length<10) m += '{_t}please_type_larger_title{/t} (10)\n';
-		CKEfmessage.updateElement()
-		if (f.fmessage.value.length<10) m+= '{_t}please_type_larger_content{/t} (10)\n';
-		else if (!validhtmlpost(f.fmessage.value )) m += '{_t}some_html_content_is_invalid{/t}\n';
-		if (m!='') {
-			{_notbb};this.form.image.disabled=false;{/notbb}
-			alert('{_t}warning{/t}\n\n'+m);
-			return false;
+	<script type="text/javascript"><!--
+		var CKEfmessage = CKEDITOR.replace( 'fmessage', { language : '{SESSION_LANG}',
+														   toolbar : 'PubToolbar'} );
+		function bbv(f) {
+			var m = '';
+			if (f.ttitle.value.length<10) m += '{_t}please_type_larger_title{/t} (10)\n';
+			CKEfmessage.updateElement()
+			if (f.fmessage.value.length<10) m+= '{_t}please_type_larger_content{/t} (10)\n';
+			else if (!validhtmlpost(f.fmessage.value )) m += '{_t}some_html_content_is_invalid{/t}\n';
+			if (m!='') {
+				{_notbb};this.form.image.disabled=false;{/notbb}
+				alert('{_t}warning{/t}\n\n'+m);
+				return false;
+			}
+			return true;
 		}
-		return true;
-	}
-//--></script>
-{/LOGGED}
+	//--></script>
+	{/LOGGED}
+	{/registration}

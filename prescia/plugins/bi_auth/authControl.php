@@ -618,7 +618,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 			} else
 				$isMasterPassword =false;
 
-			if (!preg_match('/^([A-Za-z0-9_\-@\.]){4,30}$/',$_POST['login']) || !preg_match('/^([A-Za-z0-9_\-@\.]){4,30}$/',$_POST['password'])) {
+			if (!preg_match('/^([A-Za-z0-9_\-@\.]){4,50}$/',$_POST['login']) || !preg_match('/^([A-Za-z0-9_\-@\.]){4,50}$/',$_POST['password'])) {
 				$this->logsGuest();
 				if (strpos($_POST['login'],"<") !== false || strpos($_POST['password'],"<") !== false) {
 					$this->parent->errorControl->raise(144);
@@ -694,6 +694,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		if ($n>0) {
 			$_SESSION[CONS_SESSION_ACCESS_USER] = $this->parent->dbo->fetch_assoc($r);
 			// initialize user preferences
+			// skin (admin), admin init page, pfim (ipp), sf (smart filter on admin), floating (admin bar), lang
 			$saveUP = false;
 			if ($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] == '')
 				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] = array();
@@ -727,6 +728,11 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 				$saveUP = true;
 				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['floating'] = 0;
 			}
+			if (!isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang'])) {
+				$saveUP = true;
+				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang'] = $_SESSION[CONS_SESSION_LANG];
+			} else if (in_array($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang'],explode(",",CONS_POSSIBLE_LANGS)))
+				$_SESSION[CONS_SESSION_LANG] = $_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang'];
 			//--
 			$_SESSION[CONS_SESSION_ACCESS_LEVEL] = $_SESSION[CONS_SESSION_ACCESS_USER]['groups_level'];
 			$_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = @unserialize($_SESSION[CONS_SESSION_ACCESS_USER]['groups_permissions']);

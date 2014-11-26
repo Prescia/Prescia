@@ -9,23 +9,23 @@
 </FORUM>
 <FORUMTHREAD dbname="bb_thread" title="title" order="date+" plugins="bi_bb">
 	<ID_FORUM mandatory="true">FORUM</ID_FORUM>
+	<IS_FEATURED default='n' mandatory="true">BOL</IS_FEATURED>
 	<TITLE mandatory="true">VC</TITLE>
 	<VIDEO special="onlinevideo">VC</VIDEO>
-	<IMAGE thumbnails="1920,1680|640,560" filemaxsize="1024000" filetypes="jpg,gif,png,jpeg" tweakimages="|croptofit">UPLOAD</IMAGE>
-	<DATE mandatory="true" timestamp="true">DATETIME</DATE>
+	<IMAGE thumbnails="1920,1680|640,400" filemaxsize="1024000" filetypes="jpg,gif,png,jpeg" tweakimages="|croptofit">UPLOAD</IMAGE>
+	<DATE mandatory="true" ignorenedit="true" timestamp="true">DATETIME</DATE>
 	<TAGS>VC</TAGS>
 	<URLA special="urla" urlaformat="{id_forum}-{date|date|Ymd}-{title}">VC</URLA>
-	<LASTUPDATE meta="cache for speed, is the last post's date" updatestamp="true">DATETIME</LASTUPDATE>
-	<ID_AUTHOR meta="cache for speed, is the first post" mandatory="true">USERS</ID_AUTHOR>
+	<LASTUPDATE ignorenedit="true" meta="cache for speed, is the last post's date" updatestamp="true">DATETIME</LASTUPDATE>
+	<ID_AUTHOR ignorenedit="true" meta="cache for speed, is the first post" mandatory="true">USERS</ID_AUTHOR>
 	<PUBLISH_AFTER timestamp="true" default="0000-00-00 00:00:00">DATETIME</PUBLISH_AFTER>
 </FORUMTHREAD>
 <FORUMPOST dbname="bb_post" title="content" order="date+">
 	<ID_FORUM mandatory="true">FORUM</ID_FORUM>
 	<ID_FORUMTHREAD filteredBy="id_forum" mandatory="true">FORUMTHREAD</ID_FORUMTHREAD>
 	<ID_AUTHOR mandatory="true">USERS</ID_AUTHOR>
-	<CONTENT html="true" forcesimple="true">MEDIUMTEXT</CONTENT>
-	<DATE mandatory="true" timestamp="true">DATETIME</DATE>
-	<FLAGGED default="n">BOL</FLAGGED>
+	<CONTENT html="true" meta="enforce simple HTML on code so admins can add complex HTML">MEDIUMTEXT</CONTENT>
+	<DATE ignorenedit="true" mandatory="true" timestamp="true">DATETIME</DATE>
 	<ID_WHOFLAGGED merge="left">USERS</ID_WHOFLAGGED>
 	<PROPS custom="true" readonly="true" meta="serialized array with user ids wht TRUE for prop up, FALSE for prop down, not in list if not proped">MEDIUMTEXT</PROPS>
 	<IP size="64">VC</IP>

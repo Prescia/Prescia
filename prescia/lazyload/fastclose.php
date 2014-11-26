@@ -24,7 +24,7 @@
 		$this->template->constants['HEADJSTAGS'] = "";
 		$this->template->constants['HEADCSSTAGS'] = "";
 
-		$this->renderPage(2);
+		$this->renderPage(true);
 
 		$errors = ob_get_contents();
 		ob_end_clean();

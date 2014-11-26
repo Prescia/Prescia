@@ -13,12 +13,14 @@
 			</div>
 			<div class="navbar-collapse collapse">
 				 <ul class="nav navbar-nav">
+				 	{_areaindex}
 					<li class="active"><a href="{vdir|/}{BBROOT_PATH}index.html">{_t}{areaname}{/t}</a></li>
-					{_forums}
+					{/areaindex}
+					{_topforums}
 					<li><a title="{title}" href="{vdir|/}{BBROOT_PATH}{_toggle_urla}{urla}/{/toggle_urla}index.html">{title}</a></li>
-					{/forums}
+					{/topforums}
 				</ul>
-
+				{_registration}
 				<ul class="nav navbar-nav" style="float: right !important">
 					{_GUEST}
 					<li><a title="{_t}register{/t}" href="{vdir|/}{BBROOT_PATH}profile.html"><span class="glyphicon glyphicon-user"></span> {_t}register{/t}</a></li>
@@ -30,6 +32,7 @@
 					<li><a title="{_t}logout{/t}" href="{vdir|/}{BBROOT_PATH}?logout=true"><span class="glyphicon glyphicon-off"></span> &nbsp;</a></li>
 					{/LOGGED}
 				</ul>
+				{/registration}
 			</div><!--/.navbar-collapse -->
 		</div>
 	</div>
@@ -46,7 +49,7 @@
 		<hr/>
 
 		<footer>
-			<p class="small">{_i18n_pt-br}<a href="?lang=en">English Version</a>{/i18n_pt-br}{_i18n_en}<a href="?lang=pt-br">Versão em Português</a>{/i18n_en}{_mobonly} - <a href="?desktopversion=1">Desktop version</a>{/mobonly}</p>
+			<p class="small">{_i18n_pt-br}<a href="{vdir|/}{BBROOT_PATH}?lang=en">English Version</a>{/i18n_pt-br}{_i18n_en}<a href="{vdir|/}{BBROOT_PATH}?lang=pt-br">Versão em Português</a>{/i18n_en}{_mobonly} - <a href="?desktopversion=1">Desktop version</a>{/mobonly}</p>
 			<p>ɔ <strong>PresciaBB</strong> 2014</p>
 		</footer>
 

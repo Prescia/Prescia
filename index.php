@@ -48,7 +48,7 @@ require CONS_PATH_INCLUDE."dbo/".CONS_AFF_DATABASECONNECTOR.".php";
 # Core
 require CONS_PATH_SYSTEM."coreVar.php";
 require CONS_PATH_SYSTEM."core.php";
-# Create core version according to debug/developer mode
+# Create core version according to debug/developer mode (note: does NOT connect to database yet)
 # ab -n50 total mean: 16ms
 
 if (CONS_DEVELOPER || isset($_GET['debugmode'])) {
@@ -100,9 +100,10 @@ if (CONS_AFF_ERRORHANDLER) { // override PHP error messaging? (if true, will not
 }
 # ab -n50 total mean: 19ms 16ms
 
-$core->domainLoad(); // locks domain, load config and start i18n
+$core->domainLoad(); // locks domain, load config, start i18n, parses requested URL
 define("CONS_FMANAGER",CONS_PATH_PAGES.$_SESSION['CODE']."/files/");
-if (CONS_CACHE) $core->cacheControl->startCaches(); // detects which cache to use from auto-throttle system
+$core->servingFile = $core->checkDirectLink(); // if serving a file, will run end here (if file is not set to statistics collection)
+if (CONS_CACHE && !$core->servingFile) $core->cacheControl->startCaches(); // detects which cache to use from auto-throttle system
 
 # -- database and metadata load
 if (!$core->dbconnect()) $core->offlineMode = true;
@@ -111,77 +112,84 @@ if ($core->debugmode) $core->applyMetaData(); // only in debug. Executes onMeta'
 # ab -n50 total mean: 546ms 28ms
 
 # -- start parsing the request
-require CONS_PATH_INCLUDE."getBrowser.php"; # this will also detect if we are on mobile
-$core->parseRequest();
-# ab -n50 total mean: 557ms 29ms (27ms with cache enabled)
+require CONS_PATH_INCLUDE."getBrowser.php"; # this will also detect if we are on mobile (outside servingFile so statistics grab the browser)
+if (!$core->servingFile) {
+	// if serving file, we just want to enable the database and run onEcho plugins
+	$core->parseRequest();
+	# ab -n50 total mean: 557ms 29ms (27ms with cache enabled)
+	
+	# -- which page I want and context are ready on parseRequest, load template, so get the template core (in case we need to dump an error, we can do it with the template)
+	require CONS_PATH_INCLUDE."template/tc.php";
+	$core->template = new CKTemplate(null,CONS_PATH_INCLUDE."template/",$core->debugmode,true);
+	
+	$core->template->constants = array( // these are constants ALWAYS available (echoed) in the template
+		'PAGE_TITLE' => isset($core->dimconfig['pagetitle'])?$core->dimconfig['pagetitle']:UcWords($_SESSION['CODE']),
+		'IMG_PATH' => CONS_INSTALL_ROOT.CONS_PATH_PAGES.$_SESSION['CODE']."/files/",
+		'FMANAGER_PATH' => CONS_INSTALL_ROOT.CONS_FMANAGER, // CONS_FMANAGER came from custom config.php
+		'BASE_PATH' => CONS_INSTALL_ROOT,
+		'JS_PATH' => CONS_INSTALL_ROOT.CONS_PATH_JSFRAMEWORK,
+		'SESSION_LANG' => $_SESSION[CONS_SESSION_LANG],
+		'CHARSET' => $core->charset,
+		'DOMAIN_NAME' => $core->domain,
+		'METAKEYS' => '', // meta keys contents (not the tag)
+		'METADESC' => '', // meta description contents ( not the tag)
+		'CANONICAL' => '', // canonical contents (the URL, not the tag)
+		'HEADCSSTAGS' => '', // CSS tags (should be echoed before js)
+		'HEADJSTAGS' => '', // JS tags
+		'HEADUSERTAGS' => '', // other tags that will come last in the HEADER
+		'METATAGS' => '' // actual meta tags (build with the contents above, at core::showTemplate)
+	);
+	
+	require CONS_PATH_SYSTEM."tcexternal.php"; // template classes not built-in into the core (plugins)
+	$core->template->externalClasses = new CKTCexternal($core);
+	foreach ($core->tClass as $class=>$script)
+		$core->template->varToClass[] = $class;
+	$core->loadIntlControl(); # load i18n variables into template system
+	
+	# -- at this point, the framework overhead is done. From now on, it's mostly the site code.
+	# ab -n50 total mean: 575ms 38ms (36ms with cache enabled)
 
-# -- which page I want and context are ready on parseRequest, load template, so get the template core (in case we need to dump an error, we can do it with the template)
-require CONS_PATH_INCLUDE."template/tc.php";
-$core->template = new CKTemplate(null,CONS_PATH_INCLUDE."template/",$core->debugmode,true);
+	# -- actions and cron run regardless of cache restrictions
+	$core->checkActions();
+	$core->cronCheck();
+	# ab -n50 total mean: 624ms 46ms (41ms with cache enabled)
 
-$core->template->constants = array( // these are constants ALWAYS available (echoed) in the template
-	'PAGE_TITLE' => isset($core->dimconfig['pagetitle'])?$core->dimconfig['pagetitle']:UcWords($_SESSION['CODE']),
-	'IMG_PATH' => CONS_INSTALL_ROOT.CONS_PATH_PAGES.$_SESSION['CODE']."/files/",
-	'FMANAGER_PATH' => CONS_INSTALL_ROOT.CONS_FMANAGER, // CONS_FMANAGER came from custom config.php
-	'BASE_PATH' => CONS_INSTALL_ROOT,
-	'JS_PATH' => CONS_INSTALL_ROOT.CONS_PATH_JSFRAMEWORK,
-	'SESSION_LANG' => $_SESSION[CONS_SESSION_LANG],
-	'CHARSET' => $core->charset,
-	'DOMAIN_NAME' => $core->domain,
-	'METAKEYS' => '', // meta keys contents (not the tag)
-	'METADESC' => '', // meta description contents ( not the tag)
-	'CANONICAL' => '', // canonical contents (the URL, not the tag)
-	'HEADCSSTAGS' => '', // CSS tags (should be echoed before js)
-	'HEADJSTAGS' => '', // JS tags
-	'HEADUSERTAGS' => '', // other tags that will come last in the HEADER
-	'METATAGS' => '' // actual meta tags (build with the contents above, at core::showTemplate)
-);
-
-require CONS_PATH_SYSTEM."tcexternal.php"; // template classes not built-in into the core (plugins)
-$core->template->externalClasses = new CKTCexternal($core);
-foreach ($core->tClass as $class=>$script)
-	$core->template->varToClass[] = $class;
-$core->loadIntlControl(); # load i18n variables into template system
-
-# -- at this point, the framework overhead is done. From now on, it's mostly the site code.
-# ab -n50 total mean: 575ms 38ms (36ms with cache enabled)
-
-# -- actions and cron run regardless of cache restrictions
-$core->checkActions();
-$core->cronCheck();
-# ab -n50 total mean: 624ms 46ms (41ms with cache enabled)
-
-# -- cache test
-if (CONS_CACHE && !isset($_REQUEST['nocache'])) {
-	$core->cacheControl->cachepath = CONS_PATH_CACHE.$_SESSION['CODE']."/caches/";
-	$core->cacheControl->cacheseed = ''; // language and user id are automatic
-	if ($core->cacheControl->canUseCache($core->offlineMode)) { # we can use the cache, load it up
-		$usedCache =true;
-		$PAGE = $core->cacheControl->renderCache();
-	} else { # can't use cache, build page normally (same as on the next ELSE)
+	# -- cache test
+	if (CONS_CACHE && !isset($_REQUEST['nocache'])) {
+		$core->cacheControl->cachepath = CONS_PATH_CACHE.$_SESSION['CODE']."/caches/";
+		$core->cacheControl->cacheseed = ''; // language and user id are automatic
+		if ($core->cacheControl->canUseCache($core->offlineMode)) { # we can use the cache, load it up
+			$usedCache =true;
+			$PAGE = $core->cacheControl->renderCache();
+		} else { # can't use cache, build page normally (same as on the next ELSE)
+			$core->renderPage();
+			$core->template->constants['ACTION'] = $core->action; // yes, render could change it
+			$core->template->constants['CONTEXT'] = $core->context_str;
+			$PAGE = $core->showTemplate();
+			unset($core->template); // free memory
+			if ($core->layout < 2 ) $core->cacheControl->setCache($PAGE);
+		}
+	} else { # cache disabled or can't use cache, build page normaly (same as on the ELSE above)
+		// note: core::loadMetadata already run a dumpTemplateCaches if that was required
 		$core->renderPage();
 		$core->template->constants['ACTION'] = $core->action; // yes, render could change it
 		$core->template->constants['CONTEXT'] = $core->context_str;
 		$PAGE = $core->showTemplate();
-		unset($core->template); // free memory
-		if ($core->layout < 2 ) $core->cacheControl->setCache($PAGE);
+		unset($core->template);
 	}
-} else { # cache disabled or can't use cache, build page normaly (same as on the ELSE above)
-	// note: core::loadMetadata already run a dumpTemplateCaches if that was required
-	$core->renderPage();
-	$core->template->constants['ACTION'] = $core->action; // yes, render could change it
-	$core->template->constants['CONTEXT'] = $core->context_str;
-	$PAGE = $core->showTemplate();
-	unset($core->template);
+	# ab -n50 total mean: 649ms 72ms (42m with cache enabled)
+	
+	# -- build headers
+	$core->headerControl->showHeaders();
+	# -- any script want to check the raw text/HTML output?
 }
-# ab -n50 total mean: 649ms 72ms (42m with cache enabled)
 
-# -- build headers
-$core->headerControl->showHeaders();
-# -- any script want to check the raw text/HTML output?
 foreach ($core->onEcho as $scriptName) {
 	$core->loadedPlugins[$scriptName]->onEcho($PAGE);
 }
+
+if ($core->servingFile) $core->close(true); // end here
+
 # -- collect and serve
 $error = ob_get_contents();
 ob_end_clean();

@@ -43,7 +43,8 @@
 			if (!isset($module->fields[$param[$vFn]['key']])) $this->errorControl->raise(186,$param[$vFn]['key'],"UDM","Field not found (".$param[$vFn]['key'].") on entry ".$vFn);
 
 			if ($isTree) { // we will consume 1 or more folders according to how many are available
-				if (count($tempContext)<=$treeOffset) {
+				
+				if ($treeOffset>0 && count($tempContext)<=$treeOffset) {
 					// we have LESS folders than necessary to treat this, because the offset tells us to ignore some!
 					return false;
 				}
@@ -85,6 +86,10 @@
 							$_REQUEST[$fqv] = $result[$fqv];
 						}
 					}
+					// rebuild context w/o this
+					$this->context = $tempContext;
+					$this->context_str = $strContext == ''?'/':'';
+					
 				}
 			} else {
 				return false;

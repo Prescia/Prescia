@@ -1,19 +1,14 @@
 <?
 
-	/*if ($this->parent->action == "forum" && !$this->parent->queryOk(array("#id"))) {
-		$this->parent->action = "index";
-		return;
-	}*/
-	
-	if ($this->parent->action == "preview") $_REQUEST['nocache'] = true; 
+	if ($this->parent->action == "preview" || $this->parent->action == "profile") $_REQUEST['nocache'] = true; 
 
-
+	$permaFolders = count(explode("/",$this->bbfolder))-2;
 	$ok = $this->parent->udm(array(array('module' => 'FORUM',
 								 'key' => 'urla',
 								 'convertquery' => 'id_forum', // if the URL is the key, put keys this $_REQUEST
 								 'filter' => 'forum.lang = "'.$_SESSION[CONS_SESSION_LANG].'"', // also, fill the $_REQUEST for these fields
 								 'treemode' => true, // will use the parenting system to check for folder tree structures
-								 'treeoffset' => $this->bbfolder != ''?1:0 // either to ignore or not the root virtual folder that contains the forum 
+								 'treeoffset' => $permaFolders // either to ignore or not the root virtual folder that contains the forum 
 								)
 							) // we can have multiple folders, just put in descending order
 					,true); // true, trash all others, we don't care about them (false would cause 404)
@@ -22,7 +17,8 @@
 		$this->parent->virtualFolder = false;
 		// if we are at index, internal-foward to forum
 		if ($this->parent->action == 'index') $this->parent->action = 'forum';
-	}
+	} else if ($this->parent->action == 'forum') 
+		$this->parent->action = 'index';
 
 	// checks if the file is a thread (don't even run on obvious actions)
 	if (!in_array($this->parent->action,array("index","forum","thread","profile","preview")))

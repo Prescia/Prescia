@@ -9,11 +9,11 @@
 	<NAME size="124" mandatory="true">VC</NAME>
 	<EMAIL special="mail" size="124">VC</EMAIL>
 	<LOGIN special="login" mandatory="true" size="40" ignorenedit="true" unique="true">VC</LOGIN>
-	<PASSWORD meta="password" special="login" restrict="50" size="50" ignorenedit="true" mandatory="true">VC</PASSWORD>
+	<PASSWORD meta="password" special="login" size="50" ignorenedit="true" mandatory="true">VC</PASSWORD>
 	<ACTIVE mandatory="true" restrict="50" default="y">BOL</ACTIVE>
 	<EXPIRATION_DATE restrict="50">DATETIME</EXPIRATION_DATE>
 	<HISTORY restrict="100" custom="true" html="true">TEXT</HISTORY>
-	<USERPREFS custom='true' meta="this predates the serialization system" restrict="10">TEXT</USERPREFS>
+	<USERPREFS custom='true' meta="this predates the serialization system">TEXT</USERPREFS>
 	<IMAGE filetypes="gif,jpg,png" filemaxsize="256000" thumbnails="600,600|50,50" tweakimages="croptofit|croptofit">UPLOAD</IMAGE>
 </USERS>
 <GROUPS dbname="auth_groups"

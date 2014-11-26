@@ -3,6 +3,8 @@
 	"messages" => "Mensagens",
 	"profile" => "Perfil",
 	"last_thread" => "Último Tópico",
+	"last_article" => "Último Artigo",
+	"articles" => "Artigos",
 	"last_post" => "Último Post",
 	"threads" => "Tópicos",
 	"posts" => "Posts",

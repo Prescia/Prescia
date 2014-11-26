@@ -1,33 +1,61 @@
-<?
+<? /* ----- BB thread
+ * Behaves 3 different ways depending on operationmode of the thread
+ * Note that the correct template must have been loaded (that is done on default.php)
+ * + BB MODE: list of posts, just like a normal forum
+ * + BLOG MODE: the first post is the BLOG POST, the rest are COMMENTS. The BLOG POST always shows even on "n" pages
+ * + ARTICLES MODE: there are no comments, only ONE post, so no pagination and stuff, just the _masterpost
+ */
 
+	if (!isset($core->storage['friendlyurldata']) ||
+	    !isset($core->storage['friendlyurlmodule'])) $core->fastClose(404);
+
+	// user options (ipp)
 	$up = isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])?$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']:false;
 	if ($up !== false) {
 		if (!is_array($up)) $up = @unserialize($up);
 		$ipp = $up['pfim'];
 	} else
-		$ipp = 15; 
+		$ipp = 15;
 
-	if (!isset($core->storage['friendlyurldata']) ||
-	    !isset($core->storage['friendlyurlmodule'])) $core->fastClose(404);
+	$mode = $core->storage['friendlyurldata']['forum_operationmode']; 
+	if ($mode != 'bb' && $core->template->get("_masterpost") === false) $mode = "bb"; // force bb mode if we don't have master post (personalized template fail)
 
+	// ckeditor if we can add data, shadowbox if image
+	if (!$this->noregistration || $mode == "articles") { // if we don't allow registration, we also don't allow postings
+		$core->addLink("ckeditor/ckeditor.js",true);
+		$core->addLink("validators.js");
+	}
+	// if we have image, add shadowbox
+	if ($core->storage['friendlyurldata']['image'] == 'y') $core->addScript("shadowbox");
+
+	// -- this will apply image tags and use _toggles
+	$core->templateParams['core'] = &$this->parent;
+	$core->templateParams['module'] = $core->loaded($core->storage['friendlyurlmodule']);
+	$core->storage['friendlyurldata'] = prepareDataToOutput($core->template,$core->templateParams,$core->storage['friendlyurldata']);
 	$core->template->fill($core->storage['friendlyurldata']);
+	// --
+	
+	// add data from this FORUM data
 	$core->template->assign("forumurla",$core->storage['friendlyurldata']['forum_urla'] != ''?$core->storage['friendlyurldata']['forum_urla']."/":"");
+	// add video from FORUMTHREAD (image handled on prepareDataToOutput)
 	if ($core->storage['friendlyurldata']['video']!='') {
 		$core->template->assign("videoembed",getVideoFrame($core->storage['friendlyurldata']['video'],0,0,'embed-responsive-item'));
 	} else
 		$core->template->assign("_hasvideo");
-
+	
+	// prepare to get posts
 	$idf = $core->storage['friendlyurldata']['id_forum'];
 	$idt = $core->storage['friendlyurldata']['id'];
-
-	$totalPost = $core->dbo->fetch("SELECT count(id) FROM bb_post WHERE id_forum=$idf AND id_forumthread=$idt");
-	if (isset($_REQUEST['lastpage'])) {
-		$_REQUEST['p_init'] = floor($totalPost/$ipp)*$ipp;
+	
+	// count posts
+	$totalPost = $mode != "articles"?$core->dbo->fetch("SELECT count(id) FROM bb_post WHERE id_forum=$idf AND id_forumthread=$idt GROUP BY id_forumthread"):1;
+	// NOTE: if we are not on bb mode, the FIRST post must be IGNORED, that's why we reduce one from totalPost in that case, EVERYWHERE
+	if (isset($_REQUEST['lastpage'])) { // if requested last page, calculate first post of last page
+		$_REQUEST['p_init'] = floor(($mode=='bb'?$totalPost:$totalPost-1)/$ipp)*$ipp;
 	}
-	$p = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])?$_REQUEST['p_init']:0; // item starting this page
-	$core->template->assign("pg",ceil($totalPost/$ipp));
+	$core->template->assign("pg",ceil(($mode=='bb'?$totalPost:$totalPost-1)/$ipp));
 
-	// views
+	// views (use statistics plugin)
 	$pageToBelogged = substr($core->original_context_str,1);
 	if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
 	$act = $core->original_action;
@@ -40,24 +68,42 @@
 	$v = $core->loadedPlugins['bi_stats']->getCounter($pageToBelogged);
 	$core->template->assign("v",$v>0?$v:1);
 
-	// posts (count)
-	$core->template->assign("p",$core->dbo->fetch("SELECT count(distinct id) FROM bb_post WHERE id_forum=$idf AND id_forumthread=$idt GROUP BY id_forumthread"));
+	// posts (count) - note again the first post of a non-bb mode is not counted
+	$core->template->assign("p",$mode == 'bb'?$totalPost:$totalPost-1);
 
 	// posts
-	$sql = "SELECT p.*,u.login, u.image
+	$sql = "SELECT p.*,u.login, u.image, u.name
 		    FROM (bb_post as p, auth_users as u)
 		    WHERE p.id_forumthread = $idt AND p.id_forum = $idf AND
 		    	  u.id = p.id_author
 		    ORDER BY p.date ASC";
+	
+	// where we start?
+	$tempini = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])? $_REQUEST['p_init']:0; // apparent start 
+	if ($mode != 'bb') {
+		// always show the FIRST main post
+		$_REQUEST['p_init'] = 0; 
+		$core->runContent('forumpost',$core->template,$sql,"_masterpost",1,"masterpost".$idt."idf".$idf,"getuseravatar");
+		// this is the real starting point (add one because we showed the main post already)
+		$_REQUEST['p_init'] = $tempini + 1;
+	} else
+		// bb mode works normally
+		$_REQUEST['p_init'] = $tempini;
 
-	$total = $core->runContent('forumpost',$core->template,$sql,"_post",$ipp,"postsforidt".$idt."idf".$idf."p".$p,"getuseravatar");
-	if ($total > $ipp)
-		$core->template->createPaging("_paginacao",$total,$p,$ipp);
-	else
-		$core->template->assign("_paginacao");
+	// comments	
+	if ($mode != "articles") {
+		$total = $core->runContent('forumpost',$core->template,$sql,"_post",$ipp,"postsforidt".$idt."idf".$idf."p".$tempini,"getuseravatar");
+		
+		// paging
+		if ($mode != 'bb') $total--; // removes main post of non bb, so totals are ok
+		if ($total > $ipp)
+			$core->template->createPaging("_paginacao",$total,$tempini,$ipp);
+		else
+			$core->template->assign("_paginacao");
+		$core->template->assign("pg_2",$core->template->get("_paginacao"));
+	}
 
-	$core->template->assign("pg_2",$core->template->get("_paginacao"));
-
+	// callback that loads user avatars or default image
 	function getuseravatar(&$template, &$params, $data, $processed=false) {
 		if ($processed) return $data;
 		if ($data['image'] == 'n')
@@ -71,5 +117,3 @@
 		return $data;
 	}
 
-	$core->addLink("ckeditor/ckeditor.js",true);
-	$core->addLink("validators.js");

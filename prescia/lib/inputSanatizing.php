@@ -23,21 +23,21 @@
 		$output = preg_replace("@<\/?title([^>]*)>@i","",$output);
 		$output = preg_replace("@<\/?!doctype([^>]*)>@i","",$output);
 		if (!$allowadv) {
-			$output = preg_replace("@(<\/?script)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?form)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?input)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?button)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?object)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?embed)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?textarea)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?select)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?option)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?applet)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?canvas)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?style)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);					
-			$output = preg_replace("@(<\/?layer)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?iframe)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
-			$output = preg_replace("@(<\/?link)(( |\t|\n|\n\r)+(([a-z]+)=(('([^'>]*)')|(\"([^\">]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?script)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?form)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?input)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?button)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?object)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?embed)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?textarea)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?select)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?option)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?applet)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?canvas)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?style)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);					
+			$output = preg_replace("@(<\/?layer)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?iframe)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
+			$output = preg_replace("@(<\/?link)(( |\t|\n|\n\r)+(([a-z]+)=(('([^']*)')|(\"([^\"]*)\")|([^> ]+)))?)*(\/?>)@i","",$output);
 		}
 		return $output;
 	}
@@ -72,9 +72,7 @@
 					if (!$inScript && (substr($theTag,0,6) == 'script' || substr($theTag,0,5) == "style")) $inScript = true;
 					else if ($inScript && (substr($theTag,0,7) == '/script' || substr($theTag,0,6) == "/style")) $inScript = false;
 					if ($preserveEndOfLine) {
-						if (substr($theTag,0,3) == "br " ||
-							substr($theTag,0,3) == "br>" ||
-							substr($theTag,0,3) == "br/" ||
+						if (substr($theTag,0,2) == "br" ||
 							substr($theTag,0,2) == "/p") {
 							$output .= "<br/>";
 						}
@@ -86,6 +84,6 @@
 			} else if (!$inScript)
 				$output .= $str[$p]; // note this will also remove tags that where not finished (cropped)
 		}
-		return preg_replace("@(<[^b][^r])@","&lt;",$output);
+		return $output;
   	}
 

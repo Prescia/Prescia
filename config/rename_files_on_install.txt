@@ -1,0 +1,2 @@
+domains and settings.php are required for Prescia to work. Please rename them as needed.
+They come with different name so you can update your version without overrighting them.

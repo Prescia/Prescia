@@ -3,7 +3,7 @@ function isMail( email ) {
 	return ereg( email,"^[A-Za-z0-9]+(([_\.\-]?[a-zA-Z0-9]+(_)?)*)@([A-Za-z0-9]+)(([\.\-]?[a-zA-Z0-9]+)*)\.([A-Za-z]{2,})$");
 }
 function isLogin(value,allowSpace) {
-	return ereg(value,allowSpace?"^([ A-Za-z0-9_\.@\-]){4,30}$":"^([A-Za-z0-9_\.@\-]){4,30}$");
+	return ereg(value,allowSpace?"^([ A-Za-z0-9_\.@\-]){4,50}$":"^([A-Za-z0-9_\.@\-]){4,50}$");
 }
 function isnumber( value, accept_commas ) {
 	return ereg(value,accept_commas?"^(\-)?([0-9]+)(([,\.])([0-9]{3}))*(([,\.]{1})([0-9]*))?$":"^(\-)?([0-9]+)$");

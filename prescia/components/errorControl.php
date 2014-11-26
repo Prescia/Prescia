@@ -116,7 +116,7 @@ class CErrorControl {
 								168 => CONS_ERROR_MESSAGE, # a Plugin prevented database change based on edit_parse (modules::runAction // [script]::edit_parse)
 								169 => CONS_ERROR_FATAL_MAIL, # on RunContent, tried to use fast counting and failed
 								170 => CONS_ERROR_FATAL, # Script not found on onMeta (which means the script loaded and registered onMeta, but was not found onMeta)
-								171 => CONS_ERROR_WARNING, # FMANAGER request arrived to index.html
+								171 => CONS_ERROR_WARNING, ####################### FREE ERROR CORE ###################### 
 								178 => CONS_ERROR_FATAL_MAIL, # too many errors/possible error loop
 								179 => CONS_ERROR_WARNING, # 404 error was unable to be stored in 404.log
 								180 => CONS_ERROR_FATAL, # custom.xml (merger of all) corrupt

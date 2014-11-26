@@ -1,11 +1,10 @@
 <?	# -------------------------------- Prescia Module, all modules loaded from XML inherit this file
 
 function prepareDataToOutput(&$template, &$params, $data, $processed = false) { // you can prevent auto-running this with ?noOutputParse=true
-	# A callback might be called multiple times. The processed should come as TRUE on all second or more times it's called to prevent performance impact
-	# IMPORTANT: DO NOT REMOVE A CONTENT BY SETTING IT AS $data['_somecontent'] = ""; OR THIS WILL REMOVE SAID CONTENT FROM ALL FURTHER OCCURENCES OF THE RUNCONTENT LOOP (this the object is not instantiated on each iteraction for performance).
+	# This callback might be called multiple times. The $processed should come as TRUE on all second or more times it's called to prevent performance impact
+	# IMPORTANT: DO NOT REMOVE A CONTENT BY SETTING IT AS $data['_somecontent'] = "" OR THIS WILL REMOVE SAID CONTENT FROM ALL FURTHER OCCURENCES OF THE RUNCONTENT LOOP (the object is not instantiated on each iteraction for performance).
 	#			 INSTEAD, ADD THE CONTENT TO BE REMOVED ON THE $params['excludes'] array, as: $params['excludes'][] = "_somecontent";
 	#			 THIS WILL SIMPLY NOT ECHO THE CONTENT ON THE ITERACTION, WHILE PRESERVING IT INSIDE THE TEMPLATE OBJECT
-	# Multikey OK
 
 	$myTitle = isset($data[$params['module']->title])?$data[$params['module']->title]:'';
 	if ($myTitle != '') $myTitle = str_replace("\"","",htmlspecialchars($myTitle,ENT_NOQUOTES));
@@ -35,8 +34,10 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 						$data[$fnamedata."t"] = "";
 						$data[$fnamedata."s"] = "";
 						$file = CONS_FMANAGER.$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
+						$fileout = "files/".$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
 						if ($data[$fname] == 'y' && locateAnyFile($file,$ext,CONS_FILESEARCH_EXTENSIONS)) {
-							$data[$fnamedata] = $file;
+							$fileout .= ".".$ext;
+							$data[$fnamedata] = $fileout;
 							$popped = explode("/",$file);
 							$data[$fnamedata."filename"] = array_pop($popped);
 							if (in_array(strtolower($ext),array("jpg","gif","png","jpeg","swf"))) { // image/flash
@@ -46,30 +47,31 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 							  $data[$fnamedata."s"] = humanSize(filesize($file));
 							  if (in_array(strtolower($ext),array("jpg","gif","png","jpeg"))) { // image
 							  	$randomseed = "?r=".rand(1000,9999).date("YmdHis");
-								$data[$fnamedata."t"] = "<img src=\"".CONS_INSTALL_ROOT.$file.$randomseed."\" width='".$h[0]."' title=\"".$myTitle."\" height='".$h[1]."' alt='' />";
+								$data[$fnamedata."t"] = "<img src=\"".CONS_INSTALL_ROOT.$fileout.$randomseed."\" width='".$h[0]."' title=\"".$myTitle."\" height='".$h[1]."' alt='' />";
 							  } else if (strtolower($ext) == "swf") {
 								$data[$fnamedata."t"] =
-								   str_replace("{FILE}",$file,
+								   str_replace("{FILE}",$fileout,
 								   str_replace("{H}",$h[1],
 								   str_replace("{W}",$h[0],SWF_OBJECT)));
 							  }
 							}
 						} else if (isset($field[CONS_XML_NOIMG])) {
-							$data[$fnamedata] = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$field[CONS_XML_NOIMG];
+							$data[$fnamedata] = "files/".$field[CONS_XML_NOIMG];
 							$popped = explode("/",$data[$fnamedata]);
 							$data[$fnamedata."filename"] = array_pop($popped);
-							$h = getimagesize($data[$fnamedata]);
+							$h = getimagesize(CONS_PATH_PAGES.$_SESSION['CODE']."/".$data[$fnamedata]);
 							$data[$fnamedata."w"] = $h[0];
 							$data[$fnamedata."h"] = $h[1];
-							$data[$fnamedata."s"] = humanSize(filesize($data[$fnamedata]));
+							$data[$fnamedata."s"] = humanSize(filesize(CONS_PATH_PAGES.$_SESSION['CODE']."/".$data[$fnamedata]));
 							$data[$fnamedata."t"] = "<img src=\"".CONS_INSTALL_ROOT.$data[$fnamedata]."\" width='".$h[0]."' title=\"".$myTitle."\" height='".$h[1]."' alt='' />";
 						}
 					 }
 				} else if ($data[$fname]== 'y') { // file w/o image, present
 					$file = CONS_FMANAGER.$params['module']->name."/".$fname.$keystring."_1";
+					$fileout = "files/".$params['module']->name."/".$fname.$keystring."_1";
 					$fnamedata = $fname."_1";
 					if (locateAnyFile($file,$ext)) {
-						$data[$fnamedata] = CONS_INSTALL_ROOT.$file;
+						$data[$fnamedata] = CONS_INSTALL_ROOT.$fileout.$ext;
 						$data[$fnamedata."s"] = humanSize(filesize($file));
 						$popped = explode("/",$file);
 						$data[$fnamedata."filename"] = array_pop($popped);
@@ -140,7 +142,6 @@ class CModule {
 	var $name = "";
 	var $parent = null; # Framework object
 	var $title = "";
-	# database table and data
 	var $dbname = "";
 	var $keys = array('id');
 	var $plugins = array(); # script plugins this module has (the actual objects are stored on the core::loadedPlugins
@@ -282,6 +283,7 @@ class CModule {
 			$sql['FROM'][] = $this->dbname." as ".$this->name;
 			$pos = 0;
 			foreach($this->fields as $nome => $campo) {
+			  if ($nome == "password") continue; // yeap, never select passwords
 			  $haveItem = in_array($nome,$this->keys) || isset($taglist[$nome]) || isset($taglist['_toggle_'.$nome]); # keys are always present due to upload and other fields dependent on them indirectly
 			  if (!$haveItem || $campo[CONS_XML_TIPO] == CONS_TIPO_LINK) { // we might have the id, but what about other data from inside the link?
 			  	if ($campo[CONS_XML_TIPO] == CONS_TIPO_UPLOAD) {
@@ -323,6 +325,7 @@ class CModule {
 				  	$tablecast .= "s"; # keyword, add a "s" to prevent it from causing SQL problems
 				  $insideHaveitem = false;
 				  foreach ($remodeModule->fields as $cremote_nome => $remote_campo) {
+				  	if ($cremote_nome == "password") continue; // yeap, never select passwords
 				  	if (isset($taglist[$tablecast."_".$cremote_nome])) {
 				  		$insideHaveitem = true;
 						break;
@@ -330,16 +333,10 @@ class CModule {
 				  }
 				  if ($insideHaveitem) {
 						foreach ($remodeModule->fields as $cremote_nome => $remote_campo) {
+							if ($cremote_nome == "password") continue; // yeap, never select passwords
 							if ($cremote_nome != $remodeModule->keys[0]) {
 								# do not add main key (this module should have it anyway)
 								$rmod_nome = $tablecast;
-							/*
-								$trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
-								while (substr($rmod_nome,strlen($rmod_nome)-2) == "_e" && !isset($this->fields['id_'.$trmod_nome])) {
-									$rmod_nome = $trmod_nome;
-									$trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
-								}
-							*/
 								if (isset($taglist[$rmod_nome."_".$cremote_nome]))
 									$sql['SELECT'][] = $tablecast.".".$cremote_nome." as ".$rmod_nome."_".$cremote_nome;
 							}
@@ -448,21 +445,11 @@ class CModule {
 			  if (in_array($tablecast,array("group","from","to","as","having","order","by","join","left","right"))) #reserved words that could cause issues on the SQL
 			  	$tablecast .= "s"; # keyword, add a "s" to prevent it from causing SQL problems
 			  foreach ($remodeModule->fields as $cremote_nome => $remote_campo) {
+			  	if ($cremote_nome == "password") continue; // yeap, never select passwords
 			  	// for each field on remote table
 				if ($cremote_nome != $remodeModule->keys[0]) {
 				  # do not add main key (this module should have it anyway)
 				  $rmod_nome = $tablecast;
-
-				  # TODO: WTF is this?
-				  /*
-				  $trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
-				  while (substr($rmod_nome,strlen($rmod_nome)-2) == "_e" && !isset($this->fields['id_'.$trmod_nome])) { // do not fields that end with _e and have one without _e
-					$rmod_nome = $trmod_nome;
-					$trmod_nome = substr($rmod_nome,0,strlen($rmod_nome)-2);
-				  }
-				  */
-				  # ---- END WTF is this
-
 				  $sql['SELECT'][] = $tablecast.".".$cremote_nome." as ".$rmod_nome."_".$cremote_nome;
 				}
 				if ($remote_campo[CONS_XML_TIPO] == CONS_TIPO_LINK) {
@@ -1363,7 +1350,7 @@ class CModule {
 				foreach ($this->fields as $name => $field) {
 					if ($this->parent->safety && isset($field[CONS_XML_RESTRICT]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < $field[CONS_XML_RESTRICT] && !isset($field[CONS_XML_UPDATESTAMP])) {
 						# safety is on and this is a restricted field, while the user trying to change it does not have enough level
-						$this->parent->errorControl->raise(145,$name,$this->name);
+						if (isset($data[$name])) $this->parent->errorControl->raise(145,$name,$this->name);
 						continue;
 					}
 					if ($name != $this->keys[0] && strpos($field[CONS_XML_SQL],"AUTO_INCREMENT") === false) { # cannot change main key or auto_increment ones
@@ -1444,11 +1431,11 @@ class CModule {
 
 				foreach ($this->fields as $name => $field) {
 					if ($this->parent->safety && isset($field[CONS_XML_RESTRICT]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < $field[CONS_XML_RESTRICT]) {
-						# safety is on and this is a restricted field, while the user trying to change it does not have enough level
+						# safety is on and this is a restricted field, while the user trying to add it does not have enough level
 						# however while ADDING a field that is mandatory, if it has no default you can add
 						if (!isset($field[CONS_XML_MANDATORY]) || isset($field[CONS_XML_DEFAULT])) {
+							if (isset($data[$name])) $this->parent->errorControl->raise(145,$name,$this->name,'not mandatory or default on add');
 							unset($data[$name]);
-							$this->parent->errorControl->raise(145,$name,$this->name,'not mandatory nor default on add');
 						}
 					}
 					if (strpos(strtolower($field[CONS_XML_SQL]),"auto_increment") === false && !($this->keys[0] == "id" && $name == $this->keys[0] && count($this->keys)>1 )) { # cannot change auto_increment or main key fields

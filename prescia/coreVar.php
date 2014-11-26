@@ -4,8 +4,8 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","14.11.07 beta RC"); // (Y.m.d) ~ last stable: n/a
-define ("AFF_VERSION",0.9);  // 1.0 conditioned
+define ("AFF_BUILD","14.11.26 beta"); // (Y.m.d) ~ last stable: n/a
+define ("AFF_VERSION",0.9);  
 // Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 
 # -- XML parameter
@@ -115,31 +115,38 @@ class CPresciaVar {
 	var $doctype = "html"; # html or xhtml. xhtml is very restrictive, beware
 	var $domainTranslator = array(); # if a site has multiple domains, you can foward each domain to a separate folder with domain=>folder here (no "/" allowed)
 	var $debugFile = ''; # Set this to the HTML template to debug areas (full path)
-
+	var $noBotProtectOnAjax = false; # if true, disable bot protection on ajax. Enabled usually by newsletter system
+	var $collectStatsOnTheseFiles = array(); # files inside the file manager that you wish to allow full run to collect stats (SLOW)
+	
 	# Filled at startup / action
 	var $offlineMode = false; # if true, means database is not online, and will try caches (automatic)
 	var $dbless = false; # we expect a database
-	var $domain = ""; # this domain (automatic)
-	var $action = ""; # action (file) requested
-	var $original_action = ""; # full file, important for file check, if in the right context, WITHOUT EXTENSION
-	var $context = array(); # the context, in the array form (usefull to run back to default.php on the folder structure)
+	var $maintenanceMode = false; # if file maint.txt at root, will be true and will put maint.txt as a msg
+	
+	# URL/Domain requested (all filled on domainload)
+	var $domain = ""; # this domain 
+	var $action = ""; # action (file) requested #no extension# 
+	var $original_action = ""; # full file, important for file check, if in the right context, WITH EXTENSION
+	var $context = array(); # the context, in the array form (usefull to run back to default.php on the folder structure), always starts with an empty entry (root)
 	var $context_str = ""; # implode of context, stored for faster access, must start AND end with /
 	var $original_context_str = ""; # full path, with no change whatsoever (UDM, friendlyurl etc could change the path too)
-	var $maintenanceMode = false; # if file maint.txt at root, will be true and will put maint.txt as a msg
-	var $noBotProtectOnAjax = false; # if true, disable bot protection on ajax. Enabled usually by newsletter system
+	var $original_ext = ""; # which file extension (if any) was requested
+	var $ignore404 = false; # on 404, ignore it as other scripts will handle it (example: actions, urnames)
+	var $virtualFolder = false; # is set at renderPage if the requested folder does not exist on both content nor template
+	var $servingFile = false; # will be set to tue by checkDirectLink() if a file requested statistics using the $collectStatsOnTheseFiles array, otherwise the script ends after file served
 
     # Operation proceedures --
 	var $log = array(); # log array (automatic)
 	var $loglevel = CONS_LOGGING_NOTICE;
 	var $warning = array(); # warning array (automatic - not used by the framework, but can be used by error-handling plugins)
-	var $lastReturnCode = 0; # last returned code from an action (for instance, ID from an include), or last item from a list
-	var $lastFirstset = false; # in a loop from runContent, this will be the FIRST returned set (the last comes from lastReturnCode)
 	var $errorState = false; # If TRUE, some action returned an error, thus the script is on errorState and wont run any more actions
-	var $ignore404 = false; # on 404, ignore it as other scripts will handle it (example: actions, urnames)
-	var $safety = true; # checks permissions on actions (should be set FALSE when the site runs a safe function and want to bypass safety check)
 	var $dimconfig = array(); # dinamic config from meta folder
 	var $cachetime = 0; # throttled cachetime, read from cachecontrol.dat, IN ms
 	var $cachetimeObj = 0; # throttled cachetime for objects, read from cachecontrol.dat, IN ms
+	
+	# Function returns --
+	var $lastReturnCode = 0; # last returned code from an action (for instance, ID from an include), or last item from a list
+	var $lastFirstset = false; # in a loop from runContent, this will be the FIRST returned set (the last comes from lastReturnCode)
 
 	# Controllers --
 	var $dbo = null; # Database Controller object (dbo.php)
@@ -154,7 +161,7 @@ class CPresciaVar {
 	var $nextContainer = ""; # from the current template, where to put the next content (meaning, we are using a frame), "" means there is no further place for content (no frame)
 	var $firstContainer = ""; # first tag on the base container
 	var $templateParams = array(); # used for the runContent and others, fill out before calling any runContent, used by template systems and module.php
-	var $virtualFolder = false; # is set at renderPage if the requested folder does not exist on both content nor template
+	var $templateLoaded = false; # true if LoadTemplate successful
 
 	# Modules -- (from meta.XML)
 	var $modules = array();
@@ -174,6 +181,7 @@ class CPresciaVar {
 	var $templateClasses = array();
 
 	# Session and auth -- (most are stored inside the session, some however are script dependent)
+	var $safety = true; # checks permissions on actions (should be set FALSE when the site runs a safe function and want to bypass safety check)
 	var $currentAuth = CONS_AUTH_SESSION_GUEST; # Current auth level
 	var $permissionTemplate = null; # Default tool permissions built automatically from XML
 	var $storage = array(); # so you can store data accessible anywhere, for instance, from ACTION context to CONTENT context or to _output.php

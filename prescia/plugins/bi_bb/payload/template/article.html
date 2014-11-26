@@ -1,0 +1,32 @@
+{_masterpost}
+
+<article>
+<div class="panel panel-info">
+	<div class="panel-heading">
+		<header>
+			{_imageyes}<img src="/{image}" alt="User Avatar" class="img-rounded" style="width:28px;height:auto"/>{/imageyes}
+			{_imageno}<spam class="glyphicon glyphicon glyphicon-user"></spam>{/imageno}
+			<a href="{vdir|/}{BBROOT_PATH}{forumurla}forum.html?id={id_forum}">{forum_title}</a> - {title}
+			<time datetime="{date|date|Y-m-d H:i}"></time>
+		</header>
+	</div>
+	<div class="panel-body">
+		<div class="row">
+			<div class="col-sm-8">{_t}by{/t} {author_name}</div>
+			<div class="col-sm-2">{v} <small>{_t}views{/t}</small></div>
+			<div class="col-sm-2">{date|date}</div>
+		</div>
+	</div>
+	{_hasvideo}<figure><div style="width:90%;margin:0px auto">
+		<div class="embed-responsive embed-responsive-16by9">
+			{videoembed}
+		</div>
+	</div></figure>{/hasvideo}
+	{_toggle_image}<figure><div class="text-center"><a href="/{image_1}" rel="shadowbox[imgs]">{image_2t}</a></div></figure>{/toggle_image}
+	<div class="panel-body" style="margin-top:20px">
+		{content}
+	</div>
+</div>
+</article>
+
+{/masterpost}

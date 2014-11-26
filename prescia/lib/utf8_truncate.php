@@ -6,13 +6,16 @@
 -*/
 
 	function utf8_truncate($str,$size=50) {
+		if (function_exists('mb_strimwidth')) {
+			return mb_strimwidth($str,0,$size,'','utf-8');
+		}
 		if ($size<0) return "";
 		$len = strlen($str);
 		if ($len<=$size) return $str; # trying to truncate something that is already smaller
 		$charlast = ord($str[$size]);
 		while ($charlast > 0x7F) {
-			$size++;
 			if ($charlast < 0xBF) break; # starting another word
+			$size++;
 			if ($len<=$size) return $str; # UTF encoded is larger word-wise, but smaller character-wise
 			$charlast = ord($str[$size]);
 		}

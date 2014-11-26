@@ -425,21 +425,21 @@ class CKTemplate {
 				}
 			}
 			// avoids amp codes being cut
-			$amp = strpos($content,'&');
-			if ($amp > 0) {
+			$len = strlen($content);
+			$amp = strpos($content,'&',($default-5>=0 && $default-5<$len)?$default-5:0);
+			if ($amp > 0 && $amp <= $default) {
 				$ampf = strpos($content,';',$amp);
 				if ($ampf >= $default) {
-					return substr($content,0,$amp-1).($hasn?"\n":"").$final;
+					return (isset($params[3])?str_replace("\n","<br/>",substr($content,0,$amp-1)):substr($content,0,$amp-1)).($hasn?"\n":"").$final."";
 				}
 			}
-  			$len = strlen($content);
 			if ($len > $default) {
 				if ($len <= $default - strlen($final)) // barelly on the limit
-					return (isset($params[3])?str_replace("\n","<br/>",$content):$content).$final." ";
+					return (isset($params[3])?str_replace("\n","<br/>",$content):$content).$final."";
 				else // under the limit, cut utf8 to avoid issues
 					return (isset($params[3])?str_replace("\n","<br/>",utf8_truncate($content,$default-strlen($final))):utf8_truncate($content,$default-strlen($final))).$final." ";
 			} else // not greater
-				return (isset($params[3])?str_replace("\n","<br/>",$content):$content)." ";
+				return (isset($params[3])?str_replace("\n","<br/>",$content):$content)."";
 		case "nl2br":
 			return nl2br($content);
 		case "onnull":

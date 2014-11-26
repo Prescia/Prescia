@@ -28,7 +28,6 @@
 	define("CONS_MASTERPASS"				,"admin{CODE}"); // if not "", this will override $masterOverride in ALL sites, accepts {CODE} {YEAR} {MONTH} {DAY} {DOMAIN}
 # FILL THIS:
 	define("CONS_MASTERMAIL"				,""); // for fatal errors
-	define("CONS_ACCEPT_DIRECTLINK"			,true); // will accept direct link to the files/ folder with domain/files/..., redirecting to /pages/[code]/files/ by PHP (dangerous if serving large files)
 	define("CONS_NOROBOTDOMAINS"			,""); // these will enforce crawlers NOT to index the domains in this list
 	define("CONS_DEFAULT_IPP"				,50); // default IPP (Itens per page)
 

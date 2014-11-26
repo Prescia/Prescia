@@ -124,6 +124,8 @@ class mod_bi_adm extends CscriptedModule  {
 
 	function onCheckActions() { // check if we should do something, and also check if we are properly on admin page
 
+		if (!$this->parent->virtualFolder) return; // other module processed the folder. The adm pane is a mandatory virtual folder
+	
 		// prepare folders (we can have multiple administrative pages)
 		$this->admFolder = explode(",",$this->admFolder);
 		for ($c=0;$c<count($this->admFolder);$c++) {

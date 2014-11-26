@@ -1,9 +1,10 @@
-<div class="container">
+
 	<h1>{CONTENTMAN_TITLE}</h1>
 	<div>
 	{CONTENTMAN}
 	</div>
 
+	{_} ################ The following template is how to show forums (bb) #########################{/}
 	{_forum}
 	<div class="panel panel-info">
 		<div class="panel-heading"><a href="{vdir|/}{BBROOT_PATH}{urla}/"><spam class="glyphicon glyphicon-th-list"></spam> {title}</a></div>
@@ -31,4 +32,53 @@
 		</div>
 	</div>
 	{/subforum}
-</div>
+	
+	{_} ################ The following template is how to show blogs and articles #########################{/}
+	{_others}
+	<div class="panel panel-info">
+		<div class="panel-heading"><a href="{vdir|/}{BBROOT_PATH}{urla}/"><spam class="glyphicon glyphicon-th-list"></spam> {title}</a></div>
+		<div class="panel-body">
+			<div class="row">
+				<div class="col-sm-10">{_t}last_article{/t} <a href="{vdir|/}{BBROOT_PATH}{urla}/{lt_urla}.html">{lt_title}</a><br/><small> {_t}by{/t} {lt_author} {lt_date|past|true} {_t}ago{/t}</small></div>
+				<div class="col-sm-2">{t}<br/><small>{_t}articles{/t}</small></div>
+				
+			</div>
+		</div>
+	</div>
+	{_insubdirs}{subdirs}{/insubdirs}
+	{/others}
+	{_subothers}
+	<div class="panel panel-info" style="margin-left:{level|math|*50}px">
+		<div class="panel-heading"><a href="{vdir|/}{BBROOT_PATH}{tree}/{urla}/"><spam class="glyphicon glyphicon-th-list"></spam> {title}</a></div>
+		<div class="panel-body">
+			<div class="row">
+				<div class="col-sm-10">{_t}last_article{/t} <a href="{vdir|/}{BBROOT_PATH}{tree}/{urla}/{lt_urla}.html">{lt_title}</a><br/><small> {_t}by{/t} {lt_author} {lt_date|past|true} {_t}ago{/t}</small></div>			
+				<div class="col-sm-2">{t}<br/><small>{_t}articles{/t}</small></div>
+			</div>
+		</div>
+	</div>
+	{/subothers}
+	
+	{_} ################ If you enable "show last threads", this is how they are shown (also set "mainthreadsAsBB" to show as BB or ARTICLES #########################{/}
+	{_thread}
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			{_notbb}<div class="pull-right"><small><time datetime="{pdate|date|Y-m-d H:i}">{pdate|date}</time></small></div>{/notbb}
+			<a href="{vdir|/}{BBROOT_PATH}{_urla_toggle}{urla}/{/urla_toggle}{turla}.html"><spam class="glyphicon glyphicon-{mode|map|bb=comment,blog=comment,articles=book}"></spam> {forum_title} - {title}</a>{_bb} {_t}by{/t} <i>{author_login}</i>{/bb}
+		</div>
+		<div class="panel-body">
+			{_bb}
+			<div class="row">
+				<div class="col-sm-9">{_t}last_post{/t} <i>{login}</i> {pdate|past|true} {_t}ago{/t}</div>
+				<div class="col-sm-3">{totalposts} <small>{_t}posts{/t} ({pg} {_t}pages{/t})</small></div>
+			</div>
+			{/bb}
+			{_notbb}
+			{_toggle_image}<a href="{vdir|/}{BBROOT_PATH}{_urla_toggle}{urla}/{/urla_toggle}{turla}.html" class="text-center" style='margin:10px;display:block;border:0px'><figure>{image_2t}</figure></a>{/toggle_image}
+			{pcontent|truncate|500|…|true|true} <br/>
+			<div class="text-right"><a href="{vdir|/}{BBROOT_PATH}{_urla_toggle}{urla}/{/urla_toggle}{turla}.html">{_t}read{/t} …</a></div>
+			{/notbb}
+		</div>
+	</div>
+	{/thread}
+	

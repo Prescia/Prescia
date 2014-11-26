@@ -9,18 +9,20 @@ class mod_bi_bb extends CscriptedModule  {
 	var $bbfolder = "/bb/"; //  If the forum works at the root, just leave "". If you want more than one, use SEO plugin to redirect them here
 	var $registrationGroup = 4; # when a new user register, he is put into this group
 	var $ignoreTagsSmallerThen = 3; # tags smaller than this number of characters are ignored
-	var $bbpage = "forum"; # TEMPLATE to use as a bb forum (list of threads)
+	// -- how to display a thread/blog/article
+	var $bbpage = "thread"; # TEMPLATE to use as a bb forum (list of threads)
 	var $blogpage = "blog"; # TEMPLATE to use as a blog thread (list of blogs)
 	var $articlepage = "article"; # TEMPLATE to use as article thread (list of articles)
-	var $blockforumlist = false; # if true, the index will be disabled into just a content manager
+	// -- following is for the index
+	var $blockforumlist = false; # if true, the index will be disabled into just a content manager, w/o the forum list
+	var $showlastthreads = 0; # if 0, show none. Otherwise show how much you cho0se here
+	var $mainthreadsAsBB = true; # set false to show as articles, not threads
+	// -- following for frame
 	var $areaname = "forum"; # title of the area, when not provided. Be sure to have i18n tags for it
 	var $homename = "home"; # title of the "home" link at the frame
-		// _isbb
-		// _isblog
-		// _isarticle
-		// _notbb
+	var $noregistration = false; # set true to disable user registration features
 	######################
-	// --
+
 	var $customPermissions = array('can_flag' => 'can_flag',
 								   'can_blog' => 'can_blog', // the standard settings is for every mode. This is just for blog/article (if you disable main permission, this is useless)
 								   'can_prop' => 'can_prop'
@@ -42,32 +44,28 @@ class mod_bi_bb extends CscriptedModule  {
 	}
 
 	function onCheckActions() {
+		
+		if (isset($this->parent->loadedPlugins['bi_adm']) && $this->parent->loadedPlugins['bi_adm']->isAdminPage) return; // bi_adm captured first
+
 		$this->bbfolder = trim($this->bbfolder," /");
 		$this->bbfolder = ($this->bbfolder!=''?"/":"").$this->bbfolder."/";
 		$this->isBBPage = $this->bbfolder == substr($this->parent->context_str,0,strlen($this->bbfolder));
 
 		if ($this->isBBPage) {
-
+						
 			$core = &$this->parent;
-			if ($this->parent->action == "_cms" && !$this->blockforumlist) $this->parent->action = "index";
+			
+			$oa = explode(".",$this->parent->original_action);
+			$oa = array_shift($oa);
+			if (($oa == "index" || $oa == '') && $this->parent->action == "_cms") $this->parent->action = "index"; // CMS captured the page, give it back!
+			if ($this->noregistration && ($this->parent->action == "login" || $this->parent->action == "profile" || $this->parent->action == "preview")) $this->parent->action = "index";
 
 			$this->filter = "forum.lang=\"".$_SESSION[CONS_SESSION_LANG]."\"";
 
 			$this->parent->template->constants['IMG_BBPATH'] = CONS_INSTALL_ROOT.CONS_PATH_PAGES."_common/files/bb/";
 			$this->parent->template->constants['BBROOT_PATH'] = substr($this->bbfolder,1);
-			/*
-			$ok = $this->parent->udm(array(array('module' => 'forum',
-								 'key' => 'urla',
-								 'convertquery' => 'id_forum', // if the URL is the key, put keys this $_REQUEST
-								 'fillqueries' => 'lang,operationmode', // also, fill the $_REQUEST for these fields
-								 'filter' => 'forum.id_parent = 0 OR forum.id_parent is NULL'
-								)
-							) // we can have multiple folders, just put in descending order
-					,true); // true, trash all others, we don't care about them (false would cause 404)
-			*/
-			if (is_file(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/default.php")) { // default?
-				include_once CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/default.php";
-			}
+
+			include_once CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/default.php";
 
 			if ($this->bbfolder != '/') $this->parent->virtualFolder = false; // or we will 404 or serve root data (after default because we handle UDM there)
 
@@ -87,9 +85,14 @@ class mod_bi_bb extends CscriptedModule  {
 
 	function onRender(){
 		if ($this->isBBPage) {
+			
 			// we are at a forum page
 			$core = &$this->parent;
 			$sname = $this->name;
+
+			$oa = explode(".",$this->parent->original_action);
+			$oa = array_shift($oa);
+			if (($oa == "index" || $oa == '') && $this->parent->action == "_cms") $this->parent->action = "index"; // CMS captured the page, give it back!
 
 			if ($this->parent->layout != 2) { // cannot use core::frame because we want the full path to avoid loading default files
 				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$this->bbfolder."basefile.html")) {
@@ -101,7 +104,7 @@ class mod_bi_bb extends CscriptedModule  {
 				} else {
 					$frame = CONS_PATH_SETTINGS."defaults/basefile.html";
 				}
-
+				
 				if (!is_object($this->parent->template)) $this->parent->template = new CKTemplate();
 				$this->parent->template->fetch($frame);
 				$this->parent->nextContainer = "BASEFILE_CONTENT";
@@ -122,10 +125,8 @@ class mod_bi_bb extends CscriptedModule  {
 				$this->parent->nextContainer = "BBCONTENT";
 			}
 
-			if (!is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->parent->context_str."default.php") && is_file(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/default.php")) {
-				// default?
-				include CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/default.php";
-			}
+			include CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/default.php";
+						
 			if (!is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->parent->context_str.$this->parent->action.".php") && is_file(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/".$this->parent->action.".php")) {
 				// file?
 				include CONS_PATH_SYSTEM."plugins/".$this->name."/payload/content/".$this->parent->action.".php";

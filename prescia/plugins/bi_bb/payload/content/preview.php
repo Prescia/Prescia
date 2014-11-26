@@ -1,5 +1,8 @@
 <?
 
+	$core->addLink("ckeditor/ckeditor.js",true);
+	$core->addLink("validators.js");
+
 	if ($_POST['bbaction'] == 'tpreview') { // previewing a THREAD
 		$core->template->assign("_previewPOST");
 		$core->template->assign("ttitle",$_POST['ttitle']);
@@ -19,6 +22,7 @@
 	$core->dbo->query("SELECT f.title,f.operationmode, f2.title FROM (bb_forum as f) LEFT JOIN bb_forum as f2 ON (f2.id = f.id_parent) WHERE f.id=".$_POST['id_forum'],$r,$n);
 	list($ftitle, $op,$ptitle) = $core->dbo->fetch_row($r);
 
+	$core->template->fill($_POST);
 	$core->template->assign("forum_title",$ftitle);
 	$core->template->assign("parent_title",$ptitle.(($ptitle != '')?" - ":""));
 	$core->template->assign("date",date("Y-m-d H:i:s")); // so this will result in "now"
@@ -30,7 +34,7 @@
 		else $core->template->assign("_hasvideo");
 	} else
 		 $core->template->assign("_hasvideo");
-	$core->template->fill($_POST);
+	
 
 	// user image?
 	$image = CONS_PATH_PAGES.$_SESSION['CODE'].'/files/users/t/image_'.$_SESSION[CONS_SESSION_ACCESS_USER]['id']."_2";
@@ -41,7 +45,5 @@
 		$core->template->assign("image",$image);
 	}
 
-	$core->addLink("ckeditor/ckeditor.js",true);
-	$core->addLink("validators.js");
 
 	if ($op == 'bb') $core->template->assign("_notbb");

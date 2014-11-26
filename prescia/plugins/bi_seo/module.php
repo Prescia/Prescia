@@ -27,15 +27,16 @@ class mod_bi_seo extends CscriptedModule  {
 		$this->loadSEO(); // loads data into template so the seo tag works
 		$context_for_seo = substr($this->parent->context_str,1); // no initial /
 		if (isset($this->parent->dimconfig['_seoManager']) && !is_array($this->parent->dimconfig['_seoManager']))
-				$this->parent->dimconfig['_seoManager'] = explode(",",$this->parent->dimconfig['_seoManager']);
+			$this->parent->dimconfig['_seoManager'] = explode(",",$this->parent->dimconfig['_seoManager']);
+		
 		if (isset($this->parent->dimconfig['_seoManager']) && in_array(strtolower($context_for_seo.$this->parent->action),$this->parent->dimconfig['_seoManager'])) {
-
+			
 			$seo = $this->parent->loaded($this->moduleRelation);
 			$sql = "SELECT * FROM ".$seo->dbname." WHERE alias=\"".$context_for_seo.$this->parent->action."\" AND lang='".$_SESSION[CONS_SESSION_LANG]."'";
 
 			$this->parent->dbo->query($sql,$r,$n);
 			if ($n>0) {
-
+				
 				$seo = $this->parent->dbo->fetch_assoc($r);
 				if (isset($seo['redirectmode']) && $seo['redirectmode'] != 'normal') {
 					$this->parent->headerControl->internalFoward($seo['page'],$seo['redirectmode']=='sr_temporary'?"307":"301");
@@ -73,6 +74,18 @@ class mod_bi_seo extends CscriptedModule  {
 					$this->parent->template->constants['METAKEYS'] = $seo['metakey'];
 					$this->parent->storage['LOCKKEYS'] = true;
 				}
+				
+				
+				// treat virtual folder to check if we moved in/out of one
+				$this->parent->virtualFolder = false;
+				$tempContext = $this->parent->context;
+				$strContext = implode("/",$tempContext);
+				while (count($tempContext)>1 && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/template".$strContext) && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$strContext) && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/actions".$strContext)){
+					array_pop($tempContext);
+					$strContext = implode("/",$tempContext);
+					$this->parent->virtualFolder = true; // if this remains true, we will 404
+				}
+				
 			}
 
 		}

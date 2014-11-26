@@ -73,3 +73,4 @@
 	#$this->forceLang = "en"; # force this language (kinda spoils i18n settings, this is used mostly for debugging)
 	#$this->charset = "utf-8"; # default charset (default is utf-8 already)
 	$this->doctype = "html"; // use html or xhtml. This will change how the page is served. Note xhtml is VERY STRICT, like ... VERY
+	# $this->collectStatsOnTheseFiles = array(); # list of files (files/..., do not start with /) that will be captured but won't terminate the script, allowing onEcho to run (alas, statistics gathering)

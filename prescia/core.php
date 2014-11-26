@@ -69,6 +69,14 @@ class CPrescia extends CPresciaVar {
 			$_SESSION[CONS_SESSION_LANG] = $this->intlControl->loadLocale(isset($_SESSION[CONS_SESSION_LANG])?$_SESSION[CONS_SESSION_LANG]:CONS_DEFAULT_LANG);
 		} else
 			$_SESSION[CONS_SESSION_LANG] = CONS_DEFAULT_LANG;
+		
+		# loads requested page and fills context/actions
+		list($this->context,$this->action,$this->original_action,$this->original_ext) = extractUri(CONS_INSTALL_ROOT);
+		$this->context_str = implode("/",$this->context)."/";
+		if ($this->context_str[0] != "/") $this->context_str = "/".$this->context_str;
+		if ($this->action == "") $this->action = "index";
+		$this->original_context_str = $this->context_str; # storage of original call in case script redirects us, also used by stats
+		
 	} # domainlock
 #-
 	function dbconnect() { # coreFull will override
@@ -121,10 +129,9 @@ class CPrescia extends CPresciaVar {
 	} # langOut
 #-
 	function parseRequest() { # domainLoad → PARSEREQUEST -> loadIntlControl -> checkActions -> renderPage -> showTemplate
-		# Treats the URI and detects context and action (page) being accessed.
-		# Also handle several exceptions, optimization and security issues related to URI
+		# Handle several request exceptions, optimization and security issues related to URI
 
-		list($this->context,$this->action,$this->original_action,$ext) = extractUri(CONS_INSTALL_ROOT);
+		$ext = $this->original_ext;
 
 		if (!isset($_SESSION[CONS_SESSION_NOROBOTS])) { # norobots controller
 			$_SESSION[CONS_SESSION_NOROBOTS] = (strpos(",".CONS_NOROBOTDOMAINS.",",$this->domain) !== false ||
@@ -168,16 +175,12 @@ class CPrescia extends CPresciaVar {
 				} else
 					array_unshift($this->context,trim($this->domainTranslator[$this->domain],"/"));
 				if ($this->context[0] != '') array_unshift($this->context,"");
+				# rebuilds context based on changes
+				$this->context_str = implode("/",$this->context)."/";
+				if ($this->context_str[0] != "/") $this->context_str = "/".$this->context_str;
+				$this->original_context_str = $this->context_str; # storage of original call in case script redirects us, also used by stats
 			}
 		}
-
-		# builds proper context and action data
-
-		$this->context_str = implode("/",$this->context)."/";
-		if ($this->context_str[0] != "/") $this->context_str = "/".$this->context_str;
-		if ($this->action == "") $this->action = "index";
-		$this->original_context_str = $this->context_str; # storage of original call in case script redirects us, also used by stats
-
 
 		# special cases (robots,favicon, sitemap)
 		if ($this->context_str == "/") {
@@ -190,7 +193,7 @@ class CPrescia extends CPresciaVar {
 					$this->readfile("robotssm.txt","txt",true,"robots.txt");
 				else
 					$this->readfile("robots.txt","txt",true,"robots.txt");
-			} else if ($this->action == "favicon" || $this->action == "apple-touch-icon") {
+			} else if ($this->action == "favicon" || $this->action == "apple-touch-icon" || $this->action == "apple-touch-icon-precomposed") {
 				$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
 				# favicon requested, regardless of what extension was requested, serve the one we have
 				if (locateFile($favfile,$ext,"png,jpg,gif,ico"))
@@ -208,29 +211,6 @@ class CPrescia extends CPresciaVar {
 				else
 					$this->fastClose(404);
 			}
-		}
-
-		# Redirect root files to file manager, if enabled
-		if (CONS_ACCEPT_DIRECTLINK && count($this->context)>1 && $this->context[1] == "files") {
-			$this->context_str = "/".CONS_FMANAGER;
-			for ($c=2;$c<count($this->context);$c++) {
-				$this->context_str .= $this->context[$c]."/";
-			}
-			$this->context = explode("/",$this->context_str);
-		}
-		if (substr($this->context_str,0,strlen("/".CONS_FMANAGER)) == "/".CONS_FMANAGER) {
-			# Serve a file from the file manager.
-			# Avoid using the short URL notation (files/), use full path (pages/[code]/files/)
-			# The reason this should be avoided is that during readfile, PHP will allocate the file into memory for flushing, so you can see what would happen if one tries to download a huge file
-			if (!CONS_ACCEPT_DIRECTLINK) $this->errorControl->raise(171,$theFile);
-			$theFile = $this->context_str.$this->original_action;
-			$theFile = subStr($theFile,1);
-			$ext = strtolower($ext);
-			if (!is_file($theFile)) $this->fastClose(404);
-			$this->close(false); # shuts down database
-			$this->readfile($theFile,$ext,true,$this->original_action);
-			$this->close(true); # should abort script if readfile didn't
-			return;
 		}
 
 		# you cannot have an action named default, alas it's the same as index!
@@ -258,6 +238,51 @@ class CPrescia extends CPresciaVar {
 			$this->headerControl->internalFoward(CONS_INSTALL_ROOT.$this->context_str);
 		}
 	} # parseRequest
+#-
+	/* checkDirectLink
+	 * will check if this is a request for a file inside the site file manager (pages/[code]/files) and serve the file
+	 * if the file is set for statistics, continue returning true (serving file), otherwise end script 
+	*/
+	function checkDirectLink() {
+		# Redirect root files to file manager
+		# files that go direct to the files folder (pages/[code]/files) are served by apache and never get here
+		# files using the internal redirect /files/ are what we aim here. These files can be grabbed for statistics or have permission check
+		$fm = false;
+		if (count($this->context)>1 && $this->context[1] == "files") {
+			$fm = true;
+			$this->context_str = "/".CONS_FMANAGER;
+			for ($c=2;$c<count($this->context);$c++) {
+				$this->context_str .= $this->context[$c]."/";
+			}
+			$this->context = explode("/",$this->context_str);
+		}
+		if ($fm || substr($this->context_str,0,strlen("/".CONS_FMANAGER)) == "/".CONS_FMANAGER) {
+			# Avoid using the short URL notation (files/), use full path (pages/[code]/files/)
+			# The reason this should be avoided is that during readfile, PHP will allocate the file into memory for flushing, so you can see what would happen if one tries to download a huge file
+			$theFile = $this->context_str.$this->original_action;
+			$theFile = subStr($theFile,1); // removes initial /
+			if (!is_file($theFile)) $this->fastClose(404);
+			$captureStats = false;
+			if (count($this->collectStatsOnTheseFiles)>0) {
+				$path= "pages/".$_SESSION['CODE']."/";
+				foreach ($this->collectStatsOnTheseFiles as $file) {
+					if ($file[0] == "/") $file = substr($file,1);
+					if ($path.$file == $theFile) {
+						$captureStats = true;
+						break;
+					}
+				}
+			}
+			$ext = strtolower($this->original_ext);
+			$this->close(false); # shuts down database if necessary, unloads template
+			$this->readfile($theFile,$ext,true,$this->original_action);
+			if ($captureStats && $this->dbconnect()) {
+				return true; // we keep going (only if we were able to reconnect to DB)
+			}
+			$this->close(true); # should abort script if readfile didn't
+		}
+		return false;
+	}
 #-
 	/* loadIntlControl
 	* domainLoad → parseRequest -> LOADINTLCONTROL -> checkActions -> renderPage -> showTemplate
@@ -392,6 +417,7 @@ class CPrescia extends CPresciaVar {
 #--
 	/* addLink
 	 * Finds a javascript or CSS file in the core _js framework, files folder or full path, and adds the proper link/script tag in the header
+	 * You can call "jquery.js" to add the latest available jquery, instead of specifiying a version 
 	 * Preceed will add the file first on the current list
 	 */
 	function addLink($file,$preceed=false) {
@@ -400,7 +426,9 @@ class CPrescia extends CPresciaVar {
 		if ($isJS) {
 			$tfile = explode("?",$file);
 			$tfile = $tfile[0];
-			if (is_file(CONS_PATH_JSFRAMEWORK.$tfile))
+			if ($tfile == "jquery.js")
+				$file = CONS_PATH_JSFRAMEWORK.$file; // the optimizer will load the latest jquery version on the _js/ folder and serve as jquery.js
+			else if (is_file(CONS_PATH_JSFRAMEWORK.$tfile))
 				$file = CONS_PATH_JSFRAMEWORK.$file;
 			else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$tfile))
 				$file = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$file;
@@ -725,9 +753,10 @@ class CPrescia extends CPresciaVar {
 		$this->modules[$name]->loaded = false;
 	} # loadModule
 #-
-	function loadTemplate($forcePage="") {
+	function loadTemplate($forcePage="",$noDouble = false) {
 		# Loads the current action template into the proper frame tag (or whole file)
 
+		if ($noDouble && $this->templateLoaded) return;
 		$file = $this->getTemplate($forcePage==''?$this->action:$forcePage,$this->context_str,true);
 
 		if ($file != "") {
@@ -736,9 +765,12 @@ class CPrescia extends CPresciaVar {
 			} else {
 				$this->template->fetch($file); # layout 2 can run with no template at all
 			}
+			$this->templateLoaded = true;
 		}
 
 		$this->removeAutoTags();
+		
+		
 	}
 #-
 	/* loadAllmodules
@@ -877,32 +909,34 @@ class CPrescia extends CPresciaVar {
 	/* renderPage
 	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage -> showTemplate
 	 * Runs the control scripts (which will most likely change the views), deals with 404 errors and some optimizations. Also sets the header for the current charset
+	 * NOTE: this might run twice on fastClose
 	 */
-	function renderPage() {
+	function renderPage($fastClose=false) {
 
-
-		// plugins can ALSO change the template ...
-		foreach ($this->onRender as $scriptName) {
-			$this->loadedPlugins[$scriptName]->onRender();
+		if (!$fastClose) {
+			// plugins can ALSO change the template ...
+			foreach ($this->onRender as $scriptName) {
+				$this->loadedPlugins[$scriptName]->onRender();
+			}
+	
+			// if no plugin handled 404, trigger it
+			if (!$this->ignore404 && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/template".$this->context_str) && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->context_str)) {
+				$this->action = "404";
+				$this->warning[] = "404 because of path not found at renderPage";
+			}
 		}
-
-		// if no plugin handled 404, trigger it
-		if (!$this->ignore404 && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/template".$this->context_str) && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->context_str)) {
-			$this->action = "404";
-			$this->warning[] = "404 because of path not found at renderPage";
-		}
-
-
-
+		
 		# default content handler
 		if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->context_str."default.php")) {
 			include_once CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->context_str."default.php";
 		}
 
-		# Call the content script
-		if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->context_str.$this->action.".php"))
-			include CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->context_str.$this->action.".php";
-
+		if (!$fastClose) { // no need 
+			# Call the content script
+			if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->context_str.$this->action.".php"))
+				include CONS_PATH_PAGES.$_SESSION['CODE']."/content".$this->context_str.$this->action.".php";
+		}
+		
 		$this->onShow(); // process onShow for plugins
 
 	} # renderPage

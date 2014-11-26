@@ -1,5 +1,13 @@
 TODO list is on site/github
 
+14.11.26 BETA 0.9 (bi_bb complete, new core sequencer, presciatester incomplete)
+	bi_bb complete and in use, only messages among users and a "lost password" feature missing
+	new core sequencer to handle file requests *always* (new, in test), parses URL earlier, leaves main objects/database later
+	new collectStatsOnTheseFiles option to log file downloads, new $servingFile flag to control the code on this case
+	bi_dev changed not to serve developer bars when $servingFile
+	added prettify to addScript, updated shadowbox
+	performance tweaks
+	fixes ...
 14.11.14 BETA 0.9 (still waiting presciatester to be complete)
 	new CONS_CRONDBBACKUP_MAIL constant to send a zipped backup of the database when it runs on cron (set day to 0 to daily)
 	new bdstats.ajax "backdoor" statistics

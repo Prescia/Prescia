@@ -8,7 +8,7 @@
 	}
 
 	// yes but do we have an action to perform anyway?
-	if (!$core->queryOk(array("haveinfo","bbaction"))) {
+	if ($this->noregistration || !$core->queryOk(array("haveinfo","bbaction"))) {
 		$core->action = 404;
 		return;
 	}
@@ -24,6 +24,7 @@
 				break;
 			}
 			$core->action = "preview"; // send me to preview screen (same for both)
+			$_POST['fmessage'] = cleanHTML($_POST['fmessage'],false); // not as complete as parseHTML, but lightweight, just a preview anyway
 			return;
 		break;
 		case 'preview': // preview a post
@@ -33,6 +34,7 @@
 				break;
 			}
 			$core->action = "preview"; // send me to preview screen (same for both)
+			$_POST['fmessage'] = cleanHTML($_POST['fmessage'],false); // not as complete as parseHTML, but lightweight, just a preview anyway
 			return;
 		break;
 		case 'tpost': // post thread
@@ -79,9 +81,12 @@
 				if ($_POST['bbaction'] =='tpost') $core->simpleQuery("DELETE FROM bb_thread WHERE id=".$_POST['id_forumthread']);
 				return;
 			}
+			if (!defined('C_XHTML_AUTOTAB')) {
+				include CONS_PATH_INCLUDE."xmlHandler.php";
+			}
 			$postData = array('id_forum' => $_POST['id_forum'],
 							  'id_forumthread' => $_POST['id_forumthread'],
-							  'content' => $_POST['fmessage'],
+							  'content' => parseHTML($_POST['fmessage'],true), // this is the same as forcesimple on XML, but we don't want to add that on the XML to allow the admin/master to add complex posts using the main panel
 							  'id_author' => $_SESSION[CONS_SESSION_ACCESS_USER]['id'],
 							  'props' => serialize(array()));
 			$ok = $core->runAction('forumpost',CONS_ACTION_INCLUDE,$postData);
