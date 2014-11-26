@@ -15,7 +15,7 @@
 		define("CONS_DB_HOST","186.202.152.192"); // leave empty if not using a database. The framework will enter dbless mode
 		define("CONS_DB_BASE","daisuki11");
 		define("CONS_DB_USER","daisuki11");
-		define("CONS_DB_PASS","mwlP2110");
+		define("CONS_DB_PASS","");
 		// If this site has multiple domains AND we want each domain to foward to a different FOLDER, translate domain=>folder here:
 		$this->domainTranslator = array(#'www.prescia.net' => 'prescia',
 										#'prescia.daisuki.com.br' => 'prescia',
