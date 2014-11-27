@@ -1,5 +1,13 @@
 TODO list is on site/github
 
+
+14.11.27 BETA 0.9
+	ajaxqueryunique to detect unique fields on modules using javascript validation (used on bi_bb login field for test)
+	fixed IPv6to4 returning nothing (seriously, there was no return)
+	prepared bi_stats for intelligent cookieless visitor tracking
+	tweaks on bi_bb registration
+	Statistics concurrent includes will now gracefully roll to update and erase the error from the log
+	FIXES!
 14.11.26 BETA 0.9 (bi_bb complete, new core sequencer, presciatester incomplete)
 	bi_bb complete and in use, only messages among users and a "lost password" feature missing
 	new core sequencer to handle file requests *always* (new, in test), parses URL earlier, leaves main objects/database later

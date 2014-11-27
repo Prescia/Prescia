@@ -92,7 +92,7 @@
 	$core->template->assign("_pg",$output);
 
 	## EXIT PAGES ##
-	$sql = "SELECT sum(count) as hits, pagefoward FROM ".$statspath->dbname." WHERE page='$page' AND data >= '$dataini' AND data < '$datafim' GROUP BY pagefoward ORDER BY hits DESC";
+	$sql = "SELECT sum(hits) as hits, pagefoward FROM ".$statspath->dbname." WHERE page='$page' AND data >= '$dataini' AND data < '$datafim' GROUP BY pagefoward ORDER BY hits DESC";
 	$core->dbo->query($sql,$r,$n);
 	$graphObj = $core->template->get("_pg2");
 	$output = "";

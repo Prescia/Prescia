@@ -4,7 +4,7 @@
   | NOTE: forcecron=day|hour|true only works if you are logged as master
 -*/
 
-if ($forceCron=='day' || $forceCron=='all' || date("d") != $this->dimconfig['_cronD']) { // Daily cron
+if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_cronD'] && $forceCron != 'hour')) { // Daily cron
 	$this->loadAllmodules();
 
 	$isMasterDomain = CONS_MASTERDOMAINS == "" || strpos(CONS_MASTERDOMAINS,$_SESSION['DOMAIN'])!==false || !CONS_ONSERVER;

@@ -2,6 +2,11 @@
 
 	$core->addLink('validators.js');
 
+	if (isset($_POST['haveinfo'])) {
+		$core->template->fill($_POST);
+		if (isset($_POST['ulogin'])) $core->template->assign("login",$_POST['ulogin']);
+	}
+
 	if ($core->logged()) {
 		$core->template->assign("name",$_SESSION[CONS_SESSION_ACCESS_USER]['name']);
 		$core->template->assign("email",$_SESSION[CONS_SESSION_ACCESS_USER]['email']);

@@ -2,21 +2,23 @@
 
 	HTML triggers the request to fill a SELECT -> startAjaxSelectFill -> THIS FILE
 	THIS FILE -> executeajaxSelectFill -> select is filled as requested
-
+ 
+	For example, this should be the select with the CITIES of a STATE, triggered by the choice of a STATE
+ 
 	REQUEST queries received (built in startAjaxSelectFill):
 	  MANDATORY:
-		container = which field this is being filled
-   		[keys] = key names of the current module that will filter out the SELECT, note that as of AFF 1.21 it can also come in listadd (preceeded by la_)
-		module = module this is all about
-		sourcemodule = from which module the keys (filters) came from, so we can translate. Can be '' to no translation, but must be present
-		aoc = true|false to put onChange="selectChange()" inside the SELECT
+		container = which field this is being filled (in the example, where the CITIES select will be placed)
+   		[keys] = key names of the current module that will filter out the SELECT, note that it can also come in listadd (preceeded by la_) for admin. (in the example, the WHERE keys with the STATE to look inside the CITY list)
+		module = module this is all about (in the example, the CITIES module)
+		sourcemodule = from which module the keys (filters) came from, so we can translate. Can be '' to no translation, but must be present (in the example, the STATE module so we can add "choose a state" if nothing found)
+		aoc = true|false to put onChange="selectChange()" inside the SELECT (in the example, the CITY SELECT would have the onChange so it can also trigger other selects, imagine a 3-way selects with country->state->city)
    	  OPTIONAL:
-   	    preSelected = id of pre-selected item
-   	    className = class name of the SELECT
-   		widthValue = style width of the SELECT (should be compatible with class)
-   		allowEmpty = true (if present (always true), allows an empty option as first item
+   	    preSelected = id of pre-selected item (in the example, the id of the CITY that is already selected)
+   	    className = class name of the SELECT (in the example, a class to be appended to the HTML of the SELECT)
+   		widthValue = style width of the SELECT (in the example, a numeric width (px or %) that will be added on style="width:xxx")
+   		allowEmpty = true (if present (always true), allows an empty option as first item) (in the example, means the first option is nothing (the SELECT allows you not to choose one))
 
-	The results will be filled in a span named [field]_ara (ajax return area)
+	The results will be filled in a span named [field]_ara (ajax return area) <- the container
 
 	This script runs on layout=2, startAjaxSelectFill should send layout=2 but be sure to enforce
 	This script is called (captured) by core::checkActions

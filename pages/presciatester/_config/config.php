@@ -50,18 +50,16 @@
 	$this->addPlugin('bi_seo'); // SEO system
 	$this->addPlugin('bi_undo'); // history/UNDO system
 	$advadm = $this->addPlugin('bi_adm'); // Administrative pane
-		$advadm->admFolder = "admin";
+		$advadm->admFolder = "admin"; // note we are using a different than normal, just to test
 		#$advadm->admRestrictionLevel = 10; // minimum level to access admin
 
-	$bb = $this->addPlugin('bi_bb'); // Bulleting Board
-		$bb->bbfolder = "bb";
-		$bb->registrationGroup = 4;
-		$bb->areaname = "community";
-		$bb->homename = "Home";
+	$bb = $this->addPlugin('bi_bb'); // Bulleting Board (just add to check if it will error out)
 
 	$this->addPlugin('bi_cms'); // suggest to leave later so it's also the last to handle 404
+	
 	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
 		$stats->admFolder = "admin";
+		$stats->detectVisitorByIP = true; // if we get hits from the same IP in a sort period, but the visit cookies are not set (disabled?), consider it the same person. If cookies are present, then you can have mode than one visitor per IP
 		#$stats->admRestrictionLevel = 10; // what we consider an admin level
 		#$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
 		#$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this

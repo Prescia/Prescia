@@ -495,13 +495,19 @@ class CPrescia extends CPresciaVar {
 
 		$this->currentAuth = $this->authControl->auth(); // <-- authControl or whatever plugin that snatches it, should also give the user warnings. Check errorControl for standard raise codes (3xx)
 
+		// built-in ajax captured to the default folder. BEFORE any other action because we don't want default behaviour messing this
 		if ($this->action == "ajaxquery") {
-			// captured this action to the default folder. BEFORE any other action because we don't want default behaviour messing this
-			// this is used by some plugins (mostly the admin)
+			// this is used by some plugins (mostly the admin) to fill a select based on other select
 			include_once CONS_PATH_SYSTEM."lazyload/ajaxQuery.php";
 			// ajaxQuery SHOULD perform a graceful close, but let's ensure
 			$this->close(true);
+		} else if ($this->action == "ajaxqueryunique") {
+			// this queries if a certain field (ex: login or mail) is unique for a certain database (good to check if a login is already taken)
+			include_once CONS_PATH_SYSTEM."lazyload/ajaxqueryunique.php";
+			// ajaxqueryunique SHOULD perform a graceful close, but let's ensure
+			$this->close(true);
 		}
+		
 
 		// allows you to download a file field (f) from a module (m), with the specified module title as filename, checking permission.
 		// will also trigger a "download" notifyEvent on the module

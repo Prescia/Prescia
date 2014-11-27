@@ -24,13 +24,13 @@ function IPv4To6($Ip,$expand=false) {
 }
 
 function IPv6To4($Ip) {
-	if (strpos($Ip,'::ffff:') === 0 && strpos($Ip,'0:0:0:0:0:ffff:') === 0) return $Ip; // either IPv4 already, or pure (non convertible to v4) IPv6
+	if (strpos($Ip,'::ffff:') === false && strpos($Ip,'0:0:0:0:0:ffff:') === false) return $Ip; // either IPv4 already, or pure (non convertible to v4) IPv6
 	$Ip = explode(":",$Ip);
 	$last = array_pop($Ip);
 	$prior = array_pop($Ip);
 	while (strlen($last)<4) $last = "0".$last;
 	while (strlen($prior)<4) $prior = "0".$prior;
-	hexdec(substr($prior,0,2)).".".hexdec(substr($prior,2,2)).".".hexdec(substr($last,0,2)).".".hexdec(substr($last,2,2));
+	return hexdec(substr($prior,0,2)).".".hexdec(substr($prior,2,2)).".".hexdec(substr($last,0,2)).".".hexdec(substr($last,2,2));
 }
 
 function ExpandIPv6Notation($Ip) {

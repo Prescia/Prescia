@@ -1,3 +1,4 @@
+// add after prototype/scriptaculous
 try {
 	prototypeAvail = typeof Prototype!='undefined';
 } catch (e) {
@@ -9,7 +10,7 @@ try {
 	scriptaculousAvail = false;
 }
 // -- this block will make available: is_moz, is_webkit, is_ie, is_op, is_safari, is_firefox, is_chrome, agt_txt, is_legacy (old, might not run some scripts,specially ie)
-// -- updated 2014.10.22, now detects IE 11+ too
+// -- updated 2014.10.22
 var agt=navigator.userAgent.toLowerCase();
 var agt_major = parseInt(navigator.appVersion);
 var is_chrome = (agt.indexOf("chrome") != -1);
@@ -27,7 +28,7 @@ var is_webkit = (agt.indexOf('webkit') != -1);
 var is_ie = ((agt.indexOf("trident/") != -1) || ((agt.indexOf("msie") != -1) && (agt.indexOf("opera") == -1))); // IE 11+ too
 if (is_ie) {
 	try {
-		MyRegExp = new RegExp("(msie |rv:)([0-9]*)"); // works for all IE versions
+		MyRegExp = new RegExp("(msie |rv:)([0-9]*)"); // works for all IE versions, including 11+
 		r = MyRegExp.exec(agt);
 		agt_major = r[2];
 	} catch (ee) {

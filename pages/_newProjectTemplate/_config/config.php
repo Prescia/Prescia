@@ -56,12 +56,17 @@
 	#$bb = $this->addPlugin('bi_bb'); // Bulleting Board
 		#$bb->bbfolder = "bb";
 		#$bb->registrationGroup = 4;
-		#$bb->areaname = "community";
-		#$bb->homename = "Home";
+		#$bb->areaname = "Blog";
+		#$bb->homename = "My Page";
+		#$bb->noregistration = true; // do not allow user registration
+		#$bb->blockforumlist = true; // index does not auto-fill forums
+		#$bb->showlastthreads = 5; // show last 5 threads
+		#$bb->mainthreadsAsBB = false; // as articles
 
 	#$this->addPlugin('bi_cms'); // suggest to leave later so it's also the last to handle 404
 	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
 		#$stats->admFolder = "adm";
+		$stats->detectVisitorByIP = true; // if we get hits from the same IP in a sort period, but the visit cookies are not set (disabled?), consider it the same person. If cookies are present, then you can have mode than one visitor per IP
 		#$stats->admRestrictionLevel = 10; // what we consider an admin level
 		#$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
 		#$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this

@@ -1,9 +1,30 @@
 // requires common.js
-function isMail( email ) {	
+function isMail( email, ajaxCheck ) {	
 	return ereg( email,"^[A-Za-z0-9]+(([_\.\-]?[a-zA-Z0-9]+(_)?)*)@([A-Za-z0-9]+)(([\.\-]?[a-zA-Z0-9]+)*)\.([A-Za-z]{2,})$");
 }
-function isLogin(value,allowSpace) {
-	return ereg(value,allowSpace?"^([ A-Za-z0-9_\.@\-]){4,50}$":"^([A-Za-z0-9_\.@\-]){4,50}$");
+function isLogin(value,allowSpace,ajaxCheck) { // if you want ajaxCheck, send an array with 3 items: [ module, field, callback function that will be called with the response true|false ]
+	if (!ajaxCheck) ajaxCheck = false;
+	ok = ereg(value,allowSpace?"^([ A-Za-z0-9_\.@\-]){4,50}$":"^([A-Za-z0-9_\.@\-]){4,50}$");
+	if (!ok || !ajaxCheck) {
+		return ok;
+	}
+	// requires prototype:
+	if (prototypeAvail && Array.isArray(ajaxCheck) && ajaxCheck.length == 3) {
+		var a = new Ajax.Request('ajaxqueryunique.ajax?module=' + ajaxCheck[0] + "&field=" + ajaxCheck[1] + "&value=" + value, {
+				method: 'get',
+				onSuccess: isLoginCallBack(ajaxCheck[2])
+			});
+	} 
+	return true; // on fail, or preliminarly (before the ajax return), consider ok
+}
+function isLoginCallBack(callback) {
+	return function(ajaxobj) {
+		if (ajaxobj.responseText)
+			var dados=ajaxobj.responseText;
+		else
+			dados=ajaxobj;
+		callback(dados == 'true');
+	}
 }
 function isnumber( value, accept_commas ) {
 	return ereg(value,accept_commas?"^(\-)?([0-9]+)(([,\.])([0-9]{3}))*(([,\.]{1})([0-9]*))?$":"^(\-)?([0-9]+)$");

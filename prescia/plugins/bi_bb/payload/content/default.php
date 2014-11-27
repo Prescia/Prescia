@@ -23,6 +23,10 @@
 	$bb = $core->loadedPlugins['bi_bb'];
 
  	$core->addScript('bootstrap');
+	if ($core->action == 'profile') {
+		$core->addLink('prototype_oop.js');
+		$core->addLink('prototype_ajax.js');
+	}
 	$core->addLink('common.js');
 
 	$qs = arrayToString($_GET,array('layout'));

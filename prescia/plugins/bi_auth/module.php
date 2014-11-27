@@ -15,7 +15,9 @@ class mod_bi_auth extends CscriptedModule  {
 	var $masterOverride = "master{CODE}{DAY}"; // the master login (or any master) will have THIS password, leave EMPTY to accept the password of the database
 		// template accepts: {CODE} {YEAR} {MONTH} {DAY} {DOMAIN}
 		// example: "master{CODE}{DAY}"
+		################################################
 		// NOTE: CONS_MASTERPASS at config WILL OVERRIDE
+		################################################
 	// internals --
 	####################
 	private $authReplaced = false;

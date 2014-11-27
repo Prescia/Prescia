@@ -10,6 +10,7 @@ class mod_bi_stats extends CscriptedModule  {
 	var $doNotLogMe = false; // any plugin, page or automato that is aware of this plugin can set this to TRUE to prevent logging this page
 	var $forceLogMe = false; // oposite of the above
 	var $doNotLogAdmins = false; // if true, if you are looged with an account of a higher level of admRestrictionLevel, you won't be logged
+	var $detectVisitorByIP = false; // if a visitor have cookies DISABLED, then it will track by IP
 	###########################
 
 	function loadSettings() {
@@ -221,7 +222,14 @@ class mod_bi_stats extends CscriptedModule  {
 				$id = (isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))?$_REQUEST['id']:0;
 				$x = $core->dbo->fetch("SELECT hits FROM ".$core->modules['stats']->dbname." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 				if ($x===false) {
-					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=0, uhits=0, bhits=0, ahits=1, rhits=0, lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
+					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=0, uhits=0, bhits=0, ahits=1, rhits=0, lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
+					if (!$ok) {
+						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
+						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+							array_pop($this->parent->dbo->log); // ignore this error please
+							$core->dbo->simpleQuery("UPDATE ".$core->modules['stats']->dbname." SET ahits=ahits+1 WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");							
+						}
+					}
 				} else {
 					$core->dbo->simpleQuery("UPDATE ".$core->modules['stats']->dbname." SET ahits=ahits+1 WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 				}
@@ -240,9 +248,16 @@ class mod_bi_stats extends CscriptedModule  {
 				$core->dbo->query("SELECT hits FROM ".$core->modules['statsbots']->dbname." WHERE data='".date("Y-m-d")."'",$r,$n);
 				if ($n==0) {
 					# first bot visit
-					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsbots']->dbname." SET hits=1,data='".date("Y-m-d-")."'");
+					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsbots']->dbname." SET hits=1,data='".date("Y-m-d-")."'");
+					if (!$ok) {
+						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
+						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+							array_pop($this->parent->dbo->log); // ignore this error please
+							$core->dbo->simpleQuery("UPDATE ".$core->modules['statsbots']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d-")."'");							
+						}
+					}
 				} else {
-				$core->dbo->simpleQuery("UPDATE ".$core->modules['statsbots']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d-")."'");
+					$core->dbo->simpleQuery("UPDATE ".$core->modules['statsbots']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d-")."'");
 				}
 				return;	# no more stats for bots
 			}
@@ -288,9 +303,16 @@ class mod_bi_stats extends CscriptedModule  {
 					}
 					$hits++;
 					if (strpos($pages,$referer.",") === false) $pages .= cleanString($referer).",";
-					if ($n == 0)
-						$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsref']->dbname." SET data='".date("Y-m-d")."', referer=\"$domain\", entrypage=\"".$pageToBelogged."\", hits=$hits, pages=\"".$pages."\"");
-					else
+					if ($n == 0) {
+						$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsref']->dbname." SET data='".date("Y-m-d")."', referer=\"$domain\", entrypage=\"".$pageToBelogged."\", hits=$hits, pages=\"".$pages."\"");
+						if (!$ok) {
+							$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
+							if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+								array_pop($this->parent->dbo->log); // ignore this error please
+								$core->dbo->simpleQuery("UPDATE ".$core->modules['statsref']->dbname." SET hits=$hits, pages=\"".$pages."\" WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"");							
+							}
+						}
+					} else
 						$core->dbo->simpleQuery("UPDATE ".$core->modules['statsref']->dbname." SET hits=$hits, pages=\"".$pages."\" WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"");
 
 					# -- QUERY STATS --
@@ -318,6 +340,7 @@ class mod_bi_stats extends CscriptedModule  {
 
 			$core->dbo->query("SELECT page,fullpath FROM ".$core->modules['statsrt']->dbname." WHERE ip='".CONS_IP."'",$r,$n);
 			if ($n==0) {
+				$ok = true; // we will use this to control if we try second+ visit on concurrent include
 				# first visit
 				if (!isset($referer)) {
 					# should be set at referer stats
@@ -326,7 +349,14 @@ class mod_bi_stats extends CscriptedModule  {
 				}
 				$whatToSave = CONS_BROWSER_ISMOB?"MO":CONS_BROWSER;
 				$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsrt']->dbname." SET ip='".CONS_IP."', page=\"".$pageToBelogged."\", agent=\"".$browser."\", agentcode=\"".$whatToSave."\", fullpath=\"".$pageToBelogged.",\", data=NOW(), data_ini=NOW(), referer=\"$referer\"",true);
-			} else { # second+ visit
+				if (!$ok) {
+					$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
+					if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+						array_pop($this->parent->dbo->log); // ignore this error please
+					} 
+				}
+			}
+			if (!$ok) { # second+ visit or concurrent include
 				list($page,$fullpath) = $core->dbo->fetch_row($r);
 				if ($page != $pageToBelogged)
 					$fullpath .= $pageToBelogged.",";
@@ -335,7 +365,14 @@ class mod_bi_stats extends CscriptedModule  {
 				# -- STATS PATH --
 				$count = $core->dbo->fetch("SELECT hits FROM ".$core->modules['statspath']->dbname." WHERE data='".date("Y-m-d")."' AND page=\"$page\" AND pagefoward=\"".$pageToBelogged."\"");
 				if ($count === false) {
-					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statspath']->dbname." SET data='".date("Y-m-d")."', page=\"$page\", pagefoward=\"".$pageToBelogged."\", hits=1");
+					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statspath']->dbname." SET data='".date("Y-m-d")."', page=\"$page\", pagefoward=\"".$pageToBelogged."\", hits=1");
+					if (!$ok) {
+						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
+						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+							array_pop($this->parent->dbo->log); // ignore this error please
+							$core->dbo->simpleQuery("UPDATE ".$core->modules['statspath']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND page=\"$page\" AND pagefoward=\"".$pageToBelogged."\"");							
+						}
+					}
 				} else {
 					$core->dbo->simpleQuery("UPDATE ".$core->modules['statspath']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND page=\"$page\" AND pagefoward=\"".$pageToBelogged."\"");
 				}
@@ -350,21 +387,29 @@ class mod_bi_stats extends CscriptedModule  {
 
 			$x = $core->dbo->fetch("SELECT hits FROM ".$core->modules['stats']->dbname." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 			if ($x===false) {
-				# FIRST hit here today
+				$ok = true; // also control concurrent includes from here
+				# FIRST hit on this page here today
 				if (!isset($_COOKIE['session_visited'])) {
 					// first hit (1 1 0)
-					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=1, uhits=1, bhits=0, ahits=".($isAdm?1:0).", rhits=".($isReturning?"1":"0").", lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
+					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=1, uhits=1, bhits=0, ahits=".($isAdm?1:0).", rhits=".($isReturning?"1":"0").", lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 					if (!$isReturning) @setcookie("akr_returning",'1',Time() + 86400); // 1 day
 						@setcookie("session_visited",'1',Time()+3600); // 60 min
 				} else if ($_COOKIE['session_visited'] == 1) {
 					// second hit (1 0 1)
-					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=1, uhits=0, bhits=1, ahits=".($isAdm?1:0).", rhits=0, lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
+					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=1, uhits=0, bhits=1, ahits=".($isAdm?1:0).", rhits=0, lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 					@setcookie("session_visited",'2',Time()+3600); // 60 min
 				} else { // third+ hit (1 0 0)
-					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=1, uhits=0, bhits=0, ahits=".($isAdm?1:0).", rhits=0, lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
+					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=1, uhits=0, bhits=0, ahits=".($isAdm?1:0).", rhits=0, lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 					@setcookie("session_visited",'2',Time()+3600); // 60 min
 				}
-			} else { // segundo+ hit do dia aqui
+				if (!$ok) {
+					$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
+					if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+						array_pop($this->parent->dbo->log); // ignore this error please
+					}
+				}
+			}
+			if (!$ok) { // second+ hit of day
 				if (!isset($_COOKIE['session_visited'])) {
 					// first hit 1 1 0
 					$core->dbo->simpleQuery("UPDATE ".$core->modules['stats']->dbname." SET hits=hits+1, uhits=uhits+1 ".($isReturning?", rhits=rhits+1":"").($isAdm?", ahits=ahits+1":"")." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
@@ -388,7 +433,14 @@ class mod_bi_stats extends CscriptedModule  {
 				$visits = $core->dbo->fetch("SELECT hits FROM ".$core->modules['statsbrowser']->dbname." WHERE data='".date("Y-m-d")."' AND browser=\"$browser\"");
 				if ($visits === false) {
 					# first
-					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsbrowser']->dbname." SET data=NOW(), browser=\"$browser\",hits=1");
+					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsbrowser']->dbname." SET data=NOW(), browser=\"$browser\",hits=1");
+					if (!$ok) {
+						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
+						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+							array_pop($this->parent->dbo->log); // ignore this error please
+							$core->dbo->simpleQuery("UPDATE ".$core->modules['statsbrowser']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND browser=\"$browser\"");							
+						}
+					}
 				} else { # second+ visit
 					$core->dbo->simpleQuery("UPDATE ".$core->modules['statsbrowser']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND browser=\"$browser\"");
 				}
@@ -401,7 +453,14 @@ class mod_bi_stats extends CscriptedModule  {
 				$visits = $core->dbo->fetch("SELECT hits FROM ".$core->modules['statsres']->dbname." WHERE data='".date("Y-m-d")."' AND resolution=\"".$_SESSION[CONS_USER_RESOLUTION]."\"");
 				if ($visits === false) {
 					# first
-					$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsres']->dbname." SET data=NOW(), resolution=\"".$_SESSION[CONS_USER_RESOLUTION]."\",hits=1");
+					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsres']->dbname." SET data=NOW(), resolution=\"".$_SESSION[CONS_USER_RESOLUTION]."\",hits=1");
+					if (!$ok) {
+						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
+						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+							array_pop($this->parent->dbo->log); // ignore this error please
+							$core->dbo->simpleQuery("UPDATE ".$core->modules['statsres']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND resolution=\"".$_SESSION[CONS_USER_RESOLUTION]."\"");							
+						}
+					}
 				} else { # second+ visit
 					$core->dbo->simpleQuery("UPDATE ".$core->modules['statsres']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND resolution=\"".$_SESSION[CONS_USER_RESOLUTION]."\"");
 				}

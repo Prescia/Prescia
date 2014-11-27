@@ -132,10 +132,11 @@
 				unset($data['id_group']);
 				unset($data['login']);
 				if ( $_POST['upassword'] == '') unset($_POST['upassword']);
+				# remember to allow users to change themselves
 				$ok = $core->runAction('users',CONS_ACTION_UPDATE,$data);
 			} else {
 				if ($core->tCaptcha('captcha',true)) {
-					$core->safety = false; // allow to register at all costs
+					$core->safety = false; // allow guests to register (add user)
 					$ok = $core->runAction('users',CONS_ACTION_INCLUDE,$data);
 					$core->safety = true;
 					if ($ok) {

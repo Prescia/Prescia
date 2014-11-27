@@ -248,7 +248,8 @@ class CErrorControl {
 					  $this->ERRORS[$errCode] == CONS_ERROR_SEC_SHOW ||
 					  $this->ERRORS[$errCode] == CONS_ERROR_NOTICESTOP ||
 					  $this->ERRORS[$errCode] == CONS_ERROR_MESSAGE;
-		$lowLog= $this->ERRORS[$errCode] == CONS_ERROR_WARNING ||
+		$lowLog= $this->ERRORS[$errCode] == CONS_ERROR_NOTICE ||
+				 $this->ERRORS[$errCode] == CONS_ERROR_WARNING ||
 				 $this->ERRORS[$errCode] == CONS_ERROR_WARNING_SHOW;
 		$securityLog = $this->ERRORS[$errCode] == CONS_ERROR_SEC ||
 				 		$this->ERRORS[$errCode] == CONS_ERROR_SEC_SHOW;

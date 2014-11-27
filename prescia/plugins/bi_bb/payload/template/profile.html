@@ -119,13 +119,11 @@
 
 
 <script type='text/javascript'><!--
-
+	var oldLogin = ''
+	loginOk = false; // so we trigger the ajax only once
 	function fillfeedback(frm) {
 		// color/spans
 		setSuccess(frm.name,frm.name.value.length > 10);
-		{_GUEST}setSuccess(frm.ulogin,isLogin(frm.ulogin.value));
-		setSuccess(frm.upassword,isLogin(frm.upassword.value) && (frm.upassword.value!=frm.ulogin.value));
-		{/GUEST}
 		{_LOGGED}
 		setSuccess(frm.upassword,frm.upassword.value == '' || (isLogin(frm.upassword.value) && (frm.upassword.value!='{USER_LOGIN}')));
 		{/LOGGED}
@@ -144,10 +142,17 @@
 			}
 		}
 		{_GUEST}
-		if (!isLogin(frm.ulogin.value)) {
-			$(frm.ulogin).next('span').prop('title', '{_t}invalid_login{/t}');
-			failed = true;
+		if (oldLogin != frm.ulogin.value) {
+			loginOk = isLogin(frm.ulogin.value,false,['users','login',loginCallback]);
+			setSuccess(frm.ulogin,loginOk);
+			oldLogin = frm.ulogin.value;
+			if (!loginOk) { // ajax might change this!
+				$(frm.ulogin).next('span').prop('title', '{_t}invalid_login{/t}');
+				failed = true;
+			}
 		}
+		setSuccess(frm.upassword,isLogin(frm.upassword.value) && (frm.upassword.value!=frm.ulogin.value));
+		{/GUEST}
 		if (!isLogin(frm.upassword.value)) {
 			$(frm.upassword).next('span').prop('title', '{_t}invalid_password{/t}');
 			failed = true;
@@ -182,6 +187,16 @@
 		}
 		{/GUEST}
 		return !failed;
+	}
+
+	function loginCallback(isunique) {
+		frm = getElement('profileform');
+		if (!isunique) {
+			setSuccess(frm.ulogin,false);
+			$(frm.ulogin).next('span').prop('title', '{_t}login_already_taken{/t}');
+		} else {
+			setSuccess(frm.ulogin,true);
+		}
 	}
 
 	function setSuccess(el,level) {

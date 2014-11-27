@@ -17,7 +17,7 @@ class CDBO {
   	public $log = array();
   	public $dbc = 0; // how many queries run
   	public $dbt = 0; // SQL time
-  	public $quickmode = true; // if false, will store all query logs into $log and store time (dbt) and queries (dbc) counts, otherwise only errors
+  	public $quickmode = true; // if false, will store all query logs into $log, otherwise only errors
   	public $allow_select_fast_foward = true; // allows array_break to fast-foward SELECT section and quickly detect FROM/JOIN
 	public $errorRaised = false;
 
