@@ -218,6 +218,7 @@ class mod_bi_stats extends CscriptedModule  {
 			}
 			if ($ignoreme) return; // is an IP to be ignored
 
+			# -- Administrator logged in, log a-hit
 			if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]>$this->admRestrictionLevel) {
 				$id = (isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))?$_REQUEST['id']:0;
 				$x = $core->dbo->fetch("SELECT hits FROM ".$core->modules['stats']->dbname." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
@@ -267,80 +268,91 @@ class mod_bi_stats extends CscriptedModule  {
 			$legacy = false;
 			list($browser,$legacy,$ismob)=getBrowser();
 
-			# -- REFERER STATS --
-			if (!isset($_COOKIE['session_visited'])) {
-				$partial_referer = str_replace("www.","",$core->domain); // www.prescia.net -> prescia.net (might be at sub-domain)
-				$http_referer =  isset($_SERVER['HTTP_REFERER'])?$_SERVER['HTTP_REFERER']:'';
-				if ($http_referer == "" || (strpos($http_referer, $partial_referer) === false && strpos($partial_referer,'.')!== false)) {
-					# valid external REFERER OR empty (bookmark)
-					$referer = str_replace("http://","",$http_referer);
-					$referer = str_replace("https://","",$referer);
-					$domain = explode("/",$referer);
-					$domain = $domain[0];
-					$isSearchEngine = false;
-					// lets get some search engines here (faster than preg)
-					if (strpos($domain,"www.google.") !== false) {
-						$domain = "www.google.*";
-						$isSearchEngine = true;
-					} else if (strpos($domain,".yahoo.co") !== false) {
-						$domain = "*.yahoo.*";
-						$isSearchEngine = true;
-					} else if (strpos($domain,".bing.") !== false) {
-						$domain = "*.bing.*";
-						$isSearchEngine = true;
-					} else if (strpos($domain,"busca.uol.") !== false) {
-						$domain = "busca.uol.*";
-						$isSearchEngine = true;
-					} else if (strpos($domain,".mail.") !== false || substr($domain,0,5) == "mail.") {
-						$domain = "MAIL";
-					} else if (strlen($domain)>50) $domain = substr($domain,0,47)."...";
-					$core->dbo->query("SELECT hits, pages FROM ".$core->modules['statsref']->dbname." WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"",$r,$n);
-					if ($n>0)
-						list($hits,$pages) = $core->dbo->fetch_row($r);
-					else {
-						$hits = 0;
-						$pages = "";
-					}
-					$hits++;
-					if (strpos($pages,$referer.",") === false) $pages .= cleanString($referer).",";
-					if ($n == 0) {
-						$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsref']->dbname." SET data='".date("Y-m-d")."', referer=\"$domain\", entrypage=\"".$pageToBelogged."\", hits=$hits, pages=\"".$pages."\"");
-						if (!$ok) {
-							$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
-							if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
-								array_pop($this->parent->dbo->log); // ignore this error please
-								$core->dbo->simpleQuery("UPDATE ".$core->modules['statsref']->dbname." SET hits=$hits, pages=\"".$pages."\" WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"");							
-							}
+			# -- prepare cookie/IP monitoring variables
+			$logByIP = false;
+			$alreadyVisited = false;
+			if ($core->dbo->query("SELECT page,fullpath FROM ".$core->modules['statsrt']->dbname." WHERE ip='".CONS_IP."'",$r,$n) && $n != 0) {
+				$alreadyVisited = true; // by IP
+			}
+
+			# -- REFERER STATS --			
+			
+			if (!isset($_COOKIE['session_visited'])) { // no cookies, first visit or cookies disabled
+				if (!isset($_COOKIE[session_id()]) && $this->detectVisitorByIP && $alreadyVisited) { // NOT first visit, but no cookies at all, and we want to track by IP
+					$logByIP = true;
+				}
+				if (!$logByIP) {
+					$partial_referer = str_replace("www.","",$core->domain); // www.prescia.net -> prescia.net (might be at sub-domain)
+					$http_referer =  isset($_SERVER['HTTP_REFERER'])?$_SERVER['HTTP_REFERER']:'';
+					if ($http_referer == "" || (strpos($http_referer, $partial_referer) === false && strpos($partial_referer,'.')!== false)) {
+						# valid external REFERER OR empty (bookmark)
+						$referer = str_replace("http://","",$http_referer);
+						$referer = str_replace("https://","",$referer);
+						$domain = explode("/",$referer);
+						$domain = $domain[0];
+						$isSearchEngine = false;
+						// lets get some search engines here (faster than preg)
+						if (strpos($domain,"www.google.") !== false) {
+							$domain = "www.google.*";
+							$isSearchEngine = true;
+						} else if (strpos($domain,".yahoo.co") !== false) {
+							$domain = "*.yahoo.*";
+							$isSearchEngine = true;
+						} else if (strpos($domain,".bing.") !== false) {
+							$domain = "*.bing.*";
+							$isSearchEngine = true;
+						} else if (strpos($domain,"busca.uol.") !== false) {
+							$domain = "busca.uol.*";
+							$isSearchEngine = true;
+						} else if (strpos($domain,".mail.") !== false || substr($domain,0,5) == "mail.") {
+							$domain = "MAIL";
+						} else if (strlen($domain)>50) $domain = substr($domain,0,47)."...";
+						$core->dbo->query("SELECT hits, pages FROM ".$core->modules['statsref']->dbname." WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"",$r,$n);
+						if ($n>0)
+							list($hits,$pages) = $core->dbo->fetch_row($r);
+						else {
+							$hits = 0;
+							$pages = "";
 						}
-					} else
-						$core->dbo->simpleQuery("UPDATE ".$core->modules['statsref']->dbname." SET hits=$hits, pages=\"".$pages."\" WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"");
-
-					# -- QUERY STATS --
-
-					if ($isSearchEngine) {
-						# came from search tool
-						if (preg_match("/(\?|\&)(p|q|qs)=([^\&]*)/i",$referer,$req)) {
-							# detected query!
-							$query = preg_replace("/(\+|&|%..)/i"," ",$req[3]);
-							$query = preg_replace("/( ){2,}/i"," ",$query);
-							$hits = $core->dbo->fetch("SELECT count FROM ".$core->modules['statsquery']->dbname." WHERE data='".date("Y-m-d")."' AND engine=\"$domain\" AND query=\"$query\" AND entrypage=\"".$pageToBelogged."\"");
-							if ($hits === false)
-								$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsquery']->dbname." SET data='".date("Y-m-d")."' , engine=\"$domain\" , query=\"$query\" , entrypage=\"".$pageToBelogged."\", count=1");
-							else
-								$core->dbo->simpleQuery("UPDATE ".$core->modules['statsquery']->dbname." SET count=count+1 WHERE data='".date("Y-m-d")."' AND engine=\"$domain\" AND query=\"$query\" AND entrypage=\"".$pageToBelogged."\"");
-						} # detected query
-					} # is search
-
-					# -- end query stats --
+						$hits++;
+						if (strpos($pages,$referer.",") === false) $pages .= cleanString($referer).",";
+						if ($n == 0) {
+							$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsref']->dbname." SET data='".date("Y-m-d")."', referer=\"$domain\", entrypage=\"".$pageToBelogged."\", hits=$hits, pages=\"".$pages."\"");
+							if (!$ok) {
+								$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
+								if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+									array_pop($this->parent->dbo->log); // ignore this error please
+									$core->dbo->simpleQuery("UPDATE ".$core->modules['statsref']->dbname." SET hits=$hits, pages=\"".$pages."\" WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"");							
+								}
+							}
+						} else
+							$core->dbo->simpleQuery("UPDATE ".$core->modules['statsref']->dbname." SET hits=$hits, pages=\"".$pages."\" WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"");
+	
+						# -- QUERY STATS --
+	
+						if ($isSearchEngine) {
+							# came from search tool
+							if (preg_match("/(\?|\&)(p|q|qs)=([^\&]*)/i",$referer,$req)) {
+								# detected query!
+								$query = preg_replace("/(\+|&|%..)/i"," ",$req[3]);
+								$query = preg_replace("/( ){2,}/i"," ",$query);
+								$hits = $core->dbo->fetch("SELECT count FROM ".$core->modules['statsquery']->dbname." WHERE data='".date("Y-m-d")."' AND engine=\"$domain\" AND query=\"$query\" AND entrypage=\"".$pageToBelogged."\"");
+								if ($hits === false)
+									$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsquery']->dbname." SET data='".date("Y-m-d")."' , engine=\"$domain\" , query=\"$query\" , entrypage=\"".$pageToBelogged."\", count=1");
+								else
+									$core->dbo->simpleQuery("UPDATE ".$core->modules['statsquery']->dbname." SET count=count+1 WHERE data='".date("Y-m-d")."' AND engine=\"$domain\" AND query=\"$query\" AND entrypage=\"".$pageToBelogged."\"");
+							} # detected query
+						} # is search
+	
+						# -- end query stats --
+					} # not log by IP (is set if detected this IP already visited in the last 15 min, but has no cookies) 
 				} # if valid
 			} # if new entry
 
 			# -- end referer and query stats --
 			# -- REAL TIME/Location STATS --
-
-			$core->dbo->query("SELECT page,fullpath FROM ".$core->modules['statsrt']->dbname." WHERE ip='".CONS_IP."'",$r,$n);
-			if ($n==0) {
-				$ok = true; // we will use this to control if we try second+ visit on concurrent include
+			$ok = true; // we will use this to control if we try second+ visit on concurrent include
+			if ($alreadyVisited) {
 				# first visit
 				if (!isset($referer)) {
 					# should be set at referer stats
@@ -380,21 +392,21 @@ class mod_bi_stats extends CscriptedModule  {
 			}
 
 			# -- end STATS PATH and REAL TIME --
-			# -- HIT/UHIT/BHIT/AHITS stats --
+			# -- HIT/UHIT/BHIT/AHITS stats -- (BHIT = browsing hit = acceptance, one per visitor)
 			$id = (isset($_REQUEST['id']) && is_numeric($_REQUEST['id']))?$_REQUEST['id']:0;
 			$isReturning = isset($_COOKIE['akr_returning']);
 			$isAdm = str_replace("/","",$this->parent->context_str) == $this->admFolder;
 
 			$x = $core->dbo->fetch("SELECT hits FROM ".$core->modules['stats']->dbname." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
+			$ok = true; // also control concurrent includes from here
 			if ($x===false) {
-				$ok = true; // also control concurrent includes from here
 				# FIRST hit on this page here today
-				if (!isset($_COOKIE['session_visited'])) {
+				if (!isset($_COOKIE['session_visited']) && !$logByIP) { // no cookie and we do not want to log by IP
 					// first hit (1 1 0)
 					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=1, uhits=1, bhits=0, ahits=".($isAdm?1:0).", rhits=".($isReturning?"1":"0").", lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 					if (!$isReturning) @setcookie("akr_returning",'1',Time() + 86400); // 1 day
 						@setcookie("session_visited",'1',Time()+3600); // 60 min
-				} else if ($_COOKIE['session_visited'] == 1) {
+				} else if (!$logByIP && $_COOKIE['session_visited'] == 1) { // when logging by IP, we can't gather acceptance/browsing (b) hits
 					// second hit (1 0 1)
 					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=1, uhits=0, bhits=1, ahits=".($isAdm?1:0).", rhits=0, lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 					@setcookie("session_visited",'2',Time()+3600); // 60 min
@@ -410,12 +422,12 @@ class mod_bi_stats extends CscriptedModule  {
 				}
 			}
 			if (!$ok) { // second+ hit of day
-				if (!isset($_COOKIE['session_visited'])) {
+				if (!isset($_COOKIE['session_visited']) && !$logByIP) {
 					// first hit 1 1 0
 					$core->dbo->simpleQuery("UPDATE ".$core->modules['stats']->dbname." SET hits=hits+1, uhits=uhits+1 ".($isReturning?", rhits=rhits+1":"").($isAdm?", ahits=ahits+1":"")." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 					if (!$isReturning) @setcookie("akr_returning",'1',Time() + 86400); // 1 day
 					@setcookie("session_visited",'1',Time()+3600); // 60 min
-				} else if ($_COOKIE['session_visited'] == 1) {
+				} else if (!$logByIP && $_COOKIE['session_visited'] == 1) {
 					// second hit (1 0 1)
 					$core->dbo->simpleQuery("UPDATE ".$core->modules['stats']->dbname." SET hits=hits+1, bhits=bhits+1".($isAdm?", ahits=ahits+1":"")." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 					@setcookie("session_visited",'2',Time()+3600); // 60 min

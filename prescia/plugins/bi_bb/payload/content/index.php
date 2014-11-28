@@ -1,8 +1,10 @@
 <?
 
+	$showFullList = isset($_REQUEST['all']) && $_REQUEST['all'] == "true"; // send all=true to show the lists regardless of parenting, and the last threads with paging 
+
 	if (!$this->blockforumlist) {
 
-		$idF = isset($_REQUEST['id_forum'])?$_REQUEST['id_forum']:'';
+		$idF = isset($_REQUEST['id_forum']) && !$showFullList?$_REQUEST['id_forum']:'';
 		$lang = isset($_REQUEST['lang'])?$_REQUEST['lang']:$_SESSION[CONS_SESSION_LANG];
 
 		$forumObj = $core->loaded('forum');
@@ -112,6 +114,8 @@
 			return $data;
 		}
 
+		$p = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])?$_REQUEST['p_init']:0; // item starting this page (if showing all)
+
 		$core->template->assign("mode",$this->mainthreadsAsBB?"bb":"articles");
 		$lang = $_SESSION[CONS_SESSION_LANG];
 		if ($this->mainthreadsAsBB) {
@@ -127,10 +131,9 @@
 				    	  u.id = p.id_author AND
 				    	  a.id = t.id_author 
 				    GROUP BY t.id
-				    ORDER BY p.date DESC
-				    LIMIT ".$this->showlastthreads;
+				    ORDER BY p.date DESC".(!$showFullList?" LIMIT ".$this->showlastthreads:"");
 			$core->template->assign("_notbb");
-			$total = $core->runContent('forumthread',$core->template,$sql,"_thread",false,"threadsAtIndex","gimmepages");
+			$total = $core->runContent('forumthread',$core->template,$sql,"_thread",$showFullList?$this->showlastthreads:false,"threadsAtIndex".$p,"gimmepages");
 		} else {
 			$sql = "SELECT t.id, t.title, t.image as image,t.date, t.urla as turla,
 						   p.date as pdate, p.content as pcontent,
@@ -140,14 +143,17 @@
 				    	  t.id_forum = f.id AND
 				    	  p.id_forumthread = t.id AND p.id_forum = t.id_forum 
 				    GROUP BY t.id
-				    ORDER BY t.date DESC, p.date DESC
-				    LIMIT ".$this->showlastthreads;
+				    ORDER BY t.date DESC, p.date DESC".(!$showFullList?" LIMIT ".$this->showlastthreads:"");
 			$core->template->assign("_bb");
-			$total = $core->runContent('forumthread',$core->template,$sql,"_thread",false,"threadsAtIndex");
+			$total = $core->runContent('forumthread',$core->template,$sql,"_thread",$showFullList?$this->showlastthreads:false,"threadsAtIndex".$p);
 		}
+		
+		if ($showFullList && $total > $this->showlastthreads)
+			$core->template->createPaging("_paginacao",$total,$p,$this->showlastthreads);
+		else
+			$core->template->assign("_paginacao");
 			
 	} else
 	
 		$core->template->assign("_thread");
-		
 		

@@ -15,6 +15,7 @@
 	<HISTORY restrict="100" custom="true" html="true">TEXT</HISTORY>
 	<USERPREFS custom='true' meta="this predates the serialization system">TEXT</USERPREFS>
 	<IMAGE filetypes="gif,jpg,png" filemaxsize="256000" thumbnails="600,600|50,50" tweakimages="croptofit|croptofit">UPLOAD</IMAGE>
+	<AUTHCODE custom='true' meta="this is used if you want to implement mail validation, or recover password. Store a code here and send to the user mail">VC</AUTHCODE>
 </USERS>
 <GROUPS dbname="auth_groups"
 		keys="id"

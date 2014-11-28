@@ -4,6 +4,7 @@
   | NOTE: forcecron=day|hour|true only works if you are logged as master
 -*/
 
+
 if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_cronD'] && $forceCron != 'hour')) { // Daily cron
 	$this->loadAllmodules();
 
@@ -121,7 +122,6 @@ if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_c
 if ($forceCron=='hour' || $forceCron=='all' || $this->dimconfig['_cronH'] != date("H")) {
 	// Hourly cron
 
-
 	# autoclean and notifies
 	$this->loadAllmodules();
 	foreach ($this->modules as $name => &$module) {
@@ -163,6 +163,7 @@ if ($forceCron=='hour' || $forceCron=='all' || $this->dimconfig['_cronH'] != dat
 	if (strpos(CONS_MASTERDOMAINS,$_SESSION['DOMAIN'])!==false) {
 		$this->cacheControl->logCacheThrottle();
 	}
+	
 
 	if (CONS_CRONDBBACKUP && !$this->nearTimeLimit() && ($this->dimconfig['_scheduledCronDay'] == 0 || date("d") == $this->dimconfig['_scheduledCronDay']) && $this->dimconfig['_scheduledCronDayHour'] == date("H")) {
 

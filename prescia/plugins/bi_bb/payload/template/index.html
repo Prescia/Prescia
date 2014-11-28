@@ -82,3 +82,13 @@
 	</div>
 	{/thread}
 	
+	{_paginacao}
+	<div class="text-center">
+		<ul class="pagination">
+			{_has_page_previous}<li><a href="{vdir|/}{BBROOT_PATH}index.html?all=true&id={id}&amp;p_init={page_previous}">&laquo;</a></li>{/has_page_previous}
+			{_pages}<li {current_page|map|1=class="active"}><a href="{vdir|/}{BBROOT_PATH}index.html?all=true&id={id}&amp;p_init={p_init}">{p_number}</a></li>{/pages}
+			{_has_page_next}<li><a href="{vdir|/}{BBROOT_PATH}index.html?all=true&id={id}&amp;p_init={page_next}">&raquo;</a></li>{/has_page_next}
+		</ul>
+	</div>
+	{/paginacao}
+	
