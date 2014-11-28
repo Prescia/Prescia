@@ -1,6 +1,8 @@
 TODO list is on site/github
 
-
+14.11.27 BETA 0.9
+	several fixes on statistics
+	re-enabled (after pretty much never enabling) real-time statistics
 14.11.27 BETA 0.9
 	ajaxqueryunique to detect unique fields on modules using javascript validation (used on bi_bb login field for test)
 	fixed IPv6to4 returning nothing (seriously, there was no return)

@@ -331,8 +331,25 @@
 		</div>
 	
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Visitantes atuais</strong><br/>
-			EM MANUTENÇÃO
+			<strong>Visitantes atuais</strong>:<br/>
+			<table style="border:0px;width:900px" cellspacing="0">
+			<tr>
+				<td style="border-bottom:1px solid #ccc">Início</td>
+				<td style="border-bottom:1px solid #ccc">Atual</td>
+				<td style="border-bottom:1px solid #ccc">Página</td>
+				<td style="border-bottom:1px solid #ccc">Navegador</td>
+				<td style="border-bottom:1px solid #ccc">Referência</td>
+			</tr>
+			{_rvisitor}
+			<tr>
+				<td>{data_ini|date|H:i:s}</td>
+				<td>{data|date|H:i:s}</td>
+				<td>{pagelast}</td>
+				<td><img src="/pages/_common/files/adm/b{agentcode}.gif" alt="{agentcode}" /> - {agent}</td>
+				<td>{referer}</td>
+			</tr>
+			{/rvisitor}
+			</table>
 		</div>
 	
 	</div>
@@ -485,6 +502,7 @@
 		column = Math.ceil((posX+(columnSize/2)) / columnSize);
 		index = startIndex + (totalDays-column);
 		if (index<statsdata.length) {
+			if (statsdata[index][2] ==0) statsdata[index][2] = 1;
 			switch (curtype) {
 				case "u":
 					return fixDate(statsdata[index][0]) + ": " + statsdata[index][2];
@@ -631,7 +649,7 @@
 		canvas.canvas.height = h;
 		canvas.clearRect(0,0,w,h);
 		canvas.save();
-		biggest = 0;
+		biggest = 1;
 		days = 1;
 
 		for (pos=startIndex;pos<startIndex+totalDays;pos++) { // remember, statsdata is DECRESCENT
@@ -639,6 +657,7 @@
 			if (isPercent != 1) {
 				if (statsdata[pos][idxBIG]>biggest) biggest = statsdata[pos][idxBIG];
 			} else {
+				if (statsdata[pos][2] ==0) statsdata[pos][2] = 1;
 				if (statsdata[pos][1]/statsdata[pos][2]>biggest) biggest = statsdata[pos][1]/statsdata[pos][2];
 			}
 			total += statsdata[pos][idx];
@@ -679,9 +698,11 @@
 				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[startIndex][idx]/biggest));
 				break;
 			case 1:
+				if (statsdata[startIndex][2] == 0) statsdata[startIndex][2] = 1;
 				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[startIndex][1]/statsdata[startIndex][2]/biggest));
 				break;
 			case 2:
+				if (statsdata[startIndex][idxBIG] == 0) statsdata[startIndex][idxBIG] = 1;
 				dotValue = paddingTop+(h-paddingTop)* (1-(statsdata[startIndex][idx]/statsdata[startIndex][idxBIG]));
 				break;
 		}
@@ -697,9 +718,11 @@
 					dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][idx]/biggest));;
 					break;
 				case 1:
+					if (statsdata[startIndex][2] == 0) statsdata[startIndex][2] = 1;
 					dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][1]/statsdata[pos][2]/biggest));
 					break;
 				case 2:
+					if (statsdata[startIndex][idxBIG] == 0) statsdata[startIndex][idxBIG] = 1;
 					dotValue = paddingTop+(h-paddingTop)* (1-(statsdata[pos][idx]/statsdata[pos][idxBIG]));
 					break;
 			}
@@ -712,9 +735,11 @@
 				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][idx]/biggest));
 				break;
 			case 1:
+				if (statsdata[pos][2] == 0) statsdata[pos][2] = 1;
 				dotValue = paddingTop+(h-paddingTop)*(1-(statsdata[pos][1]/statsdata[pos][2]/biggest));
 				break;
 			case 2:
+				if (statsdata[pos][idxBIG] == 0) statsdata[pos][idxBIG] = 1;
 				dotValue = paddingTop+(h-paddingTop)* (1-(statsdata[pos][idx]/statsdata[pos][idxBIG]));
 				break;
 		}

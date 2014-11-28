@@ -272,6 +272,7 @@ class mod_bi_stats extends CscriptedModule  {
 			$logByIP = false;
 			$alreadyVisited = false;
 			if ($core->dbo->query("SELECT page,fullpath FROM ".$core->modules['statsrt']->dbname." WHERE ip='".CONS_IP."'",$r,$n) && $n != 0) {
+				list($page,$fullpath) = $core->dbo->fetch_row($r);
 				$alreadyVisited = true; // by IP
 			}
 
@@ -351,8 +352,9 @@ class mod_bi_stats extends CscriptedModule  {
 
 			# -- end referer and query stats --
 			# -- REAL TIME/Location STATS --
-			$ok = true; // we will use this to control if we try second+ visit on concurrent include
-			if ($alreadyVisited) {
+			$ok = false; // we will use this to control if we try second+ visit on concurrent include
+			if (!$alreadyVisited) {
+				$ok = true;
 				# first visit
 				if (!isset($referer)) {
 					# should be set at referer stats
@@ -360,7 +362,7 @@ class mod_bi_stats extends CscriptedModule  {
 					$referer = str_replace("https://","",$referer);
 				}
 				$whatToSave = CONS_BROWSER_ISMOB?"MO":CONS_BROWSER;
-				$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsrt']->dbname." SET ip='".CONS_IP."', page=\"".$pageToBelogged."\", agent=\"".$browser."\", agentcode=\"".$whatToSave."\", fullpath=\"".$pageToBelogged.",\", data=NOW(), data_ini=NOW(), referer=\"$referer\"",true);
+				$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsrt']->dbname." SET ip='".CONS_IP."', page=\"".$pageToBelogged."\", pagelast=\"".$pageToBelogged."\", agent=\"".$browser."\", agentcode=\"".$whatToSave."\", fullpath=\"".$pageToBelogged.",\", data=NOW(), data_ini=NOW(), referer=\"$referer\"",true);
 				if (!$ok) {
 					$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
 					if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update

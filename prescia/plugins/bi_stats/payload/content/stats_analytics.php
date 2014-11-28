@@ -20,9 +20,11 @@
 	$core->dbo->query($sql,$r,$n);
 	for ($c=0;$c<$n;$c++) {
 		list($data,$hits,$uhits,$bhits,$rhits) = $core->dbo->fetch_row($r);
+		if ($uhits<$bhits) $uhits = $bhits; // weird bugs not getting uhits (uhit might have started on the day before, bhit the day next)
 		$outputArr[$data] = array($hits,$uhits,$bhits,$rhits,0);
 	}
 
+	// khits = bookmarks
 	$sql = "SELECT data,sum(hits) FROM ".$statsrObj->dbname." WHERE referer=\"\" GROUP BY data ORDER BY data DESC";
 	$core->dbo->query($sql,$r,$n);
 	for ($c=0;$c<$n;$c++) {
@@ -31,6 +33,7 @@
 			$outputArr[$data][4] = $khits;
 		else
 			$outputArr[$data] = array($khits,$khits,0,0,$khits);
+		if ($outputArr[$data][1] < $outputArr[$data][4]) $outputArr[$data][4] = $outputArr[$data][1]; // weird bug counting more khits than uhits (script aborted before counting uhit?)
 	}
 
 	$yesterday = datecalc(date("Y-m-d"),0,0,-1);
@@ -530,3 +533,6 @@
 		$output .= $obj->techo($simpleList[$c]);
 	}
 	$core->template->assign("_prop",$output);
+
+	#################################### REALTIME ########################################
+	$core->runContent('STATSRT',$core->template,array("data > NOW() - INTERVAL 30 MINUTE","data_ini DESC",""),"_rvisitor",false); 
