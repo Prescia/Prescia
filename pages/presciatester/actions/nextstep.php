@@ -40,9 +40,9 @@
 				$ok = $this->runAction('presciabeta',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
 				$beta1 = $this->lastReturnCode;
-				$this->log[] = "Beta 2";
+				$this->log[] = "Beta 2 (play with escapes)";
 				$data = array('id_nested' => $root3,
-							  'title' => 'nested inside chield 2');
+							  'title' => 'nested inside child 2 "quoted" \"escapequoted\" \'single quoted\'');
 				$ok = $this->runAction('presciabeta',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
 				$beta2 = $this->lastReturnCode;
@@ -147,15 +147,15 @@
 
 				$ok = $this->runAction('presciator',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
-				$this->log[] = "Tor 4";
+				$this->log[] = "Tor 4 (play with tags and quotes)";
 				$data = array(
 				'alpha' => 'kage',
 				'beta' => 4,
 				'title' => 'Sore wa kage desu',
 				'makemefamous' => 'y',
 				'randomtext' => 'yadda',
-				'randomhtml' => '<b><i>html!</i></b>',
-				'randomhtmllt' => 'yodda',
+				'randomhtml' => '<b><i>html!</i></b>(\")',
+				'randomhtmllt' => 'yodda(")(\")',
 				'leavemealone' => '{}{}[][]"',
 				'ignoreme' => 'keepmefooour',
 				'sosmall' => 50,
@@ -268,7 +268,7 @@
 					'lang' => $_SESSION[CONS_SESSION_LANG],
 					'title' => "HELLO",
 					'header' => "CMS HELLO",
-					'content' => "Good bye, and thanks for all the fish",
+					'content' => "Good bye, and thanks for all the fish 'single quoted'",
 					'publish' => 'y',
 					'locked' => 'y');
 				$ok = $this->runAction('contentman',CONS_ACTION_INCLUDE,$data);

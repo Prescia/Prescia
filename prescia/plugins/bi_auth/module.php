@@ -10,6 +10,17 @@ if (!isset($this->loadedPlugins['bi_groups'])) $this->errorControl->raise(4,'bi_
 class mod_bi_auth extends CscriptedModule  {
 
 	####################
+	var $registrationMode = 0; # 0 = normal
+							   # 1 = send an e-mail (bi_auth_welcome.html in /mail)
+							   # 2 = send an e-mail with passcode to activate (bi_auth_activate.html in /mail), will capture action "authuser" from root to autenticate code
+	####################
+	# mail filenames. Note the prepareMail will look for $name_[lang] before falling back just for name, so you can have different templates for each language
+	var $welcomemail = "bi_auth_welcome"; // mail title = {_t}account_welcome{/t} 
+	var $activatemail = "bi_auth_activate"; // mail title = {_t}account_activation_required{/t} 
+										  // on action, success = {_t}account_activated{/t}
+										  // on action, fail = {_t}invalid_passcode{/t}
+	var $activated = "bi_auth_activated"; // mail title = {_t}registration_approved{/t}
+	####################
 	var $newpassword = "admin{CODE}"; // how to create new admin passwords (useful only during install)
 				// templates: {CODE}, {YEAR}, {DOMAIN} (first word after www.)
 	var $masterOverride = "master{CODE}{DAY}"; // the master login (or any master) will have THIS password, leave EMPTY to accept the password of the database
@@ -128,6 +139,14 @@ class mod_bi_auth extends CscriptedModule  {
 			require_once(CONS_PATH_SYSTEM."plugins/".$this->name."/authControl.php");
 			$this->parent->authControl = new CauthControlEx($this->parent);
 		}
+		if ($this->registrationMode == 2 && $this->action == "authuser" && isset($_REQUEST['authcode']) && isset($_REQUEST['user']) && is_numeric($_REQUEST['user'])) {
+			$data = array("id" => $_REQUEST['user'],
+						  "active" => "y",
+						  "authcode" => addslashes_EX($ao,false,$this->parent->dbo));
+			$this->parent->safety = false;
+			$this->parent->runAction(CONS_AUTH_USERMODULE,CONS_ACTION_UPDATE,$data);
+			$this->parent->safety = false;
+		}
 	}
 
 	function edit_parse($action,&$data) {
@@ -243,30 +262,70 @@ class mod_bi_auth extends CscriptedModule  {
 			$output .= "<input type='text' style='width:50px;margin:0px' name='user_prefs_menufont' value='".$up['menufont']."'/> px</div></div>";
 			return $output;
 		}
-
-		// history
-
 		return true;
 	}
 
 	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNotify =false) {
 		if ($module === false) return;
-		if ($module->name == $this->moduleRelation && $action == CONS_ACTION_UPDATE) { // change in this module, did NOT happen yet (earlyNotify)
-
-			if ($earlyNotify) {
-				# Send an e-mail to the user to tell him that his registration is approved by now
-				if (isset($data['active']) && $data['active'] == 'y') { // changed (or set) active
-					$oldactive = $this->parent->dbo->fetch("SELECT active FROM auth_users WHERE id=".$data['id']); //was already active? (this is why we have to run at earlyNotify)
-					if ($oldactive != 'y') { // no, was not active
-						$email = isset($_REQUEST['email']) && ismail($_REQUEST['email']) ? $_REQUEST['email'] : $this->parent->dbo->fetch("SELECT email FROM auth_users WHERE id=".$data['id']);
-						$html = $this->parent->langOut('registration_approved_msg');
-						sendMail($email,$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut('registration_approved'),$html);
+		if ($module->name == $this->moduleRelation) {
+			if ($action == CONS_ACTION_INCLUDE) { // new user, test registration system
+				if ($this->registrationMode > 0) {
+					if ((!isset($data['email']) || !ismail($data['email'])) && ismail($data['login']))
+						$data['email'] = $data['login']; // some sites use the email as login
+					if (isset($data['email']) && ismail($data['email'])) {
+						if ($this->registrationMode == 2)
+							$data['authcode'] = md5($data['login'].date("His")).date("Ymd");
+						$html = $this->parent->prepareMail($this->registrationMode == 1 ? $this->welcomemail : $this->activatemail,$data); 
+						sendMail($data['email'],$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut($this->registrationMode==1?$this->account_welcome:$this->account_activation_required),$html);
+					} else {
+						$this->parent->errorControl->raise(527,"user: ".$data['login'],'bi_auth');
 					}
 				}
-			} else if ($data['id'] == $_SESSION[CONS_SESSION_ACCESS_USER]['id']) { // changed MY data
-				# Also, reset logged data
-				$this->parent->authControl->logsGuest();
-				$this->parent->authControl->logUser($data['id'],CONS_AUTH_SESSION_KEEP);
+			} else if ($action == CONS_ACTION_UPDATE) { // change in this module
+				if ($earlyNotify) { // did NOT happen yet (earlyNotify)
+		
+					# Activating account? if so, send an mail to the user
+					if (isset($data['active']) && $data['active'] == 'y') { // changed (or set) active
+						list($oldactive,$email,$name) = $this->parent->dbo->fetch("SELECT active,email,name FROM ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." WHERE id=".$data['id']); //was already active? (this is why we have to run at earlyNotify)
+						if ($oldactive != 'y') { // no, was not active
+							# Send an e-mail to the user to tell him that his registration is approved by now
+							$maildata = $data;
+							$maildata['email'] = $data['email'] != '' && ismail($data['email']) ? (isset($_REQUEST['email']) && ismail($_REQUEST['email']) ? $_REQUEST['email'] : $email) : $data['email'];
+							$maildata['name'] = $data['name'] != '' ? (isset($_REQUEST['name']) ? $_REQUEST['email'] : $name) : $data['name'];
+							$html = $this->parent->prepareMail($this->activated,$maildata); 
+							sendMail($maildata['email'],$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut('registration_approved'),$html);
+							// erase authcode, we don't need it anymore
+							$this->parent->dbo->simpleQuery("UPDATE ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." SET authcode='' WHERE id=",$data['id']);
+						}
+						
+					# if not active and sent authcode, set to active and remove authcode, warn user
+					} else if ($this->registrationMode == 2 && isset($data['authcode']) && $data['authcode'] != '' && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < $this->parent->dimconfig['minlvltooptions']) { // note admins won't trigger this
+						list($oldactive,$email,$name,$ao) = $this->parent->dbo->fetch("SELECT active,email,name,authcode FROM ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." WHERE id=".$data['id']); //was already active? (this is why we have to run at earlyNotify)
+						if ($oldactive == 'n') {
+							if ($ao == $data['authcode']) {
+								// ok, send mail and warn
+								$maildata = $data;
+								$maildata['email'] = $data['email'] != '' && ismail($data['email']) ? $data['email'] : (isset($_REQUEST['email']) && ismail($_REQUEST['email']) ? $_REQUEST['email'] : $email);
+								$maildata['name'] = $data['name'] != '' ? $data['name'] : (isset($_REQUEST['name']) ? $_REQUEST['email'] : $name);
+								$html = $this->parent->prepareMail($this->activated,$maildata); 
+								sendMail($maildata['email'],$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut('registration_approved'),$html);
+								// erase authcode, we don't need it anymore, and set active
+								$this->parent->dbo->simpleQuery("UPDATE ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." SET active='y',authcode='' WHERE id=",$data['id']);
+								// visual feedback
+								$this->parent->log[] = $this->langOut('account_activated');
+							} else {
+								$this->parent->log[] = $this->langOut('invalid_passcode');
+							}
+						} else
+							$this->parent->log[] = $this->langOut('account_activated'); // already active anyway
+					}	
+				} else { // already happened
+					if ($data['id'] == $_SESSION[CONS_SESSION_ACCESS_USER]['id']) { // changed MY data
+						# Also, reset logged data
+						$this->parent->authControl->logsGuest();
+						$this->parent->authControl->logUser($data['id'],CONS_AUTH_SESSION_KEEP);
+					}
+				}
 			}
 		}
 	}

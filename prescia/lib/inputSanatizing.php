@@ -7,10 +7,10 @@
 
 	# Clears a string for SQL input (prevents injection), removes total or partially HTML codes, and such
 	# Returns the treated string
-	function cleanString($data,$ishtml = false, $allowadv = false) {
+	function cleanString($data,$ishtml = false, $allowadv = false, $dbo = false) {
 	    if (!$ishtml) $data = str_replace("<","&lt;",str_replace(">","&gt;",$data));
 	    else $data = cleanHTML($data,$allowadv);
-	    $data = addslashes_EX($data,$ishtml);
+	    $data = addslashes_EX($data,$ishtml,$dbo);
 	    return $data;
   	}
 
@@ -42,18 +42,26 @@
 		return $output;
 	}
 
-	# Extension of addslashes, adds more slashes than addslashes, also conditionals
-	function addslashes_EX($entrada, $ishtml = true) {
+	# Extension of addslashes, adds more slashes than addslashes, also conditionals. Send the database object to use database-especific escape
+		function addslashes_EX($entrada, $ishtml = true, $dbo = false) {
   		if ($ishtml) {
-  			$entrada = addslashes($entrada); // escapes ', " and \
-  			return $entrada;
+  			if ($dbo !== false)
+				return $dbo->escape($entrada);
+			else
+				return addslashes($entrada); // escapes ', " and \
   		} else {
-  			$entrada = str_replace("\\\"","&quot;",$entrada); # in case something was escaped
-  			return str_replace("\"","&quot;",$entrada); # and now the official
+  			//$entrada = str_replace("\\\"","&quot;",$entrada); # in case something was escaped
+  			//$entrada = str_replace("\\'","&#39;",$entrada); # in case something was escaped
+			$entrada = str_replace("'","&#39;",$entrada); # normal escape
+			$entrada = str_replace("\"","&quot;",$entrada); # normal escape
+  			if ($dbo !== false)
+				return $dbo->escape($entrada); // escapes other characters
+			else
+				return addslashes($entrada); // escapes other characters
   		}
 	}
 
-  	# Removes HTML - note this will also remove script and style.
+  	# Removes HTML - note this will also remove script and style. For a better HTML stripping that keeps basic tags, check the parseHTML function on xmlHandler
   	function stripHTML($str,$preserveEndOfLine=false) {
 		if (strpos($str,"<")===false) return $str; // no HTML, just pop out
 		$l = strlen($str);

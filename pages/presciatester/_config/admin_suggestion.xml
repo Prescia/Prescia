@@ -14,11 +14,11 @@
 	<new>edit.php?module=forum</new>
 	<list>list.php?module=forum</list>
 </FORUM>
-<FORUMTHREAD icon="list" listing="forum_title,title,video,date,tags,urla,lastupdate,author_name">
+<FORUMTHREAD icon="list" listing="forum_title,is_featured,title,video,date,tags,urla,lastupdate">
 	<new>edit.php?module=forumthread</new>
 	<list>list.php?module=forumthread</list>
 </FORUMTHREAD>
-<FORUMPOST icon="list" listing="forum_title,forumthread_title,author_name,date,flagged,whoflagged_name,props,ip">
+<FORUMPOST icon="list" listing="forum_title,forumthread_title,author_name,date,whoflagged_name,props,ip">
 	<new>edit.php?module=forumpost</new>
 	<list>list.php?module=forumpost</list>
 </FORUMPOST>

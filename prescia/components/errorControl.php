@@ -53,7 +53,7 @@ class CErrorControl {
 								105 => CONS_ERROR_FATAL_MAIL, # Database down, aborting script (core::dbconnect)
 								106 => CONS_ERROR_WARNING, # _modules metadata corrupt, attempting to debug (core::loadMetadata)
 								107 => CONS_ERROR_FATAL, # Unknown XML error on meta.xml, module not found (core::loadMetadata)
-								108 => CONS_ERROR_FATAL, # Incorrect permission check: SQL FROM differs from module (auth::forcePermissions)
+								108 => CONS_ERROR_FATAL, # Incorrect permission check: SQL 'FROM' differs from module database, you must only run runContent on the same database as the module (auth::forcePermissions)
 								109 => CONS_ERROR_WARNING, # Last CRON timed out (core::cronCheck)
 								110 => CONS_ERROR_WARNING, # Quota exceeded (core::cronCheck)
 								111 => CONS_ERROR_WARNING, # Time out on Cron-D (core::cronCheck)
@@ -91,6 +91,9 @@ class CErrorControl {
 								143 => CONS_ERROR_WARNING_SHOW, # Unable to delete item
 								144 => CONS_ERROR_NOTICESTOP, # Possible SQL injection or exploit search - aborting
 								145 => CONS_ERROR_NOTICE_SHOW, # User tryed to change a restricted field (field not changed)
+									# This errors means the permissions of the user do not allow the change in one or more field
+									# If you must change it anyway (example: your code wants to create or change a new user, etc..), set $core->safety to false before the runAction, but check all data yourself for exploits. Set safety back to true after the action
+									# This might also happen when the user tries to use a activation link, so be sure your code also disables security when resetting password or changing user permission status yourself or using bi_auth
 								146 => CONS_ERROR_WARNING_SHOW, # SQL error on SELECT
 								147 => CONS_ERROR_WARNING, # Slow query
 								148 => CONS_ERROR_WARNING_SHOW, # SELECT command with no key
@@ -187,6 +190,7 @@ class CErrorControl {
 								524 => CONS_ERROR_WARNING_SHOW, # bi_adm multiple uploads reached time limit and aborted
 								525 => CONS_ERROR_SEC, # bi_stats reports too many bot hits
 								526 => CONS_ERROR_FATAL, # checkPermission called with an invalid $owner variable (must be either false or a 4-lenght array)
+								527 => CONS_ERROR_WARNING_SHOW, # bi_auth registered a new user, and it is set to send an E-mail to the new user, but an E-mail is not set!
 
 								598 => CONS_ERROR_FATAL, # generic fatal plugin error
 								599 => CONS_ERROR_ERROR, # generic non-fatal plugin error

@@ -39,7 +39,7 @@ class mod_bi_seo extends CscriptedModule  {
 				
 				$seo = $this->parent->dbo->fetch_assoc($r);
 				if (isset($seo['redirectmode']) && $seo['redirectmode'] != 'normal') {
-					$this->parent->headerControl->internalFoward($seo['page'],$seo['redirectmode']=='sr_temporary'?"307":"301");
+					$this->parent->headerControl->internalFoward($seo['page'].(strpos($seo['page'],".")===false && $seo['page'][strlen($seo['page'])-1]!='/'?".html":""),$seo['redirectmode']=='sr_temporary'?"307":"301");
 					$this->parent->close();
 				}
 				$this->parent->context = explode("/",$seo['page']);

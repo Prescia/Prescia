@@ -22,8 +22,8 @@
 	} else {
 		$userLang = $_SESSION[CONS_SESSION_LANG];
 		$core->template->assign("_imageyes");
-		$core->tCaptcha('captcha');
 		$core->template->fill($_POST);
+		$core->tCaptcha('captcha');
 		if (isset($_POST['ulogin'])) $core->template->assign("login",$_POST['ulogin']);
 	}
 

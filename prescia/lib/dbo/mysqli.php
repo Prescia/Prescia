@@ -48,6 +48,10 @@ class CDBO_mysqli extends CDBO  {
    	  	return true;
   	} // connect
 
+  	public function escape($str) { // database specific escape function
+  		return $this->connection->real_escape_string($str);
+	}
+  	
 	function select_db($db) {
 		return $this->connection && $this->connection->select_db($db);
 	} // select_db

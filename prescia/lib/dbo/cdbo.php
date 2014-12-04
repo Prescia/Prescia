@@ -30,6 +30,10 @@ class CDBO {
 		$this->connection = false;
   	} // __construct
 
+  	public function escape($str) { // database specific escape function, SHOULD BE EXTENDED
+  		return addslashes($str);
+	}
+  	
   	function __destructor() {
   		if ($this->connection) $this->close();
   	}

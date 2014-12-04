@@ -19,6 +19,7 @@
 	<LASTUPDATE ignorenedit="true" meta="cache for speed, is the last post's date" updatestamp="true">DATETIME</LASTUPDATE>
 	<ID_AUTHOR ignorenedit="true" meta="cache for speed, is the first post" mandatory="true">USERS</ID_AUTHOR>
 	<PUBLISH_AFTER timestamp="true" default="0000-00-00 00:00:00">DATETIME</PUBLISH_AFTER>
+	<PUBLISH default='y' mandatory="true">bol</PUBLISH>
 </FORUMTHREAD>
 <FORUMPOST dbname="bb_post" title="content" order="date+">
 	<ID_FORUM mandatory="true">FORUM</ID_FORUM>

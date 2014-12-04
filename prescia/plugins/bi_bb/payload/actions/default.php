@@ -25,9 +25,10 @@
 		$ok = $this->parent->friendlyurl(array("module" => "forumthread",
 								"page" => "thread",
 								"keys" => "urla",
-								"title" => "Forum - {forum_title} - {title}",
+								"title" => $this->homename." - ".$this->parent->langOut($this->areaname)." - {forum_title} - {title}",
 								"queryfilter" => "forumthread.id_forum",
-								"metadesc" => "Forums - {forum_title} - {title}",
+								"metadesc" => $this->homename." - ".$this->parent->langOut($this->areaname)." - {forum_title} - {title}",
+								"metakeys" => $this->homename.", {tags}"
 								));
 
 	//$this->parent->debugFile = CONS_PATH_SYSTEM."plugins/".$this->name."/payload/template/_debugarea.html"; // this is our debug area

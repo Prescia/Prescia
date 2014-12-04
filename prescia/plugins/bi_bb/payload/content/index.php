@@ -13,7 +13,7 @@
 			$sql = "SELECT forum.id,forum.title,forum.urla,forum.id_parent,
 					count(distinct t.id) as t,count(distinct post.id) as p
 					FROM bb_forum as forum
-					LEFT JOIN bb_thread as t ON t.id_forum = forum.id
+					LEFT JOIN bb_thread as t ON t.id_forum = forum.id AND t.publish='y' AND t.publish_after < NOW()
 					LEFT JOIN bb_forum as fp ON fp.id = forum.id_parent
 					LEFT JOIN bb_post as post ON post.id_forum = forum.id AND post.id_forumthread = t.id
 					WHERE ".($idF!=''?"forum.id_parent=$idF AND ":"")."
@@ -67,7 +67,7 @@
 			$sql = "SELECT forum.id,forum.title,forum.urla,forum.id_parent,
 					count(distinct t.id) as t
 					FROM bb_forum as forum
-					LEFT JOIN bb_thread as t ON t.id_forum = forum.id
+					LEFT JOIN bb_thread as t ON t.id_forum = forum.id AND t.publish='y' AND t.publish_after < NOW()
 					LEFT JOIN bb_forum as fp ON fp.id = forum.id_parent
 					WHERE ".($idF!=''?"forum.id_parent=$idF AND ":"")."
 						  forum.operationmode<>'bb' AND forum.lang='".$lang."'
@@ -126,7 +126,7 @@
 				    FROM (bb_thread as t,bb_forum as f, bb_post as p, auth_users as u, auth_users as a)
 				    LEFT JOIN bb_post as p2 ON (p2.id_forumthread = t.id AND p2.id_forum = t.id_forum)
 				    WHERE f.lang='$lang' AND
-				    	  t.id_forum = f.id AND
+				    	  t.id_forum = f.id AND t.publish='y' AND t.publish_after < NOW() AND
 				    	  p.id_forumthread = t.id AND p.id_forum = t.id_forum AND
 				    	  u.id = p.id_author AND
 				    	  a.id = t.id_author 
@@ -140,7 +140,7 @@
 						   f.title as forum_title, f.urla as urla
 				    FROM (bb_thread as t,bb_forum as f, bb_post as p)
 				    WHERE f.lang='$lang' AND
-				    	  t.id_forum = f.id AND
+				    	  t.id_forum = f.id AND t.publish='y' AND t.publish_after < NOW() AND
 				    	  p.id_forumthread = t.id AND p.id_forum = t.id_forum 
 				    GROUP BY t.id
 				    ORDER BY t.date DESC, p.date DESC".(!$showFullList?" LIMIT ".$this->showlastthreads:"");

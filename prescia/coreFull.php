@@ -525,11 +525,11 @@ class CPresciaFull extends CPrescia {
 			if (is_file(CONS_PATH_SYSTEM."plugins/$sname/payloadmanifest.php")) {
 				$copyFiles = include(CONS_PATH_SYSTEM."plugins/$sname/payloadmanifest.php");
 				foreach ($copyFiles as $from=>$to) {
-					if ($from[strlen($from)-1] == "/" && is_dir($from) && (!is_dir($to) || isset($_REQUEST['nocache']))) { // FOLDER
+					if ($from[strlen($from)-1] == "/" && is_dir($from) && (!is_dir($to) || (!CONS_ONSERVER && isset($_REQUEST['nocache'])))) { // FOLDER
 						if (!function_exists('recursive_copy'))
 							include_once(CONS_PATH_INCLUDE."recursive_copy.php");
 						recursive_copy($from,$to);
-					} else if (is_file($from) && (!is_file($to) || isset($_REQUEST['nocache']))) { // FILE
+					} else if (is_file($from) && (!is_file($to) || (!CONS_ONSERVER && isset($_REQUEST['nocache'])))) { // FILE
 						$path = explode("/",$to);
 						array_pop($path); // bye file
 						$path = implode("/",$path);

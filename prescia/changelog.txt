@@ -1,5 +1,11 @@
 TODO list is on site/github
 
+14.12.04 BETA 0.9
+	implemented some registration auto-email on bi_auth
+	overhaul on addslashes to use database specific escaping, check the inputSanatizing.php for more.
+	fixed exploit on non-HTML text fields where triple (or more) escapes were not treated
+	prepareMail now searches for i18n files using the original file plus i18n tag ($name_$lang)
+	payloadmanifest do not propagate on server, only local
 14.11.27 BETA 0.9
 	several fixes on statistics
 	re-enabled (after pretty much never enabling) real-time statistics

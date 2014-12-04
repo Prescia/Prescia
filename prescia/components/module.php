@@ -971,7 +971,7 @@ class CModule {
 				if (isset($data[$name]) && (($data[$name] !== '' && $data[$name] !== 0) || !isset($field[CONS_XML_MANDATORY]))) {
 					# non-mandatory links accept 0 values, otherwise 0 is not acceptable
 					if (((!$isADD && isset($field[CONS_XML_IGNORENEDIT])) || $isADD) && ($data[$name] === 0 || $data[$name] === '')) break;
-					else if (($field[CONS_XML_LINKTYPE] == CONS_TIPO_INT || $field[CONS_XML_LINKTYPE] == CONS_TIPO_FLOAT) && $data[$name] === '') $data[$name]=0;
+					else if (($field[CONS_XML_LINKTYPE] == CONS_TIPO_INT || $field[CONS_XML_LINKTYPE] == CONS_TIPO_FLOAT) && ($data[$name] === '' || !is_numeric($data[$name]))) $data[$name]=0;
 					else if ($field[CONS_XML_LINKTYPE] == CONS_TIPO_VC && $data[$name] != '') {
 						if ($field[CONS_XML_SPECIAL] == "ucase") {
 							$data[$name] = strtoupper($data[$name]);
@@ -1028,9 +1028,9 @@ class CModule {
 				if (isset($data[$name])) {
 					if (!isset($field[CONS_XML_SPECIAL]) || $field[CONS_XML_SPECIAL] != "urla") {
 						if (!isset($field[CONS_XML_CUSTOM]))
-							$data[$name] = cleanString($data[$name],isset($field[CONS_XML_HTML]),$_SESSION[CONS_SESSION_ACCESS_LEVEL]==100);
+							$data[$name] = cleanString($data[$name],isset($field[CONS_XML_HTML]),$_SESSION[CONS_SESSION_ACCESS_LEVEL]==100,$this->parent->dbo);
 						else if (!$isSerialized)
-							$data[$name] = addslashes_EX($data[$name],true);
+							$data[$name] = addslashes_EX($data[$name],isset($field[CONS_XML_HTML]),$this->parent->dbo);
 					}
 					if (isset($field[CONS_XML_SPECIAL])) {
 						if ($field[CONS_XML_SPECIAL] == "urla") {
@@ -1041,7 +1041,7 @@ class CModule {
 								$data[$name] = $tp->techo($data);
 								unset($tp);
 							}
-							$data[$name] = str_replace("&gt;","",str_replace("&lt;","",str_replace("&quot;","",$data[$name])));
+							$data[$name] = str_replace("&gt;","",str_replace("&lt;","",str_replace("&quot;","",str_replace("&#39;","",$data[$name]))));
 							$data[$name] = removeSimbols($data[$name],true,false,CONS_FLATTENURL);
 						}
 						if ($field[CONS_XML_SPECIAL] == "login" && $data[$name] != "") {
@@ -1060,9 +1060,11 @@ class CModule {
 						}
 						if ($field[CONS_XML_SPECIAL] == "ucase" && $data[$name] != "") {
 							$data[$name] = strtoupper($data[$name]);
+							$data[$name] = addslashes_EX($data[$name],isset($field[CONS_XML_HTML]),$this->parent->dbo);
 						}
 						if ($field[CONS_XML_SPECIAL] == "lcase" && $data[$name] != "") {
 							$data[$name] = strtolower($data[$name]);
+							$data[$name] = addslashes_EX($data[$name],isset($field[CONS_XML_HTML]),$this->parent->dbo);
 						}
 						if ($field[CONS_XML_SPECIAL] == "path" && $data[$name] != "") {
 							if (!preg_match('/^([A-Za-z0-9_\/\-]*)$/',$data[$name])) {
@@ -1118,9 +1120,9 @@ class CModule {
 
 					}
 					if (!isset($field[CONS_XML_CUSTOM])) {
-						$data[$name] = cleanString($data[$name],isset($field[CONS_XML_HTML]),$_SESSION[CONS_SESSION_ACCESS_LEVEL]==100);
+						$data[$name] = cleanString($data[$name],isset($field[CONS_XML_HTML]),$_SESSION[CONS_SESSION_ACCESS_LEVEL]==100,$this->parent->dbo);
 					} else if (!$isSerialized) {
-						$data[$name] = addslashes_EX($data[$name],true);
+						$data[$name] = addslashes_EX($data[$name],isset($field[CONS_XML_HTML]),$this->parent->dbo); 
 					}
 					if (!$isADD&& isset($field[CONS_XML_IGNORENEDIT]) && $data[$name] == "") break;
 					$output = $encapsulation.$data[$name].$encapsulation;
@@ -1279,7 +1281,7 @@ class CModule {
 							if ($outfield !== false && $outfield != 'NULL') $serialized[$exname] = $outfield; # we don't need to store NULL like in sql
 						}
 					}
-					$output = $encapsulation.addslashes_EX(serialize($serialized)).$encapsulation;
+					$output = $encapsulation.addslashes_EX(serialize($serialized),true,$this->parent->dbo).$encapsulation;
 				}
 			break;
 		} # switch

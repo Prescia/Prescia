@@ -12,9 +12,9 @@
 
 	if (CONS_ONSERVER) { // <-- settings for your online "final" server
 		define("CONS_INSTALL_ROOT","/"); // if Prescia is installed in other than the ROOT folder, fill this (must end and start with /)
-		define("CONS_DB_HOST","186.202.152.192"); // leave empty if not using a database. The framework will enter dbless mode
-		define("CONS_DB_BASE","daisuki11");
-		define("CONS_DB_USER","daisuki11");
+		define("CONS_DB_HOST",""); // leave empty if not using a database. The framework will enter dbless mode
+		define("CONS_DB_BASE","");
+		define("CONS_DB_USER","");
 		define("CONS_DB_PASS","");
 		// If this site has multiple domains AND we want each domain to foward to a different FOLDER, translate domain=>folder here:
 		$this->domainTranslator = array(#'www.prescia.net' => 'prescia',
@@ -78,4 +78,6 @@
 	#$this->forceLang = "en"; # force this language (kinda spoils i18n settings, this is used mostly for debugging)
 	#$this->charset = "utf-8"; # default charset (default is utf-8 already)
 	$this->doctype = "html"; // use html or xhtml. This will change how the page is served. Note xhtml is VERY STRICT, like ... VERY
-	# $this->collectStatsOnTheseFiles = array(); # list of files (files/..., do not start with /) that will be captured but won't terminate the script, allowing onEcho to run (alas, statistics gathering)
+	/*$this->collectStatsOnTheseFiles = array(
+		'files/releases/prescia09.zip'
+	);*/

@@ -27,7 +27,7 @@
 						   p.date as pdate, u.login, count(distinct p2.id) as totalposts
 				    FROM (bb_thread as t, bb_post as p, auth_users as u, auth_users as a)
 				    LEFT JOIN bb_post as p2 ON (p2.id_forumthread = t.id AND p2.id_forum = $id)
-				    WHERE t.id_forum = $id AND
+				    WHERE t.id_forum = $id AND t.publish='y' AND t.publish_after < NOW() AND
 				    	  p.id_forumthread = t.id AND p.id_forum = $id AND
 				    	  u.id = p.id_author AND
 				    	  a.id = t.id_author
@@ -39,7 +39,7 @@
 			$sql = "SELECT t.id, t.title, t.image as image,t.date, t.urla as turla, a.login as author_login,
 						   p.date as pdate, p.content as pcontent, u.login
 				    FROM (bb_thread as t, bb_post as p, auth_users as u, auth_users as a)
-				    WHERE t.id_forum = $id AND
+				    WHERE t.id_forum = $id AND t.publish='y' AND t.publish_after < NOW() AND
 				    	  p.id_forumthread = t.id AND p.id_forum = $id AND
 				    	  u.id = p.id_author AND
 				    	  a.id = t.id_author
@@ -51,7 +51,7 @@
 			$sql = "SELECT t.id, t.title, t.image as image,t.date, t.urla as turla,
 						   p.date as pdate, p.content as pcontent
 				    FROM (bb_thread as t, bb_post as p)
-				    WHERE t.id_forum = $id AND
+				    WHERE t.id_forum = $id AND t.publish='y' AND t.publish_after < NOW() AND
 				    	  p.id_forumthread = t.id AND p.id_forum = $id
 				    GROUP BY t.id
 				    ORDER BY t.date DESC, p.date DESC";
