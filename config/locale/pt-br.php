@@ -96,8 +96,7 @@
 "ago" => "atrás",
 
 "waiting_ajax_results"=>"Consultando, aguarde ...",
-"floodcontrol" => "Controle de fluxo",
-"floodcontrol_pleasewait" => "Por favor aguarde um pouco antes de tentar a ação novamente, para não sobrecarregar o servidor",
+"not_found" => "Não encontrado",
 
 //error codes
 "e1"=>"Erro no loadMetadata ou loadPageSettings (inicialização)",

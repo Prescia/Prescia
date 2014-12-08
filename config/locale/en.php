@@ -96,7 +96,6 @@
 "ago" => "ago",
 
 "waiting_ajax_results"=>"Checking, wait ...",
-"floodcontrol" => "Flood Control",
-"floodcontrol_pleasewait" => "Please wait a while before trying this action again, to prevent server overload"
+"not_found" => "Not found"
 
 );

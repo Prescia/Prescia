@@ -276,7 +276,7 @@ class CPrescia extends CPresciaVar {
 			}
 			$ext = strtolower($this->original_ext);
 			$this->close(false); # shuts down database if necessary, unloads template
-			$this->readfile($theFile,$ext,true,$this->original_action);
+			$this->readfile($theFile,$ext,true,$this->original_action,false,CONS_CACHE && !isset($_REQUEST['nocache'])?CONS_DEFAULT_MMCACHETIME*1000:0);
 			if ($captureStats && $this->dbconnect()) {
 				return true; // we keep going (only if we were able to reconnect to DB)
 			}
@@ -1170,7 +1170,6 @@ class CPrescia extends CPresciaVar {
 				$metadata .= "\t<meta property=\"og:image\" content=\"/files/".$this->template->constants['METAFIGURE']."\" />\n";
 				$metadata .= "\t<link rel=\"image_src\" href=\"/files/".$this->template->constants['METAFIGURE']."\" />\n";
 			}
-
 			$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
 			if (locateFile($favfile,$ext)) {
 				$favfile = CONS_INSTALL_ROOT.$favfile;
@@ -1182,6 +1181,26 @@ class CPrescia extends CPresciaVar {
 					$metadata .= "\t<link rel=\"shortcut icon\" href=\"/favicon.".$ext."\" />\n";
 				}
 			}
+			// Alternate Language versions (only on root index)
+			
+			if (CONS_USE_I18N && $this->context_str == "/" && $this->action == "index") {
+				$langs = explode(",",CONS_POSSIBLE_LANGS);
+				foreach ($langs as $lang) {
+					if ($lang != $_SESSION[CONS_SESSION_LANG]) {
+						if (count($this->languageTL)>0) {
+							foreach ($this->languageTL as $fl => $ln) {
+								if ($ln == $lang) {
+									$metadata .= "\t<link rel=\"alternate\" hreflang=\"$lang\" href=\"/$fl/index.html\"/>\n";
+									break;
+								}
+							}
+						} else
+							$metadata .= "\t<link rel=\"alternate\" hreflang=\"$lang\" href=\"".$this->template->constants['CANONICAL']."?lang=$lang\"/>\n";
+					}
+				}
+			}
+			
+			
 
 			$this->template->constants['METATAGS'] = $metadata;
 		}

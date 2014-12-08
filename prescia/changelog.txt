@@ -1,5 +1,9 @@
 TODO list is on site/github
 
+14.12.08 BETA 0.92
+	added css to .htaccess to reroute to gzip optimizer
+	added better caching parameters for file-manager resources (default 1 hour cache)
+	added hreflang alternate links on root, if i18n is active and you have multiple languages (will also obbey translateTL)
 14.12.06 BETA 0.91
 	improved error verbosity on some administrative action warnings (like unable to edit an item NOT being displayed as an error)
 	fixed warning 306 not being treated as an error

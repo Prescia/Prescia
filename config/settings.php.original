@@ -48,6 +48,7 @@
 		define ("CONS_FOWARDER"			,true); // after an action on the admin, foward to the same page to prevent the refresh "repost" issue
 		define ("CONS_CACHE"			,true); // cache main toggle
 		define ("CONS_DEFAULT_CACHETIME",30); // default cache in seconds, when not handled by the main cache handler
+		define ("CONS_DEFAULT_MMCACHETIME",3600); // default cache in seconds, for direct link resources on the files folder, should be larger (these are usually images, etc)
 		define ("CONS_HIDE_MYSQLDOWN"	,true); // If DB is gone, try to use caches and serve them (or abort with a 503 error instead an ugly SQL error)
 		define ("CONS_MASTERDOMAINS"	,"www.prescia.net"); # these can access the master control (if available)
 
@@ -73,7 +74,8 @@
 		define ("CONS_DEVELOPER"		,true);
 		define ("CONS_FOWARDER"			,true);
 		define ("CONS_CACHE"			,true);
-		define ("CONS_DEFAULT_CACHETIME",5);
+		define ("CONS_DEFAULT_CACHETIME",10);
+		define ("CONS_DEFAULT_MMCACHETIME",30); 
 		define ("CONS_HIDE_MYSQLDOWN"	,false);
 		define ("CONS_MASTERDOMAINS"	,"localhost,127.0.0.1");
 

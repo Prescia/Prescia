@@ -53,12 +53,12 @@
 	if (is_file($file)) {
 		if ($gzip) {
 			header("Content-Encoding: gzip");
-			header("Content-Type: text/".(isset($_REQUEST['js'])?"javascript":"plain"));
+			header("Content-Type: ".(isset($_REQUEST['js'])?"text/javascript":"text/css"));
 			header('Pragma: public');
 			header('Cache-Control: public,max-age='.CONS_CACHE_TIME.',s-maxage='.CONS_CACHE_TIME);
     		echo gzencode(cReadFile($file));
 		} else {
-			header("Content-Type: text/".(isset($_REQUEST['js'])?"javascript":"plain"));
+			header("Content-Type: ".(isset($_REQUEST['js'])?"text/javascript":"text/css"));
 			header('Pragma: public');
 			header('Cache-Control: public,max-age='.CONS_CACHE_TIME.',s-maxage='.CONS_CACHE_TIME);
 			readfile($file);

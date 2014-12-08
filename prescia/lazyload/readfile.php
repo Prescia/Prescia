@@ -8,7 +8,7 @@
 	}
 
 	$ext = strtolower($ext);
-	if ($ext == "php" || $ext == "asp" || $ext == "jsp") $this->fastClose('403'); # don't serve scripts
+	if ($ext == "php" || $ext == "asp" || $ext == "jsp" || $ext == "htaccess") $this->fastClose('403'); # don't serve scripts
 	if (!function_exists('getMime')) include CONS_PATH_INCLUDE."getMime.php"; # as needed
 	$mime = getMime($ext);
 	$attachMode = $forceAttach || getMimeMode($ext,true);
