@@ -960,7 +960,6 @@ class mod_bi_dev extends CscriptedModule  {
 				if (count($log)>0) {
 					$thereAreErrors = true;
 					$this->log[] = implode("<br/>",$log); // for dev_test
-					//$PAGE .= "<font color='red'>".implode("<br/>",$log)."</font>";
 				}
 				unset($log);
 			}
@@ -1007,7 +1006,9 @@ class mod_bi_dev extends CscriptedModule  {
 				}
 				$PAGE .= "<!-- bi_dev output logs. To stop this output, disable bi_dev";
 				$PAGE .= "\nDbLOG:\n".implode("\n",$this->parent->dbo->log);
-				$PAGE .= "\n".print_r($_SESSION,1)."\n";
+				$C = $_SESSION;
+				unset($C['prescia_cache']); // the cache can contain whole HTML that would cause havok
+				$PAGE .= "\n".print_r($C,1)."\n";
 				$PAGE .= "-->";
 			}
 		}

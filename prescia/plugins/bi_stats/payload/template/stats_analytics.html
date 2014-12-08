@@ -24,6 +24,10 @@
 		<div id="tabtop5" onclick="tab(5);" style="cursor:pointer;float:left;width:100px;">
 			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Tecnologia
 		</div>
+		<div id="tabtop6" onclick="document.location='https://www.google.com/webmasters/tools/home';" style="cursor:pointer;float:left;width:100px;">
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Webmasters
+		</div>
+		
 		<br style="clear:both"/>
 	</div>
 	
@@ -189,27 +193,6 @@
 					  <td>{h}</td>
 					</tr>
 					{/refh}
-				</tbody></table>
-			</div>
-		</div>
-	
-		<div class="lxmladm_box" style="position:relative">
-			<strong>Palavras chave usadas para chegar à este site (últimos 30 dias)</strong><br/>
-			<div style="margin:0px 20px 0px 20px">
-				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
-					<tr>
-					  <td >Site</td>
-					  <td >Palavras</td>
-					  <td colspan="2">Hits</td>
-					</tr>
-					{_query}
-					<tr>
-					  <td style="border-bottom:1px dotted #7f7f7f;overflow:hidden">{engine}</td>
-					  <td style="border-bottom:1px dotted #7f7f7f">{query}</td>
-				  	  <td style="width:400px;"><div style="float:left;background:#ccccee;height:10px;width:{width}px;"></div></td>
-					  <td style="padding-left:2px;">{hits} ({percent|number|2}%)</td>
-					</tr>
-					{/query}
 				</tbody></table>
 			</div>
 		</div>

@@ -18,7 +18,6 @@
 -*/
 
 # ab -n50 total mean: 1ms
-
 ob_start();
 
 #- Paths (relative to root (THIS FILE))  Must end with /
@@ -100,6 +99,7 @@ if (CONS_AFF_ERRORHANDLER) { // override PHP error messaging? (if true, will not
 }
 # ab -n50 total mean: 19ms 16ms
 
+require CONS_PATH_INCLUDE."getBrowser.php"; # this will also detect if we are on mobile, required at domainLoad
 $core->domainLoad(); // locks domain, load config, start i18n, parses requested URL
 define("CONS_FMANAGER",CONS_PATH_PAGES.$_SESSION['CODE']."/files/");
 $core->servingFile = $core->checkDirectLink(); // if serving a file, will run end here (if file is not set to statistics collection)
@@ -112,7 +112,6 @@ if ($core->debugmode) $core->applyMetaData(); // only in debug. Executes onMeta'
 # ab -n50 total mean: 546ms 28ms
 
 # -- start parsing the request
-require CONS_PATH_INCLUDE."getBrowser.php"; # this will also detect if we are on mobile (outside servingFile so statistics grab the browser)
 if (!$core->servingFile) {
 	// if serving file, we just want to enable the database and run onEcho plugins
 	$core->parseRequest();

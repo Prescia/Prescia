@@ -32,11 +32,8 @@
 	$qs = arrayToString($_GET,array('layout'));
 	$core->template->assign("main_qs",$qs);
 
-	$core->template->assign("areaname",$bb->areaname);
-	$core->template->assign("homename",$bb->homename);
-
-	if ($core->template->get("_topforums") !== false)
-		$core->runContent('forum',$core->template,array('(forum.id_parent=0 OR forum.id_parent is NULL)  AND forum.urla<>"" AND forum.lang="'.$_SESSION[CONS_SESSION_LANG].'"','forum.ordem asc',''),'_topforums',false,'frameforuns');
+	// -- use showHeader on pages that are not controled by the bi_bb to fill the top menu, like this: $this->loadedPlugins['bi_bb']->showHeader();
+	$bb->showHeader();
 
 	if ($this->noregistration)
 		$core->template->assign("_registration");

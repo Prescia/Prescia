@@ -816,7 +816,7 @@
 	} else {
 		$rm = 0;
 		$addedAsRelate = array();
-		if (!$p['isADD'] && !$p['isMultiple'] && !$p['isMup']) { # TODO: work with multiple keys
+		if (!$p['isADD'] && !$p['isMultiple'] && !$p['isMup']) { # TODO: work with multiple keys or filtered keys
 			$rmt = $core->template->get("_rm");
 			$temp = '';
 			foreach ($core->modules as $name => &$rmodule) {
@@ -826,6 +826,18 @@
 						if ($field[CONS_XML_TIPO] == CONS_TIPO_LINK && $field[CONS_XML_MODULE] == $module->name) {
 							if (in_array($name,$addedAsRelate) && $rmodule->linker) break; // add only once linker modules (A<->A relations)
 							$rm++;
+							/*
+							$keyflat = array();
+							$keyquery = array();
+							foreach($rmodule->keys as $rkey) {
+								if ($rmodule->fields[$rkey][CONS_XML_TIPO] == CONS_TIPO_LINK) {
+									// to me?
+									if ($rmodule->fields[$rkey][CONS_XML_MODULE] == $module->name) {
+										// yes, always add
+										
+									}
+								}
+							}*/
 							$output = array('module'=>$name,
 											'referer' => 'affreferer='.$module->name."&affrefererkeys=".$data[$module->keys[0]],
 											'keys'=>$fname."=".$data[$module->keys[0]]);

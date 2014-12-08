@@ -23,7 +23,7 @@
 	}
 
 	$statsh = $core->loaded('statsdaily');
-	$core->dbo->query("SELECT data,SUM(hits) as hits FROM ".$statsh->dbname." WHERE data >= '$weekAgo' AND page=\"$page\" GROUP BY data ORDER BY data ASC",$r,$n);
+	$core->dbo->query("SELECT data,SUM(hits) as shits FROM ".$statsh->dbname." WHERE data >= '$weekAgo' AND page=\"$page\" GROUP BY data ORDER BY data ASC",$r,$n);
 	$biggest = 1;
 	for ($c=0;$c<$n;$c++) {
 		$data=$core->dbo->fetch_row($r);
@@ -55,7 +55,7 @@
 
 	## ENTRY PAGES ##
 	$statspath = $core->loaded('statspath');
-	$sql = "SELECT sum(hits) as hits, page FROM ".$statspath->dbname." WHERE pagefoward='$page' AND data >= '$dataini' AND data < '$datafim' GROUP BY page ORDER BY hits DESC";
+	$sql = "SELECT sum(hits) as shits, page FROM ".$statspath->dbname." WHERE pagefoward='$page' AND data >= '$dataini' AND data < '$datafim' GROUP BY page ORDER BY shits DESC";
 	$core->dbo->query($sql,$r,$n);
 	$graphObj = $core->template->get("_pg");
 	$output = "";
@@ -64,6 +64,7 @@
 	$total = 0;
 	for($c=0;$c<$n;$c++) {
 		$data=$core->dbo->fetch_assoc($r);
+		$data['hits'] = $data['shits'];
 		$pages[] = $data;
 		if ($data['hits'] > $biggest) $biggest = $data['hits'];
 		$total += $data['hits'];
@@ -92,7 +93,7 @@
 	$core->template->assign("_pg",$output);
 
 	## EXIT PAGES ##
-	$sql = "SELECT sum(hits) as hits, pagefoward FROM ".$statspath->dbname." WHERE page='$page' AND data >= '$dataini' AND data < '$datafim' GROUP BY pagefoward ORDER BY hits DESC";
+	$sql = "SELECT sum(hits) as shits, pagefoward FROM ".$statspath->dbname." WHERE page='$page' AND data >= '$dataini' AND data < '$datafim' GROUP BY pagefoward ORDER BY shits DESC";
 	$core->dbo->query($sql,$r,$n);
 	$graphObj = $core->template->get("_pg2");
 	$output = "";
@@ -101,6 +102,7 @@
 	$total = 0;
 	for($c=0;$c<$n;$c++) {
 		$data=$core->dbo->fetch_assoc($r);
+		$data['hits'] = $data['shits'];
 		$pages[] = $data;
 		if ($data['hits'] > $biggest) $biggest = $data['hits'];
 		$total += $data['hits'];

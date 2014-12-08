@@ -1,11 +1,22 @@
 TODO list is on site/github
 
-14.12.04 BETA 0.9
+14.12.06 BETA 0.91
+	improved error verbosity on some administrative action warnings (like unable to edit an item NOT being displayed as an error)
+	fixed warning 306 not being treated as an error
+	removed query status, since google and other search engines no longer supply them on the referer
+	tweaked some anti-exploits on the statistics and udm/friendlyurl
+	Bumped anti-bot protection to earlier, before database connect
+	Added a crawler whitelist feature for the anti-bot
+	Added log message when an IP is banned
+14.12.04 BETA 0.91
 	implemented some registration auto-email on bi_auth
 	overhaul on addslashes to use database specific escaping, check the inputSanatizing.php for more.
 	fixed exploit on non-HTML text fields where triple (or more) escapes were not treated
 	prepareMail now searches for i18n files using the original file plus i18n tag ($name_$lang)
 	payloadmanifest do not propagate on server, only local
+	truncate function moved from the template core to main.php, so it can now be used anytime
+	bi_bb now support including HTML inside a post, so you can have scripts and complex posts as long as you are an admin
+	Fixed mobile removing ajax tags (was mostly obvious on the admin pane)
 14.11.27 BETA 0.9
 	several fixes on statistics
 	re-enabled (after pretty much never enabling) real-time statistics

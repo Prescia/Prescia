@@ -46,7 +46,8 @@
 
 	// Add whatever modules this site will use
 	$this->addPlugin('bi_groups'); // required for AUTH
-	$this->addPlugin('bi_auth'); // user/auth system
+	$auth = $this->addPlugin('bi_auth'); // user/auth system
+		$auth->registrationMode = 0;
 	#$this->addPlugin('bi_seo'); // SEO system
 	#$this->addPlugin('bi_undo'); // history/UNDO system
 	$advadm = $this->addPlugin('bi_adm'); // Administrative pane

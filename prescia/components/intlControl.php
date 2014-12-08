@@ -99,13 +99,13 @@ class CintlControl {
   		return number_format($valor,2,$this->getDec($code),$this->getTSep($code));
 	}
 #-
-	function removeLanguageTags() {
+	function removeLanguageTags(&$tp) {
 		$langs = explode(",",CONS_POSSIBLE_LANGS);
 		if (!isset($_SESSION[CONS_SESSION_LANG]))
 			$_SESSION[CONS_SESSION_LANG] = CONS_DEFAULT_LANG;
 		foreach ($langs as $lang) {
 			if ($lang != $_SESSION[CONS_SESSION_LANG])
-				$this->parent->template->assign("_i18n_".$lang);
+				$tp->assign("_i18n_".$lang);
 		}
 	}
 #-

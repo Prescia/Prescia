@@ -4,7 +4,7 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","14.12.04 beta"); // (Y.m.d) ~ last stable: n/a
+define ("AFF_BUILD","14.12.05 beta"); // (Y.m.d) ~ last stable: n/a
 define ("AFF_VERSION",0.91);  
 // Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 

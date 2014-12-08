@@ -22,7 +22,7 @@
 </STATS>
 <STATSDAILY dbname="stats_hitsh" meta="Full history of visits (5 years). Last data OVERLAPS with stats_hitsd, but is less complete because misses HOUR"
 		    volatile="true"
-		    keys="data,page,hid"
+		    keys="data,page,hid,lang"
 		    title="data"
 		    systemModule="true"
 		    permissionOverride="CDDCDDCDDC"
@@ -105,22 +105,6 @@
 	<PAGEFOWARD size="72">VC</PAGEFOWARD>
 	<HITS default="1">SMALLINT</HITS>
 </STATSPATH>
-<STATSQUERY dbname="stats_query"
-			keys="data,engine,query,entrypage"
-			volatile="true"
-			systemModule="true"
-			title="query"
-			permissionOverride="CDDCDDCDDC"
-			autoclean="data < NOW() - INTERVAL 6 MONTH"
-			backup="no"
-			noadminpanes="edit,list"
-			>
-	<DATA mandatory="true">DATE</DATA>
-	<ENGINE size="32">VC</ENGINE>
-	<QUERY size="64">VC</QUERY>
-	<ENTRYPAGE size="72">VC</ENTRYPAGE>
-	<COUNT default="1">SMALLINT</COUNT>
-</STATSQUERY>
 <STATSBROWSER dbname="stats_browser"
 			  keys="data,browser"
 			  volatile="true"

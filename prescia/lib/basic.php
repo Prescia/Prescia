@@ -109,3 +109,30 @@
 		}
 		return array($context,$action,$original_action,$ext);
 	}
+	function truncate($content,$size=50,$final="…",$stripHTML=false,$preserveEOL=false) {
+		$hasn = false;
+		if ($stripHTML) {
+			$content = str_replace("\"","'",stripHTML(str_replace("\n","",$content),$preserveEOL));
+			if ($preserveEOL) {
+				$content = str_replace("<br/>","\n",$content);
+				$hasn = strpos($content,"\n")!==false;
+			}
+		}
+		// avoids amp codes being cut
+		$len = strlen($content);
+		$amp = strpos($content,'&',($size-5>=0 && $size-5<$len)?$size-5:0);
+		if ($amp > 0 && $amp <= $size) {
+			$ampf = strpos($content,';',$amp);
+			if ($ampf >= $size) {
+				return ($preserveEOL?str_replace("\n","<br/>",substr($content,0,$amp-1)):substr($content,0,$amp-1)).($hasn?"\n":"").$final;
+			}
+		}
+		if ($len > $size) {
+			if ($len <= $size - strlen($final)) // barelly on the limit
+				return ($preserveEOL?str_replace("\n","<br/>",$content):$content).$final;
+			else // under the limit, cut utf8 to avoid issues
+				return ($preserveEOL?str_replace("\n","<br/>",utf8_truncate($content,$size-strlen($final))):utf8_truncate($content,$size-strlen($final))).$final." ";
+		} else // not greater
+			return ($preserveEOL?str_replace("\n","<br/>",$content):$content)."";
+	}
+	

@@ -46,7 +46,7 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 							  $data[$fnamedata."h"] = $h[1];
 							  $data[$fnamedata."s"] = humanSize(filesize($file));
 							  if (in_array(strtolower($ext),array("jpg","gif","png","jpeg"))) { // image
-							  	$randomseed = "?r=".rand(1000,9999).date("YmdHis");
+							  	$randomseed = isset($_SESSION[CONS_SESSION_ACCESS_LEVEL]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] > 9 ? "?r=".rand(1000,9999).date("YmdHis"):"";
 								$data[$fnamedata."t"] = "<img src=\"".CONS_INSTALL_ROOT.$fileout.$randomseed."\" width='".$h[0]."' title=\"".$myTitle."\" height='".$h[1]."' alt='' />";
 							  } else if (strtolower($ext) == "swf") {
 								$data[$fnamedata."t"] =
@@ -64,6 +64,8 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 							$data[$fnamedata."h"] = $h[1];
 							$data[$fnamedata."s"] = humanSize(filesize(CONS_PATH_PAGES.$_SESSION['CODE']."/".$data[$fnamedata]));
 							$data[$fnamedata."t"] = "<img src=\"".CONS_INSTALL_ROOT.$data[$fnamedata]."\" width='".$h[0]."' title=\"".$myTitle."\" height='".$h[1]."' alt='' />";
+						} else {
+							$data[$fname] = 'n';
 						}
 					 }
 				} else if ($data[$fname]== 'y') { // file w/o image, present

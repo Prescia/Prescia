@@ -319,29 +319,6 @@
 	}
 	$core->template->assign("_refe",$output);
 
-	# Query
-	$statsq = $core->loaded('statsquery');
-	$sql = "SELECT sum(count) as hits, query, engine FROM ".$statsq->dbname." WHERE data>NOW() - INTERVAL 31 DAY GROUP BY engine, query ORDER BY hits DESC LIMIT 100";
-	$core->dbo->query($sql,$r,$n);
-	$query=array();
-	$biggest = 1;
-	$total  =0;
-	for ($c=0;$c<$n;$c++) {
-		$aquery = $core->dbo->fetch_assoc($r);
-		$query[] = $aquery;
-		if ($aquery['hits'] > $biggest) $biggest = $aquery['hits'];
-		$total += $aquery['hits'];
-	}
-	if ($total == 0) $total = 1;
-	$obj = $core->template->get("_query");
-	$output = "";
-	for ($c=0;$c<$n;$c++) {
-		$query[$c]['percent'] = 100*$query[$c]['hits'] / $total;
-		$query[$c]['width'] = ceil($graphWidth * $query[$c]['hits'] / $biggest);
-		$output .= $obj->techo($query[$c]);
-	}
-	$core->template->assign("_query",$output);
-
     ########################################### PATH #####################################
 
     $pathmod = $core->loaded('statspath');

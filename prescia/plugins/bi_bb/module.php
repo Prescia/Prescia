@@ -13,14 +13,16 @@ class mod_bi_bb extends CscriptedModule  {
 	var $bbpage = "thread"; # TEMPLATE to use as a bb forum (list of threads)
 	var $blogpage = "blog"; # TEMPLATE to use as a blog thread (list of blogs)
 	var $articlepage = "article"; # TEMPLATE to use as article thread (list of articles)
-	// -- following is for the index
+	// -- index
 	var $blockforumlist = false; # if true, the index will be disabled into just a content manager, w/o the forum list
 	var $showlastthreads = 0; # if 0, show none. Otherwise show how much you cho0se here
 	var $mainthreadsAsBB = true; # set false to show as articles, not threads
-	// -- following for frame
+	// -- frame
 	var $areaname = "forum"; # title of the area, when not provided. Be sure to have i18n tags for it
 	var $homename = "home"; # title of the "home" link at the frame
 	var $noregistration = false; # set true to disable user registration features
+	// -- folders to ignore (do not treat as bb)
+	var $ignorefolders = ""; // leave empty or it will ignore root. Use this for sub-folders that are not part of the bi_bb, thus all bi_bb scripts will be ignored. Comma delimited
 	######################
 
 	var $customPermissions = array('can_flag' => 'can_flag',
@@ -46,7 +48,15 @@ class mod_bi_bb extends CscriptedModule  {
 	function onCheckActions() {
 		
 		if (isset($this->parent->loadedPlugins['bi_adm']) && $this->parent->loadedPlugins['bi_adm']->isAdminPage) return; // bi_adm captured first
-
+		if ($this->ignorefolders != '') {
+			$this->ignorefolders = explode(",",$this->ignorefolders);
+			foreach ($this->ignorefolders as $if) {
+				$if = trim($if," /")."/";
+				if ($if != '/') $if = '/'.$if;
+				if ($if == substr($this->parent->context_str,0,strlen($if))) return; // ignore this
+			}
+		}
+		
 		$this->bbfolder = trim($this->bbfolder," /");
 		$this->bbfolder = ($this->bbfolder!=''?"/":"").$this->bbfolder."/";
 		$this->isBBPage = $this->bbfolder == substr($this->parent->context_str,0,strlen($this->bbfolder));
@@ -211,5 +221,12 @@ class mod_bi_bb extends CscriptedModule  {
 		if ($filterOnlyNew) $sql .= " AND dateseen<>'0000-00-00 00:00:00'";
 		return $this->parent->dbo->fetch($sql);
 	}
+	
+	function showHeader() { 
+		$this->parent->template->assign("areaname",$this->areaname);
+		$this->parent->template->assign("homename",$this->homename);
+		if ($this->parent->template->get("_topforums") !== false)
+			$this->parent->runContent('forum',$this->parent->template,array('(forum.id_parent=0 OR forum.id_parent is NULL)  AND forum.urla<>"" AND forum.lang="'.$_SESSION[CONS_SESSION_LANG].'"','forum.ordem asc',''),'_topforums',false,'frameforuns');
+	}	
 }
 

@@ -27,7 +27,7 @@
 						}
 						$kS .= $key."=".$_POST[$key]."&";
 					}
-					$core->log[] = str_replace("{#}",$core->langOut($module->name),$core->langOut('new_sucesso')).($module->title != "" && isset($_REQUEST[$module->title])?": ".$_REQUEST[$module->title]:"");
+					$core->log[] = str_replace("{#}",$core->langOut($module->name),$core->langOut('new_sucesso')).($module->title != "" && isset($_REQUEST[$module->title])?": ".truncate($_REQUEST[$module->title],500):"");
 					$core->setLog(CONS_LOGGING_SUCCESS);
 				} else {
 					$core->setLog(CONS_LOGGING_ERROR);
@@ -43,7 +43,7 @@
 				if ($ok) {
 					foreach ($module->keys as $key)
 						$kS .= $key."=".$_POST[$key]."&";
-					$core->log[] = str_replace("{#}",$core->langOut($module->name),$core->langOut('edit_sucesso')).($module->title != "" && isset($_REQUEST[$module->title])?": ".$_REQUEST[$module->title]:"");
+					$core->log[] = str_replace("{#}",$core->langOut($module->name),$core->langOut('edit_sucesso')).($module->title != "" && isset($_REQUEST[$module->title])?": ".truncate($_REQUEST[$module->title],500):"");
 					$core->setLog(CONS_LOGGING_SUCCESS);
 				} else {
 					$core->setLog(CONS_LOGGING_ERROR);

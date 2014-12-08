@@ -25,11 +25,16 @@
 	define("CONS_SINGLEDOMAIN"				,""); // set the name of the folder inside /pages/ that will ALWAYS result this install, thus disabling domain handling (faster)
 	define("CONS_SITESELECTOR"				,true); // on first access, will ask which site to serve. Works only on production
 # CHANGE THIS OR MASTER USERS CAN'T LOG:
-	define("CONS_MASTERPASS"				,"admin{CODE}"); // if not "", this will override $masterOverride in ALL sites, accepts {CODE} {YEAR} {MONTH} {DAY} {DOMAIN}
+	define("CONS_MASTERPASS"				,""); // if not "", this will override $masterOverride in ALL sites, accepts {CODE} {YEAR} {MONTH} {DAY} {DOMAIN}
+############
 # FILL THIS:
 	define("CONS_MASTERMAIL"				,""); // for fatal errors
+############
 	define("CONS_NOROBOTDOMAINS"			,""); // these will enforce crawlers NOT to index the domains in this list
 	define("CONS_DEFAULT_IPP"				,50); // default IPP (Itens per page)
+	define("CONS_CRAWLER_WHITELIST_ENABLE"	,true); // crawlers in the whitelist will not be throttled or slowed down, list below, implementation on botprotect
+	define("CONS_CRAWLER_WHITELIST"			,"/^(Googlebot\/.*)|(crawler@alexa\.com)|(.*yahoo\.co.*)|(Bingbot)|(facebookexternalhit\/.*)|(.*DAUMOA.*)|(.*Baiduspider.*)/i"); // preg match for whitelisted crawlers
+
 
 	# -- BEHAVIOUR/SAFETY SETTINGS --
 	if (CONS_ONSERVER) { # When on main server/deployed
@@ -52,7 +57,7 @@
 		define ("CONS_MAXRUNCONTENTSIZE",50000); // lists larger then this will result a fatal error due to overflow of the TC system (paging should prevent this altogether, so this catches infinite loops)
 
 		define("CONS_BOTPROTECT"		,false); // monitors calls from same IP and prevent too many in a short time (see CONS_BOTPROTECT_MAXHITS)
-		define("CONS_BOTPROTECT_MAXHITS",35); // how many hits one IP can perform per MINUTE. More than that will trigger a temporary IP ban
+		define("CONS_BOTPROTECT_MAXHITS",45); // how many hits one IP can perform per MINUTE. More than that will trigger a temporary IP ban
 											  // KEEP IN MIND this also count ajax and other hits. So be conservative
 		define("CONS_BOTPROTECT_BANTIME",5); // how long, in minutes, someone caught by BOTPROTECT should be banned from the system
 

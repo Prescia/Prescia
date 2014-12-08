@@ -201,6 +201,7 @@ class mod_bi_stats extends CscriptedModule  {
 				$act = implode(".",$act);
 			}
 			$pageToBelogged .= $act;
+			$pageToBelogged = str_replace('"',"",$pageToBelogged); # there are exploits everywhere!
 
 			# is this a BOT? atm we consider unknown browsers as bots to make this faster
 			$isBot = CONS_BROWSER == "UN";
@@ -226,7 +227,7 @@ class mod_bi_stats extends CscriptedModule  {
 					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['stats']->dbname." SET data = '".date("Y-m-d")."' , hour = '".date("H")."' , page=\"".$pageToBelogged."\" , hid=\"".$id."\", hits=0, uhits=0, bhits=0, ahits=1, rhits=0, lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");
 					if (!$ok) {
 						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
-						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+						if (strpos(strtolower($lastError),"duplicate") !== false) { // concurrent INSERT happened first! use update
 							array_pop($this->parent->dbo->log); // ignore this error please
 							$core->dbo->simpleQuery("UPDATE ".$core->modules['stats']->dbname." SET ahits=ahits+1 WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");							
 						}
@@ -252,7 +253,7 @@ class mod_bi_stats extends CscriptedModule  {
 					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsbots']->dbname." SET hits=1,data='".date("Y-m-d-")."'");
 					if (!$ok) {
 						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
-						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+						if (strpos(strtolower($lastError),"duplicate") !== false) { // concurrent INSERT happened first! use update
 							array_pop($this->parent->dbo->log); // ignore this error please
 							$core->dbo->simpleQuery("UPDATE ".$core->modules['statsbots']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d-")."'");							
 						}
@@ -289,23 +290,21 @@ class mod_bi_stats extends CscriptedModule  {
 						# valid external REFERER OR empty (bookmark)
 						$referer = str_replace("http://","",$http_referer);
 						$referer = str_replace("https://","",$referer);
+						$referer = str_replace('"',"",$referer); # die exploits, die
 						$domain = explode("/",$referer);
 						$domain = $domain[0];
-						$isSearchEngine = false;
 						// lets get some search engines here (faster than preg)
-						if (strpos($domain,"www.google.") !== false) {
-							$domain = "www.google.*";
-							$isSearchEngine = true;
-						} else if (strpos($domain,".yahoo.co") !== false) {
+						if (strpos($domain,".google.") !== false) {
+							$domain = "*.google.*";
+						} else if (strpos($domain,".yahoo.") !== false) {
 							$domain = "*.yahoo.*";
-							$isSearchEngine = true;
+						} else if (strpos($domain,".facebook.com") !== false) {
+							$domain = "*.facebook.com";
 						} else if (strpos($domain,".bing.") !== false) {
 							$domain = "*.bing.*";
-							$isSearchEngine = true;
 						} else if (strpos($domain,"busca.uol.") !== false) {
 							$domain = "busca.uol.*";
-							$isSearchEngine = true;
-						} else if (strpos($domain,".mail.") !== false || substr($domain,0,5) == "mail.") {
+						} else if (strpos($domain,".mail.") !== false || substr($domain,0,5) == "mail." || strpos($domain,".webmail.") !== false || substr($domain,0,8) == "webmail.") {
 							$domain = "MAIL";
 						} else if (strlen($domain)>50) $domain = substr($domain,0,47)."...";
 						$core->dbo->query("SELECT hits, pages FROM ".$core->modules['statsref']->dbname." WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"",$r,$n);
@@ -321,7 +320,7 @@ class mod_bi_stats extends CscriptedModule  {
 							$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsref']->dbname." SET data='".date("Y-m-d")."', referer=\"$domain\", entrypage=\"".$pageToBelogged."\", hits=$hits, pages=\"".$pages."\"");
 							if (!$ok) {
 								$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
-								if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+								if (strpos(strtolower($lastError),"duplicate") !== false) { // concurrent INSERT happened first! use update
 									array_pop($this->parent->dbo->log); // ignore this error please
 									$core->dbo->simpleQuery("UPDATE ".$core->modules['statsref']->dbname." SET hits=$hits, pages=\"".$pages."\" WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"");							
 								}
@@ -329,23 +328,7 @@ class mod_bi_stats extends CscriptedModule  {
 						} else
 							$core->dbo->simpleQuery("UPDATE ".$core->modules['statsref']->dbname." SET hits=$hits, pages=\"".$pages."\" WHERE data='".date("Y-m-d")."' AND referer=\"$domain\" AND entrypage=\"".$pageToBelogged."\"");
 	
-						# -- QUERY STATS --
 	
-						if ($isSearchEngine) {
-							# came from search tool
-							if (preg_match("/(\?|\&)(p|q|qs)=([^\&]*)/i",$referer,$req)) {
-								# detected query!
-								$query = preg_replace("/(\+|&|%..)/i"," ",$req[3]);
-								$query = preg_replace("/( ){2,}/i"," ",$query);
-								$hits = $core->dbo->fetch("SELECT count FROM ".$core->modules['statsquery']->dbname." WHERE data='".date("Y-m-d")."' AND engine=\"$domain\" AND query=\"$query\" AND entrypage=\"".$pageToBelogged."\"");
-								if ($hits === false)
-									$core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsquery']->dbname." SET data='".date("Y-m-d")."' , engine=\"$domain\" , query=\"$query\" , entrypage=\"".$pageToBelogged."\", count=1");
-								else
-									$core->dbo->simpleQuery("UPDATE ".$core->modules['statsquery']->dbname." SET count=count+1 WHERE data='".date("Y-m-d")."' AND engine=\"$domain\" AND query=\"$query\" AND entrypage=\"".$pageToBelogged."\"");
-							} # detected query
-						} # is search
-	
-						# -- end query stats --
 					} # not log by IP (is set if detected this IP already visited in the last 15 min, but has no cookies) 
 				} # if valid
 			} # if new entry
@@ -382,7 +365,7 @@ class mod_bi_stats extends CscriptedModule  {
 					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statspath']->dbname." SET data='".date("Y-m-d")."', page=\"$page\", pagefoward=\"".$pageToBelogged."\", hits=1");
 					if (!$ok) {
 						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
-						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+						if (strpos(strtolower($lastError),"duplicate") !== false) { // concurrent INSERT happened first! use update
 							array_pop($this->parent->dbo->log); // ignore this error please
 							$core->dbo->simpleQuery("UPDATE ".$core->modules['statspath']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND page=\"$page\" AND pagefoward=\"".$pageToBelogged."\"");							
 						}
@@ -418,7 +401,7 @@ class mod_bi_stats extends CscriptedModule  {
 				}
 				if (!$ok) {
 					$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
-					if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+					if (strpos(strtolower($lastError),"duplicate") !== false) { // concurrent INSERT happened first! use update
 						array_pop($this->parent->dbo->log); // ignore this error please
 					}
 				}
@@ -450,7 +433,7 @@ class mod_bi_stats extends CscriptedModule  {
 					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsbrowser']->dbname." SET data=NOW(), browser=\"$browser\",hits=1");
 					if (!$ok) {
 						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
-						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+						if (strpos(strtolower($lastError),"duplicate") !== false) { // concurrent INSERT happened first! use update
 							array_pop($this->parent->dbo->log); // ignore this error please
 							$core->dbo->simpleQuery("UPDATE ".$core->modules['statsbrowser']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND browser=\"$browser\"");							
 						}
@@ -470,7 +453,7 @@ class mod_bi_stats extends CscriptedModule  {
 					$ok = $core->dbo->simpleQuery("INSERT INTO ".$core->modules['statsres']->dbname." SET data=NOW(), resolution=\"".$_SESSION[CONS_USER_RESOLUTION]."\",hits=1");
 					if (!$ok) {
 						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
-						if (strpos(strtolower($lastError),"duplicate") === false) { // concurrent INSERT happened first! use update
+						if (strpos(strtolower($lastError),"duplicate") !== false) { // concurrent INSERT happened first! use update
 							array_pop($this->parent->dbo->log); // ignore this error please
 							$core->dbo->simpleQuery("UPDATE ".$core->modules['statsres']->dbname." SET hits=hits+1 WHERE data='".date("Y-m-d")."' AND resolution=\"".$_SESSION[CONS_USER_RESOLUTION]."\"");							
 						}

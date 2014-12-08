@@ -82,8 +82,10 @@
 	$tempini = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])? $_REQUEST['p_init']:0; // apparent start 
 	if ($mode != 'bb') {
 		// always show the FIRST main post
-		$_REQUEST['p_init'] = 0; 
-		$core->runContent('forumpost',$core->template,$sql,"_masterpost",1,"masterpost".$idt."idf".$idf,"getuseravatar");
+		$_REQUEST['p_init'] = 0;
+		$core->templateParams['mainpost'] = true; // we will use on callback to treat includehtml
+		$mainPost = $core->runContent('forumpost',$core->template,$sql,"_masterpost",1,"masterpost".$idt."idf".$idf,"getuseravatar");
+		unset($core->templateParams['mainpost']);
 		// this is the real starting point (add one because we showed the main post already)
 		$_REQUEST['p_init'] = $tempini + 1;
 	} else
@@ -93,7 +95,6 @@
 	// comments	
 	if ($mode != "articles") {
 		$total = $core->runContent('forumpost',$core->template,$sql,"_post",$ipp,"postsforidt".$idt."idf".$idf."p".$tempini,"getuseravatar");
-		
 		// paging
 		if ($mode != 'bb') $total--; // removes main post of non bb, so totals are ok
 		if ($total > $ipp)
@@ -113,6 +114,25 @@
 			$data['image'] = CONS_PATH_PAGES.$_SESSION['CODE']."/files/users/t/image_".$data['id_author']."_2";
 			$ext = "";
 			locateFile($data['image'],$ext);
+		}
+		if (isset($params['mainpost']) && $data['includehtml'] != '') {
+			$file = "";			
+			if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$data['includehtml'])) {
+				$file = CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$data['includehtml'];
+			} else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$data['includehtml'].".html")) {
+				$file = CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$data['includehtml'].".html";
+			}
+			if ($file != '') {
+				$tmpTP = new CKTemplate($params['core']->template);
+				$tmpInner = new CKTemplate($params['core']->template);
+				$tmpTP->append($data['content']);
+				$tmpInner->fetch($file);
+				$tmpTP->append($tmpInner);
+				$params['core']->removeAutoTags($tmpTP);
+				$data['content'] = $tmpTP;
+			} else {
+				$data['content'] .= "<br/><small>File not found: ".$data['includehtml']."</small>";
+			}
 		}
 		return $data;
 	}

@@ -77,6 +77,25 @@ class CPrescia extends CPresciaVar {
 		if ($this->action == "") $this->action = "index";
 		$this->original_context_str = $this->context_str; # storage of original call in case script redirects us, also used by stats
 		
+		# LAYOUT CONTROLER -- (need early for the bot control)
+		# 0 = normal, 1 = no frame, 2 = ajax (.ajax or .xml to force), = mobile (.mob to force)
+		$this->layout = isset($_REQUEST['layout'])?(int)$_REQUEST['layout']:0;
+		if ($this->original_ext == "ajax" || $this->original_ext == "xml") $this->layout = 2;
+		else if ($this->layout != 2 && ($this->original_ext == "mob" || (CONS_BROWSER_ISMOB && !isset($_SESSION['NOMOBVER'])))) $this->layout = 3;
+		if (!is_numeric($this->layout) || $this->layout<0 || $this->layout>3) $this->layout = 0;
+		if ($this->layout==3 && isset($_REQUEST['desktopversion'])) {
+			$_SESSION['NOMOBVER'] = true;
+			$this->layout = 0;
+		}
+		if ($this->layout==0 && isset($_REQUEST['mobileversion'])) {
+			unset($_SESSION['NOMOBVER']);
+			$this->layout = 3;
+		}
+
+
+		# anti-bot (basically a anti-DOS tool)
+		if (CONS_BOTPROTECT && ($this->layout != 2 || !$this->noBotProtectOnAjax)) require CONS_PATH_SYSTEM."lazyload/botprotect.php";
+		
 	} # domainlock
 #-
 	function dbconnect() { # coreFull will override
@@ -141,24 +160,6 @@ class CPrescia extends CPresciaVar {
 			$this->headerControl->addHeader("X-Robots-Tag", "X-Robots-Tag: noindex"); # How to avoid robots, as specified by Google
 		}
 
-		# LAYOUT CONTROLER -- (need early for the bot control)
-		# 0 = normal, 1 = no frame, 2 = ajax (.ajax or .xml to force), = mobile (.mob to force)
-		$this->layout = isset($_REQUEST['layout'])?(int)$_REQUEST['layout']:0;
-		if ($ext == "ajax" || $ext == "xml") $this->layout = 2;
-		else if ($ext == "mob" || (CONS_BROWSER_ISMOB && !isset($_SESSION['NOMOBVER']))) $this->layout = 3;
-		if (!is_numeric($this->layout) || $this->layout<0 || $this->layout>3) $this->layout = 0;
-		if ($this->layout==3 && isset($_REQUEST['desktopversion'])) {
-			$_SESSION['NOMOBVER'] = true;
-			$this->layout = 0;
-		}
-		if ($this->layout==0 && isset($_REQUEST['mobileversion'])) {
-			unset($_SESSION['NOMOBVER']);
-			$this->layout = 3;
-		}
-
-		# anti-bot (basically a anti-DOS tool)
-		if (CONS_BOTPROTECT && ($this->layout != 2 || !$this->noBotProtectOnAjax)) require CONS_PATH_SYSTEM."lazyload/botprotect.php";
-
 		# domainTranslator (allows you to translate a sub-domain to a folder)
 		if (count($this->domainTranslator)>0) { #
 			if (isset($this->domainTranslator[$this->domain]) && $this->domainTranslator[$this->domain] != '') {
@@ -205,7 +206,7 @@ class CPrescia extends CPresciaVar {
 				} else {
 					$this->fastClose(404);
 				}
-			} else if ($this->original_action == "sitemap.xml" || $this->original_action == "sitemap.xml") {
+			} else if ($this->original_action == "sitemap.xml" || $this->original_action == "sitemap") {
 				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml"))
 					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml","txt",true,"sitemap.xml");
 				else
@@ -774,7 +775,7 @@ class CPrescia extends CPresciaVar {
 			$this->templateLoaded = true;
 		}
 
-		$this->removeAutoTags();
+		$this->removeAutoTags($this->template);
 		
 		
 	}
@@ -1185,7 +1186,7 @@ class CPrescia extends CPresciaVar {
 			$this->template->constants['METATAGS'] = $metadata;
 		}
 
-		$this->removeAutoTags();
+		$this->removeAutoTags($this->template);
 
 		// print version
 		if ($this->template->get("printver") == '') {
@@ -1197,7 +1198,7 @@ class CPrescia extends CPresciaVar {
 		return $this->template->techo();
 	} # showTemplate
 #-
-	function removeAutoTags() {
+	function removeAutoTags(&$tp) {
 		/*
 						layout 0 (normal)		layout 1 (popup)		layout 2 (ajax)		CONS_BROWSER_ISMOB / layout 3
 		_ajaxonly		REMOVE					REMOVE					KEEP				<- as layout
@@ -1211,30 +1212,30 @@ class CPrescia extends CPresciaVar {
 
 		*/
 		if ($this->layout == 0) {
-			$this->template->assign("_ajaxonly");
-		} else if ($this->layout == 1) {
-			$this->template->assign("_removeonpopup");
-			$this->template->assign("_ajaxonly");
-		} else {
-			$this->template->assign("_removeonpopup");
-			$this->template->assign("_removeonajax");
+			$tp->assign("_ajaxonly");
+		} else if ($this->layout == 1) { // printver
+			$tp->assign("_removeonpopup");
+			$tp->assign("_ajaxonly");
+		} else if ($this->layout == 2) { // ajax
+			$tp->assign("_removeonpopup");
+			$tp->assign("_removeonajax");
 		}
 
 		if (!CONS_ONSERVER)
-			$this->template->assign("_onserver");
+			$tp->assign("_onserver");
 
 		if ((CONS_BROWSER_ISMOB && !isset($_SESSION['NOMOBVER'])) || $this->layout == 3) // note: also removed in renderPage
-			$this->template->assign("_removemob");
+			$tp->assign("_removemob");
 		else
-			$this->template->assign("_mobonly");
+			$tp->assign("_mobonly");
 
 		if ($this->logged()) {
-			$this->template->assign("_GUEST");
-			$this->template->assign("USER_ID",$_SESSION[CONS_SESSION_ACCESS_USER]['id']);
-			$this->template->assign("USER_LOGIN",$_SESSION[CONS_SESSION_ACCESS_USER]['login']);
-		} else $this->template->assign("_LOGGED");
+			$tp->assign("_GUEST");
+			$tp->assign("USER_ID",$_SESSION[CONS_SESSION_ACCESS_USER]['id']);
+			$tp->assign("USER_LOGIN",$_SESSION[CONS_SESSION_ACCESS_USER]['login']);
+		} else $tp->assign("_LOGGED");
 
-		if (CONS_USE_I18N) $this->intlControl->removeLanguageTags();
+		if (CONS_USE_I18N) $this->intlControl->removeLanguageTags($tp);
 
 	}
 #-
@@ -1370,7 +1371,7 @@ class CPrescia extends CPresciaVar {
 			$this->fastClose(403); # most certainly will abort
 			$this->close(true); # bah abort
 		} else
-			return $command;
+			return str_replace("\"","",$command);
 	}
 #-
 	/* queryOk

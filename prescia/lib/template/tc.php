@@ -5,7 +5,7 @@
 --*/
 # REQUIRES main.php
 
-define ("CKTemplate_version","141018"); // Build version - yes this is a date
+define ("CKTemplate_version","141204"); // Build version - yes this is a date
 
 define ("EREG_TAG","/(\{)([^\n\r]+)(\})/"); // used inside parsers, but not on tbreak
 define ("START_REPLACE", "\\"); // this string inside the limiters will generate the start limiter ({\} will output {)
@@ -412,34 +412,11 @@ class CKTemplate {
   		case "truncate": // truncate: (truncate[:pos[:…[:striptags[:preserveEOL]]]])
   			$default = 50;
   			$final = "…";
-			$hasn = false;
   			if (isset($params[0]))
   				$default = (int)$params[0];
 			if (isset($params[1]))
 				$final = $params[1];
-			if (isset($params[2])) {
-				$content = str_replace("\"","'",stripHTML(str_replace("\n","",$content),isset($params[3])));
-				if (isset($params[3])) {
-					$content = str_replace("<br/>","\n",$content);
-					$hasn = strpos($content,"\n")!==false;
-				}
-			}
-			// avoids amp codes being cut
-			$len = strlen($content);
-			$amp = strpos($content,'&',($default-5>=0 && $default-5<$len)?$default-5:0);
-			if ($amp > 0 && $amp <= $default) {
-				$ampf = strpos($content,';',$amp);
-				if ($ampf >= $default) {
-					return (isset($params[3])?str_replace("\n","<br/>",substr($content,0,$amp-1)):substr($content,0,$amp-1)).($hasn?"\n":"").$final."";
-				}
-			}
-			if ($len > $default) {
-				if ($len <= $default - strlen($final)) // barelly on the limit
-					return (isset($params[3])?str_replace("\n","<br/>",$content):$content).$final."";
-				else // under the limit, cut utf8 to avoid issues
-					return (isset($params[3])?str_replace("\n","<br/>",utf8_truncate($content,$default-strlen($final))):utf8_truncate($content,$default-strlen($final))).$final." ";
-			} else // not greater
-				return (isset($params[3])?str_replace("\n","<br/>",$content):$content)."";
+			return truncate($content,$default,$final,isset($params[2]),isset($params[3]));
 		case "nl2br":
 			return nl2br($content);
 		case "onnull":

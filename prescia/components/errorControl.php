@@ -72,8 +72,8 @@ class CErrorControl {
 								124 => CONS_ERROR_ERROR_SHOW,  # Failed to save metadata cache in disk (corefull::save_model)
 								125 => CONS_ERROR_SEC, # Possible hack attempt came in a field to be stored in database - expected number, came HTML tag (module::check_mandatory)
 								126 => CONS_ERROR_FATAL, # An object was sent as an action on runAction (module::runAction)
-								127 => CONS_ERROR_NOTICE_SHOW, # Missing mandatory fields
-								128 => CONS_ERROR_NOTICE_SHOW, # Mandatory parent key missing or caused ciclic parenting
+								127 => CONS_ERROR_WARNING_SHOW, # Missing mandatory fields
+								128 => CONS_ERROR_WARNING_SHOW, # Mandatory parent key missing or caused ciclic parenting
 								129 => CONS_ERROR_NOTICE_SHOW, # Invalid login-like field
 								130 => CONS_ERROR_NOTICE_SHOW, # Invalid e-mail field
 								131 => CONS_ERROR_NOTICE_SHOW, # Invalid path/file field
@@ -119,7 +119,7 @@ class CErrorControl {
 								168 => CONS_ERROR_MESSAGE, # a Plugin prevented database change based on edit_parse (modules::runAction // [script]::edit_parse)
 								169 => CONS_ERROR_FATAL_MAIL, # on RunContent, tried to use fast counting and failed
 								170 => CONS_ERROR_FATAL, # Script not found on onMeta (which means the script loaded and registered onMeta, but was not found onMeta)
-								171 => CONS_ERROR_WARNING, ####################### FREE ERROR CORE ###################### 
+								171 => CONS_ERROR_SEC, # IP banned 
 								178 => CONS_ERROR_FATAL_MAIL, # too many errors/possible error loop
 								179 => CONS_ERROR_WARNING, # 404 error was unable to be stored in 404.log
 								180 => CONS_ERROR_FATAL, # custom.xml (merger of all) corrupt
@@ -261,7 +261,7 @@ class CErrorControl {
 					$this->ERRORS[$errCode] == CONS_ERROR_ERROR_SHOW ||
 					$this->ERRORS[$errCode] == CONS_ERROR_FATAL ||
 					$this->ERRORS[$errCode] == CONS_ERROR_NOTIFYMAIL;
-		$actionLog = $errCode >= 300 && $errCode < 400;
+		$actionLog = $this->ERRORS[$errCode] < CONS_ERROR_WARNING && ($errCode >= 300 && $errCode < 400);
 		$stopScript = $this->ERRORS[$errCode] == CONS_ERROR_FATAL ||
 						$this->ERRORS[$errCode] == CONS_ERROR_FATAL_NOLOG ||
 						$this->ERRORS[$errCode] == CONS_ERROR_NOTICESTOP ||

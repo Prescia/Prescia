@@ -30,6 +30,7 @@
 	<ID_WHOFLAGGED merge="left">USERS</ID_WHOFLAGGED>
 	<PROPS custom="true" readonly="true" meta="serialized array with user ids wht TRUE for prop up, FALSE for prop down, not in list if not proped">MEDIUMTEXT</PROPS>
 	<IP size="64">VC</IP>
+	<INCLUDEHTML default='' meta="if set and a valid local html, will append this to the content, AS-IS">VC</INCLUDEHTML>
 </FORUMPOST>
 <BBMAIL dbname="bb_mail" title="title" order="date+" listing="author_login,recipient_login,title,date,dateseen">
 	<id_author mandatory="true">USERS</id_author>
