@@ -138,9 +138,11 @@ if (!$core->servingFile) {
 		'HEADUSERTAGS' => '', // other tags that will come last in the HEADER
 		'METATAGS' => '' // actual meta tags (build with the contents above, at core::showTemplate)
 	);
-	
+	$core->template->lang_selectors = explode(",",CONS_POSSIBLE_LANGS);
+	$core->template->current_language = $_SESSION[CONS_SESSION_LANG];
 	require CONS_PATH_SYSTEM."tcexternal.php"; // template classes not built-in into the core (plugins)
 	$core->template->externalClasses = new CKTCexternal($core);
+	
 	foreach ($core->tClass as $class=>$script)
 		$core->template->varToClass[] = $class;
 	$core->loadIntlControl(); # load i18n variables into template system

@@ -1254,7 +1254,7 @@ class CPrescia extends CPresciaVar {
 			$tp->assign("USER_LOGIN",$_SESSION[CONS_SESSION_ACCESS_USER]['login']);
 		} else $tp->assign("_LOGGED");
 
-		if (CONS_USE_I18N) $this->intlControl->removeLanguageTags($tp);
+		if (CONS_USE_I18N && $tp !== $this->template) $this->intlControl->removeLanguageTags($tp);
 
 	}
 #-

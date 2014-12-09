@@ -31,6 +31,8 @@ class CKTemplate {
   var $std_decimal = ".";
   var $std_tseparator = ",";
   var $lang_replacer = array();
+  var $lang_selectors = array(); // i18n selectors			\_> same as removei18n tags from Prescia, but automatic
+  var $current_language = ""; // which lang_selector to use /
   // internals
   var $errorsDetected = false;
   var $internal_cache;
@@ -39,7 +41,7 @@ class CKTemplate {
   var $firstReturnedSet = false; // ona list, will preserve the first recordset (fullpage)
   var $lastReturnedSet = false; // on a list, will preserve the last recordset (fullpage)
   var $externalClasses = false; // classes to run on templating
-  var $stackedTags = array();
+  var $stackedTags = array(); // used externally to control nested tags to prevent loop
   // change this to register new classes
   var $varToClass = array(); // if this come as a variable, consider it as a class ({abc|...} => {@|abc|...})
 
@@ -68,6 +70,8 @@ class CKTemplate {
 	  $this->cacheSeed = $parent->cacheSeed;
 	  $this->externalClasses = &$parent->externalClasses;
 	  $this->varToClass = $parent->varToClass;
+	  $this->lang_selectors = $parent->lang_selectors;
+	  $this->current_language = $parent->current_language;
 	}
   }
   public function __clone() {
@@ -77,6 +81,12 @@ class CKTemplate {
 			$this->contents[$idx][2] = clone $this->contents[$idx][2];
 		}
 	}
+  }
+  public function removeLanguageTags() {
+		foreach ($this->lang_selectors as $lang) {
+			if ($lang != $this->current_language)
+				$this->assign("_i18n_".$lang);
+		}
   }
   public function populate() { // applies tags to $str_monthlabels and $str_intervals
   	for ($c=1;$c<=12;$c++)
@@ -765,6 +775,7 @@ class CKTemplate {
 
   public function techo($arrayin = false,$emptyme = array(),$recursive=false) {
 	$saida = "";
+	$this->removeLanguageTags();
 	$this->fill($this->constants);
 	$this->flushcache();
 	if ($arrayin !== false && !$recursive) $this->fill($arrayin);

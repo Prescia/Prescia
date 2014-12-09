@@ -1,5 +1,7 @@
 TODO list is on site/github
 
+14.12.09 BETA 0.92
+	Created removeLanguageTags inside template core, which loads languages with the template and uses on techo, making propagation of i18n tags automatic
 14.12.08 BETA 0.92
 	added css to .htaccess to reroute to gzip optimizer
 	added better caching parameters for file-manager resources (default 1 hour cache)
