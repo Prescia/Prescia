@@ -18,6 +18,7 @@
 	$fdata = $core->runContent('forum',$core->template,$_REQUEST['id_forum']); // filled by udm
 	$id = $_REQUEST['id_forum'];
 	if ($fdata['id_parent'] > 0) $core->template->assign("separator","‒");
+	$this->parent->template->constants['PAGE_TITLE'] .= " - ".$fdata['title'];
 
 	$mode = $fdata['operationmode'];
 	

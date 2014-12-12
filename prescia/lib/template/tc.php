@@ -5,7 +5,7 @@
 --*/
 # REQUIRES main.php
 
-define ("CKTemplate_version","141204"); // Build version - yes this is a date
+define ("CKTemplate_version","141209"); // Build version - yes this is a date
 
 define ("EREG_TAG","/(\{)([^\n\r]+)(\})/"); // used inside parsers, but not on tbreak
 define ("START_REPLACE", "\\"); // this string inside the limiters will generate the start limiter ({\} will output {)

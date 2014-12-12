@@ -17,6 +17,13 @@ class CHeaderControl {
 		$this->parent = &$parent;
 	}
 
+	function noIndex() { // call this to tell bots not to index this page
+		if (isset($this->parent->storage['noindex_set'])) return;
+		$this->parent->template->constants['METATAGS'] .= "<meta name=\"robots\" CONTENT=\"NOINDEX\"/>\n";
+		$this->addHeader("X-Robots-Tag", "X-Robots-Tag: noindex"); 
+		$this->parent->storage['noindex_set'] = true;
+	}
+
 	function getHeader($code, $pop = true) {
 		# Searches a header with given code (from defines CONS_HC...) and returns it
 		# pop true will REMOVE it from stack (usefull for replacing the header)
@@ -82,6 +89,7 @@ class CHeaderControl {
 		if (!$limit)
 			foreach ($this->headers as $header)
 				header($header[1]);
+		$this->softHeaderSent = true;
 		return true;
 
 	} # showHeaders

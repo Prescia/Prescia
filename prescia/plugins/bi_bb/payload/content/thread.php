@@ -9,6 +9,8 @@
 	if (!isset($core->storage['friendlyurldata']) ||
 	    !isset($core->storage['friendlyurlmodule'])) $core->fastClose(404);
 
+	$this->parent->template->constants['PAGE_TITLE'] .= " - ".$core->storage['friendlyurldata']['forum_title']." - ".$core->storage['friendlyurldata']['title'];
+
 	// user options (ipp)
 	$up = isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])?$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']:false;
 	if ($up !== false) {

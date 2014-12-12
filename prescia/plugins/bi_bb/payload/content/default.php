@@ -24,8 +24,10 @@
 
  	$core->addScript('bootstrap');
 	if ($core->action == 'profile') {
-		$core->addLink('prototype_oop.js');
-		$core->addLink('prototype_ajax.js');
+		if (strpos($core->template->constants['HEADJSTAGS'],'prototype')===false) {
+			$core->addLink('prototype_oop.js');
+			$core->addLink('prototype_ajax.js');
+		}
 	}
 	$core->addLink('common.js');
 

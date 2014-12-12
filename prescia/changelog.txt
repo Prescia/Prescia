@@ -1,5 +1,7 @@
 TODO list is on site/github
 
+14.12.11 BETA 0.93
+	Added headercontrol to set noIndex on search engines (headerControl->noIndex())
 14.12.09 BETA 0.92
 	Created removeLanguageTags inside template core, which loads languages with the template and uses on techo, making propagation of i18n tags automatic
 14.12.08 BETA 0.92

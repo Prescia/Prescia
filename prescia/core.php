@@ -156,9 +156,6 @@ class CPrescia extends CPresciaVar {
 			$_SESSION[CONS_SESSION_NOROBOTS] = (strpos(",".CONS_NOROBOTDOMAINS.",",$this->domain) !== false ||
 											  strpos(",".CONS_NOROBOTDOMAINS.",",str_replace("www.","",$this->domain)) !== false);
 		}
-		if ($_SESSION[CONS_SESSION_NOROBOTS]) {
-			$this->headerControl->addHeader("X-Robots-Tag", "X-Robots-Tag: noindex"); # How to avoid robots, as specified by Google
-		}
 
 		# domainTranslator (allows you to translate a sub-domain to a folder)
 		if (count($this->domainTranslator)>0) { #

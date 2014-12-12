@@ -222,7 +222,8 @@ class mod_bi_bb extends CscriptedModule  {
 		return $this->parent->dbo->fetch($sql);
 	}
 	
-	function showHeader() { 
+	function showHeader() {
+		$this->parent->template->constants['PAGE_TITLE'] = $this->homename.($this->areaname != ''?" - ".$this->areaname:''); 
 		$this->parent->template->assign("areaname",$this->areaname);
 		$this->parent->template->assign("homename",$this->homename);
 		if ($this->parent->template->get("_topforums") !== false)

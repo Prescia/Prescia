@@ -122,7 +122,7 @@ if (!$core->servingFile) {
 	$core->template = new CKTemplate(null,CONS_PATH_INCLUDE."template/",$core->debugmode,true);
 	
 	$core->template->constants = array( // these are constants ALWAYS available (echoed) in the template
-		'PAGE_TITLE' => isset($core->dimconfig['pagetitle'])?$core->dimconfig['pagetitle']:UcWords($_SESSION['CODE']),
+		'PAGE_TITLE' => (isset($core->dimconfig['pagetitle']) && $core->dimconfig['pagetitle'] != '')?$core->dimconfig['pagetitle']:UcWords($_SESSION['CODE']),
 		'IMG_PATH' => CONS_INSTALL_ROOT.CONS_PATH_PAGES.$_SESSION['CODE']."/files/",
 		'FMANAGER_PATH' => CONS_INSTALL_ROOT.CONS_FMANAGER, // CONS_FMANAGER came from custom config.php
 		'BASE_PATH' => CONS_INSTALL_ROOT,
@@ -146,7 +146,10 @@ if (!$core->servingFile) {
 	foreach ($core->tClass as $class=>$script)
 		$core->template->varToClass[] = $class;
 	$core->loadIntlControl(); # load i18n variables into template system
-	
+	if ($_SESSION[CONS_SESSION_NOROBOTS]) {
+		$core->headerControl->noIndex();
+	}
+		
 	# -- at this point, the framework overhead is done. From now on, it's mostly the site code.
 	# ab -n50 total mean: 575ms 38ms (36ms with cache enabled)
 

@@ -329,7 +329,7 @@
 				<td>{data|date|H:i:s}</td>
 				<td>{pagelast}</td>
 				<td><img src="/pages/_common/files/adm/b{agentcode}.gif" alt="{agentcode}" /> - {agent}</td>
-				<td>{referer}</td>
+				<td>{referer|truncate|100}</td>
 			</tr>
 			{/rvisitor}
 			</table>

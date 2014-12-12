@@ -137,6 +137,7 @@
 			} else {
 				if ($core->tCaptcha('captcha',true)) {
 					$core->safety = false; // allow guests to register (add user)
+					if (!isset($_REQUEST['email']) && isMail($data['login'])) $data['email'] = $data['login']; // if the email is the login
 					$ok = $core->runAction('users',CONS_ACTION_INCLUDE,$data);
 					$core->safety = true;
 					if ($ok) {

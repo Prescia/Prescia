@@ -2,7 +2,7 @@
 RewriteEngine on
 
 # Every .js file inside pages/_js are fowarded to the optimizer (which will gzip them if the browser supports it)
-RewriteRule	^pages/_js/(.+)\.(js|css)(\?.+)?	pages/_js/optimizer.php?$2=$1.$2$3	[L]
+RewriteRule	^pages/_js/(.+)\.js(\?.+)?	pages/_js/optimizer.php?js=$1.js$2	[L]
 
 # PHP/ASP in the pages/[code]/files can never run
 RewriteRule	^pages/([^/]+)/files/(.+)(\.php|\.asp|/)$	index.php	[L]

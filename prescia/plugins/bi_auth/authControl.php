@@ -731,8 +731,10 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 			if (!isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang'])) {
 				$saveUP = true;
 				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang'] = $_SESSION[CONS_SESSION_LANG];
-			} else if (in_array($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang'],explode(",",CONS_POSSIBLE_LANGS)))
+			} else if (in_array($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang'],explode(",",CONS_POSSIBLE_LANGS))) {
 				$_SESSION[CONS_SESSION_LANG] = $_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang'];
+				$this->parent->intlControl->loadLocale($_SESSION[CONS_SESSION_LANG]);
+			}
 			//--
 			$_SESSION[CONS_SESSION_ACCESS_LEVEL] = $_SESSION[CONS_SESSION_ACCESS_USER]['groups_level'];
 			$_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = @unserialize($_SESSION[CONS_SESSION_ACCESS_USER]['groups_permissions']);
