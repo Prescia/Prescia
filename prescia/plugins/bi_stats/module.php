@@ -354,7 +354,6 @@ class mod_bi_stats extends CscriptedModule  {
 				}
 			}
 			if (!$ok) { # second+ visit or concurrent include
-				list($page,$fullpath) = $core->dbo->fetch_row($r);
 				if ($page != $pageToBelogged)
 					$fullpath .= $pageToBelogged.",";
 				$core->dbo->simpleQuery("UPDATE ".$core->modules['statsrt']->dbname." SET page=\"".$pageToBelogged."\", pagelast=\"$page\", data=NOW(), fullpath=\"$fullpath\" WHERE ip='".CONS_IP."'");

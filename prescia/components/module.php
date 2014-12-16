@@ -1124,7 +1124,7 @@ class CModule {
 					if (!isset($field[CONS_XML_CUSTOM])) {
 						$data[$name] = cleanString($data[$name],isset($field[CONS_XML_HTML]),$_SESSION[CONS_SESSION_ACCESS_LEVEL]==100,$this->parent->dbo);
 					} else if (!$isSerialized) {
-						$data[$name] = addslashes_EX($data[$name],isset($field[CONS_XML_HTML]),$this->parent->dbo); 
+						$data[$name] = addslashes_EX($data[$name],true,$this->parent->dbo); 
 					}
 					if (!$isADD&& isset($field[CONS_XML_IGNORENEDIT]) && $data[$name] == "") break;
 					$output = $encapsulation.$data[$name].$encapsulation;
@@ -1273,9 +1273,11 @@ class CModule {
 					$output = $encapsulation.$data[$name].$encapsulation;
 				} else if ($this->fields[$name][CONS_XML_SERIALIZED] > 1) { // set to WRITE or ALL
 					// note: we ADD fields, never replace, because we should allow partial edits, thus we need to read the original data first
-					$sql = "SELECT $name FROM ".$this->name." WHERE $wS";
+					$sql = "SELECT $name FROM ".$this->dbname." WHERE $wS";
 					$serialized = $this->parent->dbo->fetch($sql);
 					if ($serialized === false) $serialized = array();
+					else $serialized = @unserialize($serialized);
+					
 					$serializedFields = 0;
 					foreach ($this->fields[$name][CONS_XML_SERIALIZEDMODEL] as $exname => &$exfield) {
 						if (isset($data[$name."_".$exname])) {
@@ -1377,6 +1379,7 @@ class CModule {
 						}
 						return false;
 					} else {
+						
 						$this->parent->notifyEvent($this,CONS_ACTION_UPDATE,$data,$startedAt); # later notify
 						$this->parent->storage['lastactiondata'] = &$data;
 					}

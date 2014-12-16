@@ -175,11 +175,11 @@
 	$core->template->assign('timelapse',$output);
 	$core->template->assign('timelapse2',$output2);
 
-	// ############################# top 15 pages ###########################
-	// outputs raw data for top 15 pages, so the client can build them
+	// ############################# top 20 pages ###########################
+	// outputs raw data for top 20 pages, so the client can build them
 	// -- also allows the client side to draw the graphics in the canvas
 
-	// worst case scenario is a full graphic: 15 pages * 30 days = 450 entries, each with (date, hit, pageid, page) with a total about  18Kb
+	// worst case scenario is a full graphic: 20 pages * 30 days = 600 entries, each with (date, hit, pageid, page) with a total about  24Kb
 	$yesterday = datecalc(date("Y-m-d"),0,0,-1);
 	$moduletranslator = array(); // action name => module
 	$pages = array(); // (invert place) => [sum, page, hid] // <- outputed
@@ -202,7 +202,7 @@
 	$statsh = $core->loaded('statsdaily');
 
 	# gets the top pages on this month
-	$sql = "SELECT sum( hits ) AS h, page,hid FROM ".$statsh->dbname." WHERE DATA > NOW() - INTERVAL 32 DAY AND page <> 'setres' AND page <> '' GROUP BY page,hid ORDER BY h DESC LIMIT 15";
+	$sql = "SELECT sum( hits ) AS h, page,hid FROM ".$statsh->dbname." WHERE DATA > NOW() - INTERVAL 32 DAY AND page <> 'setres' AND page <> '' GROUP BY page,hid ORDER BY h DESC LIMIT 20";
 	$core->dbo->query($sql,$r,$n);
 	$pagesTotal = $n;
 	$where = array();
@@ -512,4 +512,13 @@
 	$core->template->assign("_prop",$output);
 
 	#################################### REALTIME ########################################
-	$core->runContent('STATSRT',$core->template,array("data > NOW() - INTERVAL 30 MINUTE","data_ini DESC",""),"_rvisitor",false); 
+	function counthitsrt($template, $params, $data, $processed = false) {
+		if (!$processed)
+			$data['hits'] = isset($data['fullpath'])?count(explode(",",$data['fullpath'])):1;
+		return $data;
+	}
+	$core->runContent('STATSRT',$core->template,array("data > NOW() - INTERVAL 30 MINUTE","data_ini DESC",""),"_rvisitor",false,false,'counthitsrt');
+	
+	
+	
+	 

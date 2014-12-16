@@ -162,7 +162,7 @@ class mod_bi_auth extends CscriptedModule  {
 				unset($data['id_group']); # disallow change
 			}
 		}
-		if ($action == CONS_ACTION_UPDATE && isset($data['user_prefs_skin']) && $data['user_prefs_skin'] != '') {
+		if ($action == CONS_ACTION_UPDATE && !isset($data['userprefs'])) {
 			// get's original up array
 			$uMod = $this->parent->loaded(CONS_AUTH_USERMODULE);
 			$sql = "SELECT userprefs FROM ".$uMod->dbname." WHERE id=".$data['id'];
@@ -170,18 +170,19 @@ class mod_bi_auth extends CscriptedModule  {
 			$up = @unserialize($up);
 			if (!is_array($up)) $up = array();
 			// note: remember to initialize new users' preferences on authControl::logUser
-			$up['skin'] = $data['user_prefs_skin'];
-			$up['init'] = $data['user_prefs_init'];
-			if (is_numeric($data['user_prefs_pfim']) && $data['user_prefs_pfim'] > 4 && $data['user_prefs_pfim'] <= 100)
+			if (isset($data['user_prefs_skin'])) $up['skin'] = $data['user_prefs_skin'];
+			if (isset($data['user_prefs_init'])) $up['init'] = $data['user_prefs_init'];
+			if (isset($data['user_prefs_pfim']) && is_numeric($data['user_prefs_pfim']) && $data['user_prefs_pfim'] > 4 && $data['user_prefs_pfim'] <= 100)
 				$up['pfim'] = (int)$data['user_prefs_pfim'];
-			$up['sf'] = isset($data['user_prefs_sf'])?'1':'0';
-			$up['floating'] = isset($data['user_prefs_floating'])?'1':'0';
-			$up['menufont'] = $data['user_prefs_menufont'];
-			$up['lang'] = $data['user_prefs_lang'];
+			if (isset($data['user_prefs_sf'])) $up['sf'] = isset($data['user_prefs_sf'])?'1':'0';
+			if (isset($data['user_prefs_floating'])) $up['floating'] = isset($data['user_prefs_floating'])?'1':'0';
+			if (isset($data['user_prefs_menufont'])) $up['menufont'] = $data['user_prefs_menufont'];
+			if (isset($data['user_prefs_lang'])) $up['lang'] = $data['user_prefs_lang'];
 			if ($up['menufont']<8 || $up['menufont']>16) $up['menufont'] = 12;
 			$data['userprefs'] = serialize($up);
-			if ($data['id'] == $_SESSION[CONS_SESSION_ACCESS_USER]['id'])
+			if ($data['id'] == $_SESSION[CONS_SESSION_ACCESS_USER]['id']) {
 				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] = unserialize($data['userprefs']);
+			}
 		}
 		return true;
 	}

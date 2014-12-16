@@ -5,7 +5,7 @@
 --*/
 # REQUIRES main.php
 
-define ("CKTemplate_version","141209"); // Build version - yes this is a date
+define ("CKTemplate_version","141213"); // Build version - yes this is a date
 
 define ("EREG_TAG","/(\{)([^\n\r]+)(\})/"); // used inside parsers, but not on tbreak
 define ("START_REPLACE", "\\"); // this string inside the limiters will generate the start limiter ({\} will output {)
@@ -435,8 +435,8 @@ class CKTemplate {
 			else return $content;
 		case "toplain":
 			return str_replace("<","&lt;",str_replace(">","&gt;",$content));
-		case "html": // create amps, remove ", and if param is set, remove '
-			return str_replace("\"","",isset($params[0])?str_replace("'","",htmlspecialchars($content,ENT_NOQUOTES)):htmlspecialchars($content,ENT_NOQUOTES));
+		case "html": // create amps, and if param is set, remove '
+			return str_replace("&amp;","&",isset($params[0])?str_replace("'","",htmlspecialchars($content)):htmlspecialchars($content));
 		case "htmlentities":
   			return htmlentities_ex($content);
 		case "url":

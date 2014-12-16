@@ -11,6 +11,7 @@
 		$core->template->assign("name",$_SESSION[CONS_SESSION_ACCESS_USER]['name']);
 		$core->template->assign("email",$_SESSION[CONS_SESSION_ACCESS_USER]['email']);
 		$core->template->assign("ipp",$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['pfim']);
+		$core->template->assign("lang",$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['lang']);
 		$image = CONS_PATH_PAGES.$_SESSION['CODE'].'/files/users/t/image_'.$_SESSION[CONS_SESSION_ACCESS_USER]['id']."_2";
 		if ($_SESSION[CONS_SESSION_ACCESS_USER]['image']=='n' || !locateFile($image,$ext)) {
 			$core->template->assign("_imageyes");

@@ -24,7 +24,7 @@
 		<div id="tabtop5" onclick="tab(5);" style="cursor:pointer;float:left;width:100px;">
 			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Tecnologia
 		</div>
-		<div id="tabtop6" onclick="document.location='https://www.google.com/webmasters/tools/home';" style="cursor:pointer;float:left;width:100px;">
+		<div id="tabtop7" onclick="document.location='https://www.google.com/webmasters/tools/home';" style="cursor:pointer;float:left;width:100px;">
 			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Webmasters
 		</div>
 		
@@ -318,8 +318,9 @@
 			<table style="border:0px;width:900px" cellspacing="0">
 			<tr>
 				<td style="border-bottom:1px solid #ccc">Início</td>
-				<td style="border-bottom:1px solid #ccc">Atual</td>
+				<td style="border-bottom:1px solid #ccc">Último</td>
 				<td style="border-bottom:1px solid #ccc">Página</td>
+				<td style="border-bottom:1px solid #ccc">Hits</td>
 				<td style="border-bottom:1px solid #ccc">Navegador</td>
 				<td style="border-bottom:1px solid #ccc">Referência</td>
 			</tr>
@@ -328,7 +329,8 @@
 				<td>{data_ini|date|H:i:s}</td>
 				<td>{data|date|H:i:s}</td>
 				<td>{pagelast}</td>
-				<td><img src="/pages/_common/files/adm/b{agentcode}.gif" alt="{agentcode}" /> - {agent}</td>
+				<td>{hits}</td>
+				<td><img src="/pages/_common/files/adm/b{agentcode}.gif" alt="{agentcode}" /> - {agent|truncate|20}</td>
 				<td>{referer|truncate|100}</td>
 			</tr>
 			{/rvisitor}
@@ -355,7 +357,10 @@
 	var yesterdayDate = new Date(yesterday.split("-")[0],yesterday.split("-")[1],yesterday.split("-")[2]);
 	var totalDays = statsdata.length;
 	var curtab = 0;
-	var colors = ['9393fb','7aa6e9','6ccbdf','62d5b3','63cd81','61bd5d','97cf6e','9fb360','99934d','a77e4e','c56f5d','e57277','f180c0','d075dd','9961c9'];
+	var colors = ['05c000','11b177','11c0b2','04dbde','0cdff2',
+				  '0e99e9','0d78d2','0f45cc','0c1cba','1109b1',
+				  '5a0ec2','800fcf','a912db','f308e0','fe00b3',
+				  'ea1264','c04652','ac6051','946f5b','877a68'];
 
 	function tab(idx) {
 		$('tabtop' + curtab).style.borderBottom = "0px";
@@ -432,16 +437,18 @@
 			var one_day=1000*60*60*24;
 
 			startIndex = Math.floor(yesterdayDate.getTime() - dE.getTime()) / one_day;
-			if (startIndex<0) startIndex = 0;
-			if (startIndex+30>statsdata.length) startIndex = statsdata.length-30;
 			totalDays = 1+Math.ceil(dE.getTime()-dI.getTime()) / one_day; // note: javascript dumb shit is not leap year aware, in fact, it considers all monthes as 31 days
-			if (totalDays < 7) totalDays = 7;
-			if (totalDays+startIndex>statsdata.length) totalDays = statsdata.length - startIndex;
+			
 
 			// for some really random reason, sometimes the values get here as float ...
 			startIndex = Math.floor(startIndex);
-			totalDays = Math.ceil(totalDays);
-
+			if (startIndex<0) startIndex = 0;
+			if (startIndex+30>=statsdata.length) startIndex = statsdata.length-30;
+			
+			totalDays = Math.floor(totalDays)-2;
+			if (totalDays < 7) totalDays = 7;
+			if (totalDays+startIndex>statsdata.length) totalDays = statsdata.length - startIndex;
+			
 		} else if (dI != '')
 			alert("Aviso: Datas inválidas, use o formato DD/MM/AAAA");
 	}

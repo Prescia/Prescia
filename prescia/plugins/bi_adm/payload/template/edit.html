@@ -183,7 +183,7 @@
 	{/select_field}
 
 	{_normal_field}
-	<input type="{type}" name="{field}" style="width:{width}" id="{field}" value="{value|parse|html}" {_multiple}onchange="$('me_edit_{field}').checked = true;"{/multiple} />{calendar}<br/>
+	<input type="{type}" name="{field}" style="width:{width}" id="{field}" value="{value|html}" {_multiple}onchange="$('me_edit_{field}').checked = true;"{/multiple} />{calendar}<br/>
 	<span style="font-size:9px">{helper}</span>
 	{/normal_field}
 
