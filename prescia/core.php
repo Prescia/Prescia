@@ -180,37 +180,6 @@ class CPrescia extends CPresciaVar {
 			}
 		}
 
-		# special cases (robots,favicon, sitemap)
-		if ($this->context_str == "/") {
-			if ($this->original_action == "robots.txt" || $this->original_action == "robot.txt") {
-				if ($_SESSION[CONS_SESSION_NOROBOTS])
-					$this->readfile("robotsno.txt","txt",true,"robots.txt");
-				else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/files/robots.txt")) # allows personalized robots.txt
-					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/files/robots.txt","txt",true,"robots.txt");
-				else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml"))
-					$this->readfile("robotssm.txt","txt",true,"robots.txt");
-				else
-					$this->readfile("robots.txt","txt",true,"robots.txt");
-			} else if ($this->action == "favicon" || $this->action == "apple-touch-icon" || $this->action == "apple-touch-icon-precomposed") {
-				$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
-				# favicon requested, regardless of what extension was requested, serve the one we have
-				if (locateFile($favfile,$ext,"png,jpg,gif,ico"))
-					$this->readfile($favfile,$ext,true);
-				else if (CONS_DEFAULT_FAVICON) {
-					$favfile = "favicon";
-					if (locateFile($favfile,$ext))
-						$this->readfile($favfile,$ext,true);
-				} else {
-					$this->fastClose(404);
-				}
-			} else if ($this->original_action == "sitemap.xml" || $this->original_action == "sitemap") {
-				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml"))
-					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml","txt",true,"sitemap.xml");
-				else
-					$this->fastClose(404);
-			}
-		}
-
 		# you cannot have an action named default, alas it's the same as index!
 		if ($this->action == "default") $this->action = "index";
 
@@ -278,6 +247,34 @@ class CPrescia extends CPresciaVar {
 				return true; // we keep going (only if we were able to reconnect to DB)
 			}
 			$this->close(true); # should abort script if readfile didn't
+		}
+		# special cases (robots,favicon, sitemap)
+		if ($this->context_str == "/") {
+			if ($this->original_action == "robots.txt" || $this->original_action == "robot.txt") {
+				if ($_SESSION[CONS_SESSION_NOROBOTS])
+					$this->readfile("robotsno.txt","txt",true,"robots.txt");
+				else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/files/robots.txt")) # allows personalized robots.txt
+					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/files/robots.txt","txt",true,"robots.txt");
+				else
+					$this->readfile("robots.txt","txt",true,"robots.txt");
+			} else if ($this->action == "favicon" || $this->action == "apple-touch-icon" || $this->action == "apple-touch-icon-precomposed") {
+				$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
+				# favicon requested, regardless of what extension was requested, serve the one we have
+				if (locateFile($favfile,$ext,"png,jpg,gif,ico"))
+					$this->readfile($favfile,$ext,true);
+				else if (CONS_DEFAULT_FAVICON) {
+					$favfile = "favicon";
+					if (locateFile($favfile,$ext))
+						$this->readfile($favfile,$ext,true);
+				} else {
+					$this->fastClose(404);
+				}
+			} else if ($this->original_action == "sitemap.xml" || $this->original_action == "sitemap") {
+				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml"))
+					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml","txt",true,"sitemap.xml");
+				else
+					$this->fastClose(404);
+			}
 		}
 		return false;
 	}

@@ -15,37 +15,27 @@
 	@ob_end_clean();
 	$this->close(false); # disconnects from DB
 
-	if ($exit) {
-		header("HTTP/1.1: 302 Found");
-		header("Pragma: public");
-		if (!is_numeric($cachetime) || $cachetime<5) $cachetime = 5;
-		header("Cache-Control: public,max-age=".$cachetime.",s-maxage=".$cachetime);
-		###############
-		header("Location: /".$file);
-		###############
-		$this->close(true);
-	} else {
-		header("HTTP/1.1: 200 Ok");
-		header("Pragma: public");
-		if (!is_numeric($cachetime) || $cachetime<5) $cachetime = 5;
-		header("Cache-Control: public,max-age=".$cachetime.",s-maxage=".$cachetime);
-		if ($mime != "")
-			header("Content-type: $mime");
-		else
-			header("Content-type: application/octet-stream");
-		header("Content-Description: File Transfer");
-		header("Content-Length: ".filesize($file));
-		if ($filename == "") $filename = $file;
-		$exfile = explode("/",$filename);
-		$filetitle = array_pop($exfile);
-		header("Content-Disposition: ".($attachMode?"attachment":"inline")."; filename=\"".$filetitle."\""); // estava como attachment
-		$this->headerControl->softHeaderSent = true;
-		###############
-		readfile($file);
-		###############
+	header("HTTP/1.1: 200 Ok");
+	header("Pragma: public");
+	if (!is_numeric($cachetime) || $cachetime<5) $cachetime = 5;
+	header("Cache-Control: public,max-age=".$cachetime.",s-maxage=".$cachetime);
+	if ($mime != "")
+		header("Content-type: $mime");
+	else
+		header("Content-type: application/octet-stream");
+	header("Content-Description: File Transfer");
+	header("Content-Length: ".filesize($file));
+	if ($filename == "") $filename = $file;
+	$exfile = explode("/",$filename);
+	$filetitle = array_pop($exfile);
+	header("Content-Disposition: ".($attachMode?"attachment":"inline")."; filename=\"".$filetitle."\""); // estava como attachment
+	$this->headerControl->softHeaderSent = true;
+	###############
+	readfile($file);
+	###############
 
-		if ($exit) $this->close(true);
-		@ob_start();
-		$this->dbconnect(); # reconnect
+	if ($exit) $this->close(true);
+	@ob_start();
+	$this->dbconnect(); # reconnect
 		
-	}
+	

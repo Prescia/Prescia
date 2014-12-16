@@ -4,6 +4,7 @@ TODO list is on site/github
 	Several statistics fixes. Improved most visited pages from 15 to 20
 	Fixed issues on custom fields escaping
 	Fixed issues on user preferences at bb_bi
+	Important fix on direct link handler
 14.12.13 BETA 0.93
 	Fixed template HTML parser escaping & to &amp; and breaking &quot; to &amp;quot;
 	Fixed bi_adm edit pane that have old template parameters in it
