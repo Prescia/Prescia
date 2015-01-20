@@ -4,8 +4,8 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","14.12.13 beta"); // (Y.m.d) ~ last stable: 0.91
-define ("AFF_VERSION",0.93);  
+define ("AFF_BUILD","15.1.20 beta"); // (Y.m.d) ~ last stable: 0.93
+define ("AFF_VERSION",0.94);  
 // Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 
 # -- XML parameter
@@ -110,10 +110,10 @@ class CPresciaVar {
 	# Client variables (change at config.php) ----
     var $debugmode = false; # running on debug mode? (from index, can be set with ?debugmode=true or CONS_DEVELOPER at settings.php)
 	var $languageTL = array(); # folder names for different languages, leave blank not to use it
+	var $forceVDIRTL = false; # if true, will force the language from languageTL to be the first on the {vdir} tag
 	var $forceLang = ""; # ignore all langage settings and use THIS language always
 	var $charset = "utf-8"; # kinda obvious
 	var $doctype = "html"; # html or xhtml. xhtml is very restrictive, beware
-	var $domainTranslator = array(); # if a site has multiple domains, you can foward each domain to a separate folder with domain=>folder here (no "/" allowed)
 	var $debugFile = ''; # Set this to the HTML template to debug areas (full path)
 	var $noBotProtectOnAjax = false; # if true, disable bot protection on ajax. Enabled usually by newsletter system
 	var $collectStatsOnTheseFiles = array(); # files inside the file manager that you wish to allow full run to collect stats (SLOW)

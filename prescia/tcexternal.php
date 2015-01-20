@@ -21,11 +21,19 @@ class CKTCexternal {
 				# {vdir|path} - will remove paths if using domainTranslation or any different context.
 				# path should be the FULL path FROM ROOT (ignoring CONS_INSTALL_ROOT)
 				# WILL ADD CONS_INSTALL_ROOT if necessary
-				if (!isset($params[0]) || $params[0]=='' || $params[0]=='/') return CONS_INSTALL_ROOT;
-				if (count($this->parent->domainTranslator)!=0 && isset($this->parent->domainTranslator[$this->parent->domain]) && $this->parent->domainTranslator[$this->parent->domain] != '') {
-					$params[0] = str_replace(trim($this->parent->domainTranslator[$this->parent->domain],"/"),"",$params[0]);
+				$vdir = "";
+				if ($this->parent->forceVDIRTL && count($this->parent->languageTL)>1) {
+					foreach ($this->parent->languageTL as $f => $l) {
+						if ($l == $_SESSION[CONS_SESSION_LANG]) {
+							$vdir = $f."/";
+							break;
+						}
+					}
 				}
-				if ($params[0] != '' && substr($params[0],0,strlen(CONS_INSTALL_ROOT)) != CONS_INSTALL_ROOT) $params[0] = CONS_INSTALL_ROOT.$params[0];
+				
+				if (!isset($params[0]) || $params[0]=='' || $params[0]=='/') return CONS_INSTALL_ROOT.$vdir;
+				if ($params[0] != '' && substr($params[0],0,strlen(CONS_INSTALL_ROOT)) != CONS_INSTALL_ROOT) $params[0] = CONS_INSTALL_ROOT.$vdir.$params[0];
+				else if ($vdir != '') $params[0] = CONS_INSTALL_ROOT.$vdir.substr($params[0],strlen(CONS_INSTALL_ROOT));
 				$params[0] = preg_replace("@/{1,}@","/",$params[0]);
 				return $params[0];
 			break;

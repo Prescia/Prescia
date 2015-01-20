@@ -68,7 +68,8 @@ else
 	define ("SWF_OBJECT","<object type=\"application/x-shockwave-flash\" classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" codebase=\"http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=9,0,28,0\" width=\"{W}\" height=\"{H}\">\n <param name=\"movie\" value=\"{FILE}\" /><param name=\"wmode\" value=\"transparent\" />\n <object type=\"application/x-shockwave-flash\" width=\"{W}\" height=\"{H}\" data=\"{FILE}\">  <param name=\"movie\" value=\"{FILE}\" /><param name=\"wmode\" value=\"transparent\" />\n <param name=\"pluginurl\" value=\"http://www.macromedia.com/go/getflashplayer\" />\n</object>\n</object>\n");
 
 # GZIP accepted
-define ("CONS_GZIP_OK",isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strstr( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip'));
+
+define ("CONS_GZIP_OK",isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false);
 
 # Force register globals and magic quotes OFF (@ php 5.4+ you can remove everything under this line)
 if (version_compare(phpversion(), '5.4.0', '<')) {

@@ -225,7 +225,7 @@
 	for ($c=0;$c<$n;$c++) {
 		list($hits,$page,$data,$hid) = $core->dbo->fetch_row($r);
 		$datediff = date_diff_ex($yesterday,$data);
-		$pages[$pagesRV[$page."_".$hid]][4][$datediff] = $hits;
+		if (isset($pagesRV[$page."_".$hid])) $pages[$pagesRV[$page."_".$hid]][4][$datediff] = $hits;
 	}
 
 	# get page translations from modules
@@ -514,7 +514,7 @@
 	#################################### REALTIME ########################################
 	function counthitsrt($template, $params, $data, $processed = false) {
 		if (!$processed)
-			$data['hits'] = isset($data['fullpath'])?count(explode(",",$data['fullpath'])):1;
+			$data['hits'] = isset($data['fullpath'])?count(explode(",",$data['fullpath']))-1:1;
 		return $data;
 	}
 	$core->runContent('STATSRT',$core->template,array("data > NOW() - INTERVAL 30 MINUTE","data_ini DESC",""),"_rvisitor",false,false,'counthitsrt');

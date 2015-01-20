@@ -9,7 +9,7 @@
 	define("CONS_FLATTENURL"				,"-"); // spaces will turn into this for filenames
 													 // IMPORTANT: if you change the safe folder, be sure to change it on the .htaccess
 	# -- CACHE and PERFORMANCE --
-	define("CONS_DEFAULT_MIN_OBJECTCACHETIME",15); // (s) time for default object time caches (they are always common-to-all-users caches)
+	define("CONS_DEFAULT_MIN_OBJECTCACHETIME",20); // (s) time for default object time caches (they are always common-to-all-users caches)
 	define("CONS_DEFAULT_MAX_OBJECTCACHETIME",300); // used to calculate best cache time from cachecontrol.dat
 	define("CONS_DEFAULT_MIN_BROWSERCACHETIME",1); // (s) too large a time will break statistics. This is for the WHOLE PAGE (checkActions runs everytime)
 	define("CONS_DEFAULT_MAX_BROWSERCACHETIME",25); // used to calculate best cache time from cachecontrol.dat
@@ -57,7 +57,7 @@
 		define ("CONS_SLOWQUERY_TH"		, 2); # queries that take longer than this will trigger an internal (log) warning
 		define ("CONS_MAXRUNCONTENTSIZE",50000); // lists larger then this will result a fatal error due to overflow of the TC system (paging should prevent this altogether, so this catches infinite loops)
 
-		define("CONS_BOTPROTECT"		,false); // monitors calls from same IP and prevent too many in a short time (see CONS_BOTPROTECT_MAXHITS)
+		define("CONS_BOTPROTECT"		,true); // monitors calls from same IP and prevent too many in a short time (see CONS_BOTPROTECT_MAXHITS)
 		define("CONS_BOTPROTECT_MAXHITS",45); // how many hits one IP can perform per MINUTE. More than that will trigger a temporary IP ban
 											  // KEEP IN MIND this also count ajax and other hits. So be conservative
 		define("CONS_BOTPROTECT_BANTIME",5); // how long, in minutes, someone caught by BOTPROTECT should be banned from the system
@@ -84,7 +84,7 @@
 		define ("CONS_SLOWQUERY_TH"		,6);
 		define ("CONS_MAXRUNCONTENTSIZE",30000);
 
-		define("CONS_BOTPROTECT"		,false);
+		define("CONS_BOTPROTECT"		,true);
 		define("CONS_BOTPROTECT_MAXHITS",60);
 
 		define("CONS_BOTPROTECT_BANTIME",1);

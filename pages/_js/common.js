@@ -275,10 +275,10 @@ function startAjaxSelectFill(container,module,ajaxQuery,sourceModule,theForm,add
 function numberFormat(n,decimals,tsep,dsep) { // prototype/jQuery compatible
 	if (!tsep) tsep = '.';
 	if (!dsep) dsep = ',';
-	if (decimals == false|| isNaN(decimals)) decimals = 2;
-	sign = n < 0 ? "-" : "";
-    i = parseInt(n = Math.abs(+n || 0).toFixed(decimals)) + "";
-    j = (j = i.length) > 3 ? j % 3 : 0;
+	if (decimals === false|| isNaN(decimals)) decimals = 2;
+	var sign = n < 0 ? "-" : "";
+    var i = parseInt(n = Math.abs(+n || 0).toFixed(decimals)) + "";
+    var j = (j = i.length) > 3 ? j % 3 : 0;
     return sign + (j ? i.substr(0, j) + tsep : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + tsep) + (decimals ? dsep + Math.abs(n - i).toFixed(decimals).slice(2) : "");
 }
 function executeAjaxSelectFill(rawData) {

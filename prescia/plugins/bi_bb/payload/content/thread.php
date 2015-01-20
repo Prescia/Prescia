@@ -27,8 +27,6 @@
 		$core->addLink("ckeditor/ckeditor.js",true);
 		$core->addLink("validators.js");
 	}
-	// if we have image, add shadowbox
-	if ($core->storage['friendlyurldata']['image'] == 'y') $core->addScript("shadowbox");
 
 	// -- this will apply image tags and use _toggles
 	$core->templateParams['core'] = &$this->parent;
@@ -36,6 +34,14 @@
 	$core->storage['friendlyurldata'] = prepareDataToOutput($core->template,$core->templateParams,$core->storage['friendlyurldata']);
 	$core->template->fill($core->storage['friendlyurldata']);
 	// --
+	// image meta
+	if ($core->storage['friendlyurldata']['image'] == 'y') {
+		$core->addScript("shadowbox"); 
+		$core->template->constants['METAFIGURE'] = str_replace("//","/",str_replace("files/","/",str_replace(CONS_FMANAGER,"/",$core->storage['friendlyurldata']['image_2'])));
+	}
+	
+	//print_r($core->storage['friendlyurldata']);
+	//die();
 	
 	// add data from this FORUM data
 	$core->template->assign("forumurla",$core->storage['friendlyurldata']['forum_urla'] != ''?$core->storage['friendlyurldata']['forum_urla']."/":"");
@@ -44,7 +50,9 @@
 		$core->template->assign("videoembed",getVideoFrame($core->storage['friendlyurldata']['video'],0,0,'embed-responsive-item'));
 	} else
 		$core->template->assign("_hasvideo");
+
 	
+			
 	// prepare to get posts
 	$idf = $core->storage['friendlyurldata']['id_forum'];
 	$idt = $core->storage['friendlyurldata']['id'];

@@ -150,36 +150,6 @@ class CPrescia extends CPresciaVar {
 	function parseRequest() { # domainLoad → PARSEREQUEST -> loadIntlControl -> checkActions -> renderPage -> showTemplate
 		# Handle several request exceptions, optimization and security issues related to URI
 
-		$ext = $this->original_ext;
-
-		if (!isset($_SESSION[CONS_SESSION_NOROBOTS])) { # norobots controller
-			$_SESSION[CONS_SESSION_NOROBOTS] = (strpos(",".CONS_NOROBOTDOMAINS.",",$this->domain) !== false ||
-											  strpos(",".CONS_NOROBOTDOMAINS.",",str_replace("www.","",$this->domain)) !== false);
-		}
-
-		# domainTranslator (allows you to translate a sub-domain to a folder)
-		if (count($this->domainTranslator)>0) { #
-			if (isset($this->domainTranslator[$this->domain]) && $this->domainTranslator[$this->domain] != '') {
-				array_shift($this->context); // remove root
-				if (count($this->context)>0) {
-					$folder = array_shift($this->context);
-					if ($folder == 'm' || (CONS_USE_I18N && isset($this->languageTL[$folder]))) { # mobile or language translator folder tag
-						array_unshift($this->context,trim($this->domainTranslator[$this->domain],"/"));
-						array_unshift($this->context,$folder);
-					} else {
-						array_unshift($this->context,$folder);
-						array_unshift($this->context,trim($this->domainTranslator[$this->domain],"/"));
-					}
-				} else
-					array_unshift($this->context,trim($this->domainTranslator[$this->domain],"/"));
-				if ($this->context[0] != '') array_unshift($this->context,"");
-				# rebuilds context based on changes
-				$this->context_str = implode("/",$this->context)."/";
-				if ($this->context_str[0] != "/") $this->context_str = "/".$this->context_str;
-				$this->original_context_str = $this->context_str; # storage of original call in case script redirects us, also used by stats
-			}
-		}
-
 		# you cannot have an action named default, alas it's the same as index!
 		if ($this->action == "default") $this->action = "index";
 
@@ -249,6 +219,10 @@ class CPrescia extends CPresciaVar {
 			$this->close(true); # should abort script if readfile didn't
 		}
 		# special cases (robots,favicon, sitemap)
+		if (!isset($_SESSION[CONS_SESSION_NOROBOTS])) { # norobots controller
+			$_SESSION[CONS_SESSION_NOROBOTS] = (strpos(",".CONS_NOROBOTDOMAINS.",",$this->domain) !== false ||
+											  strpos(",".CONS_NOROBOTDOMAINS.",",str_replace("www.","",$this->domain)) !== false);
+		}
 		if ($this->context_str == "/") {
 			if ($this->original_action == "robots.txt" || $this->original_action == "robot.txt") {
 				if ($_SESSION[CONS_SESSION_NOROBOTS])
@@ -291,10 +265,15 @@ class CPrescia extends CPresciaVar {
 				if (isset($this->languageTL[$this->context[1]])) { # is in a language context
 					$temp = $this->context[1];
 					$_SESSION[CONS_SESSION_LANG] = $this->languageTL[$this->context[1]]; // get the language from the folder
+					if (is_object($this->template)) {
+						$this->template->constants['SESSION_LANG'] = $_SESSION[CONS_SESSION_LANG];
+						$this->template->current_language= $_SESSION[CONS_SESSION_LANG];
+					}
 					array_shift($this->context); # root
 					array_shift($this->context); # language
 					array_unshift($this->context,""); # puts back root
 					$this->context_str = substr($this->context_str,strlen($temp)+1);
+					$this->original_context_str = $this->context_str;
 				}
 			}
 
@@ -989,6 +968,7 @@ class CPrescia extends CPresciaVar {
 		$this->headerControl->baseHeader = $action == '403'?'403':($action == '503'?'503':'404');
 		if ($action != "403" && $action != "404" && $action != "503") {
 			$this->warning[] = "404 because template not found: ".$context.$action;
+			$this->action = '404';
 
 			$cfile = CONS_PATH_PAGES.$_SESSION['CODE']."/template".$context.$this->headerControl->baseHeader.".html";
 			if (is_file($cfile)) return $cfile;
@@ -1161,8 +1141,9 @@ class CPrescia extends CPresciaVar {
 			$metadata .= "\t<meta property=\"og:title\" content=\"".str_replace("\"","",$this->template->constants['PAGE_TITLE'])."\" />\n";
 			$metadata .= "\t<meta property=\"og:url\" content=\"".$this->template->constants['CANONICAL']."\" />\n";
 			if (isset($this->template->constants['METAFIGURE']) && $this->template->constants['METAFIGURE'] != "") {
-				$metadata .= "\t<meta property=\"og:image\" content=\"/files/".$this->template->constants['METAFIGURE']."\" />\n";
-				$metadata .= "\t<link rel=\"image_src\" href=\"/files/".$this->template->constants['METAFIGURE']."\" />\n";
+				if ($this->template->constants['METAFIGURE'][0] != '/') $this->template->constants['METAFIGURE'] = "/".$this->template->constants['METAFIGURE'];
+				$metadata .= "\t<meta property=\"og:image\" content=\"/files".$this->template->constants['METAFIGURE']."\" />\n";
+				$metadata .= "\t<link rel=\"image_src\" href=\"/files".$this->template->constants['METAFIGURE']."\" />\n";
 			}
 			$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
 			if (locateFile($favfile,$ext)) {

@@ -1,8 +1,8 @@
 <? # will gzip files, if possible. Note this will also auto-detect the latest jquery min version if you call jquery.js
 
 
-	define ('CONS_CACHE_TIME',86400); // 1 day
-	$gzip = isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strstr( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip');
+	define ('CONS_CACHE_TIME',604800); // 7 days
+	$gzip = isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false;
 
 	function cReadFile($ofile) {
 	  if (is_file($ofile)) {

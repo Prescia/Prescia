@@ -86,7 +86,7 @@
 		}
 		$pw = $pages[$c]['hits'] / $biggest;
 		$pages[$c]['width'] = ceil($graphWidth * $pw);
-		$pages[$c]['percent'] = 100*$pages[$c]['hits']/$phits;
+		$pages[$c]['percent'] = 100*$pages[$c]['hits']/($phits==0?1:$phits);
 		if ($pages[$c]['percent']<1) break;
 		$output .= $graphObj->techo($pages[$c]);
 	}
@@ -116,7 +116,7 @@
 		if ($outsideExits > $pages[$c]['hits'] && !$showOE) {
 			$pw = $outsideExits / $biggest;
 			$data = array('width' => ceil($graphWidth * $pw),
-						  'percent' => 100*$outsideExits/$phits,
+						  'percent' => 100*$outsideExits/($phits==0?1:$phits),
 						  'hits' => $outsideExits,
 						  'pagefoward' => "INTERNET"
 						  );

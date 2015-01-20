@@ -7,9 +7,11 @@
 
 	# This is a ubber-simple URL catcher that can be faster (easier to use or an alternate if you don't have) than CURL for simple URL's
 	# Supports basc authentication on the URL since it uses parse_url (check PHP's documentation on that)
+	# if openssl is installed, also supports https 
 	# $response[0] is the header data (array)
 	# $response[1] is the actual content
 	function loadURL($url,$agent="PHP",$method = "get") {
+		ini_set("allow_url_fopen", 1);
 	    $url_parts = parse_url($url);
 	    $response = '';
 	    if(isset($url_parts['query'])) {
@@ -22,9 +24,9 @@
 	    } else
 	    	$page = "/";
 
-	    if(!isset($url_parts['port'])) $url_parts['port'] = 80;
+	    if(!isset($url_parts['port'])) $url_parts['port'] = $url_parts['scheme'] == 'https'?443:80;
 
-	    $fp = fsockopen($url_parts['host'], $url_parts['port'], $errno, $errstr, 30);
+	    $fp = fsockopen(($url_parts['scheme'] == 'https'?'ssl://':'').$url_parts['host'], $url_parts['port'], $errno, $errstr, 10);
 	    if ($fp) {
 	        $out = '';
 	        if($method == 'post' && isset($url_parts['query'])) {
@@ -96,4 +98,22 @@
 		}
 		return false;
 
+	}
+
+	# Get number of views on a YOUTUBE video!
+	# Send video code, not url
+	function getYoutubeViews($code) {
+		# 2015.1.1: <div class="watch-view-count">16,520,660</div>
+		$html = loadURL('https://www.youtube.com/watch?v='.$code);
+		if ($html !== false) {
+			$html = $html[1];
+			$haswvc = strpos($html,'watch-view-count',5000);
+			if ($haswvc > 0) {
+				$initpos = strpos($html,">",$haswvc);
+				$endpos = strpos($html,"<",$initpos);
+				return str_replace(".","",str_replace(",","",substr($html,$initpos+1,$endpos-$initpos-1)));
+			} else
+				return "getYoutubeviews:counter not found";
+		} else
+			return "getYoutubeviews:loadURL fail";
 	}

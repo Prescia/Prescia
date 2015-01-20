@@ -1155,6 +1155,10 @@
 	}
 
 	$pinit = isset($_REQUEST['p_init'])?$_REQUEST['p_init']:0;
+	if (isset($_REQUEST['vaction']) && $_REQUEST['vaction'] == 'repage') {
+		$pinit = 0;
+		unset($_REQUEST['p_init']);
+	} 
 	$psize = $core->templateParams['p_size'];
 	$core->template->assign("p_size",$psize);
 	$core->template->assign("p_init",$pinit);

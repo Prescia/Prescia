@@ -10,7 +10,7 @@ class mod_bi_stats extends CscriptedModule  {
 	var $doNotLogMe = false; // any plugin, page or automato that is aware of this plugin can set this to TRUE to prevent logging this page
 	var $forceLogMe = false; // oposite of the above
 	var $doNotLogAdmins = false; // if true, if you are looged with an account of a higher level of admRestrictionLevel, you won't be logged
-	var $detectVisitorByIP = false; // if a visitor have cookies DISABLED, then it will track by IP
+	var $detectVisitorByIP = true; // if a visitor have cookies DISABLED, then it will track by IP
 	###########################
 
 	function loadSettings() {
@@ -275,12 +275,15 @@ class mod_bi_stats extends CscriptedModule  {
 			if ($core->dbo->query("SELECT page,fullpath FROM ".$core->modules['statsrt']->dbname." WHERE ip='".CONS_IP."'",$r,$n) && $n != 0) {
 				list($page,$fullpath) = $core->dbo->fetch_row($r);
 				$alreadyVisited = true; // by IP
+			} else {
+				$page = "";
+				$fullpath = "";
 			}
 
 			# -- REFERER STATS --			
 			
 			if (!isset($_COOKIE['session_visited'])) { // no cookies, first visit or cookies disabled
-				if (!isset($_COOKIE[session_id()]) && $this->detectVisitorByIP && $alreadyVisited) { // NOT first visit, but no cookies at all, and we want to track by IP
+				if ($this->detectVisitorByIP && $alreadyVisited) { // NOT first visit, but no cookies?, and we want to track by IP
 					$logByIP = true;
 				}
 				if (!$logByIP) {
@@ -405,7 +408,7 @@ class mod_bi_stats extends CscriptedModule  {
 					}
 				}
 			}
-			if (!$ok) { // second+ hit of day
+			if (!$ok || $x !== false) { // second+ hit of day
 				if (!isset($_COOKIE['session_visited']) && !$logByIP) {
 					// first hit 1 1 0
 					$core->dbo->simpleQuery("UPDATE ".$core->modules['stats']->dbname." SET hits=hits+1, uhits=uhits+1 ".($isReturning?", rhits=rhits+1":"").($isAdm?", ahits=ahits+1":"")." WHERE data = '".date("Y-m-d")."' AND hour = '".date("H")."' AND page=\"".$pageToBelogged."\" AND hid=\"".$id."\" AND lang=\"".$_SESSION[CONS_SESSION_LANG]."\"");

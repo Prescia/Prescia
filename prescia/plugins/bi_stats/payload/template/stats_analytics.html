@@ -317,21 +317,21 @@
 			<strong>Visitantes atuais</strong>:<br/>
 			<table style="border:0px;width:900px" cellspacing="0">
 			<tr>
-				<td style="border-bottom:1px solid #ccc">Início</td>
-				<td style="border-bottom:1px solid #ccc">Último</td>
+				<td style="border-bottom:1px solid #ccc">Último hit</td>
 				<td style="border-bottom:1px solid #ccc">Página</td>
 				<td style="border-bottom:1px solid #ccc">Hits</td>
 				<td style="border-bottom:1px solid #ccc">Navegador</td>
+				<td style="border-bottom:1px solid #ccc">IP</td>
 				<td style="border-bottom:1px solid #ccc">Referência</td>
 			</tr>
 			{_rvisitor}
 			<tr>
-				<td>{data_ini|date|H:i:s}</td>
-				<td>{data|date|H:i:s}</td>
+				<td><span title="start at {data_ini|date|H:i:s}">{data|date|H:i:s}</span></td>
 				<td>{pagelast}</td>
 				<td>{hits}</td>
-				<td><img src="/pages/_common/files/adm/b{agentcode}.gif" alt="{agentcode}" /> - {agent|truncate|20}</td>
-				<td>{referer|truncate|100}</td>
+				<td><img src="/pages/_common/files/adm/b{agentcode}.gif" alt="{agentcode}" /> - {agent|truncate|24}</td>
+				<td>{ip}</td>
+				<td>{referer|truncate|70}</td>
 			</tr>
 			{/rvisitor}
 			</table>

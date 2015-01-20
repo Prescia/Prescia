@@ -1,10 +1,28 @@
 TODO list is on site/github
 
+15.01.20 BETA 0.94 Stabilization version
+	Fixed small issue on first-time statistics by IP
+15.01.16 BETA 0.93
+	Fixed administrative list/search title vanishing on search
+	Fixed search not getting results when paged
+	Added IP to realtime statistics pane
+	Fixed issue on i18n loading template tags after template loaded (would cause wrong i18n tag to display on xml tag on first language change hit)
+	Improved gzip detection
+	Added css to optimizer on _js, improved cache from 1 to 7 days
+15.01.12 BETA 0.93
+	Fixed small issue on page statistics
+	Fixed small issue no nurmberFormat (javascript)
+	Fixed issue where, when no template found during plugin search, it would not force 404, causing it to be logged (also, potential security breach)
+15.01.04 BETA 0.93
+	Implemented getYoutubeViews
+14.12.26 BETA 0.93
+	Fixed METAFIGURE rendering
+14.12.24 BETA 0.93
+	Implemented forceVDIRTL to force language folder on {vdir}
 14.12.14 BETA 0.93
 	Several statistics fixes. Improved most visited pages from 15 to 20
 	Fixed issues on custom fields escaping
 	Fixed issues on user preferences at bb_bi
-	Important fix on direct link handler
 14.12.13 BETA 0.93
 	Fixed template HTML parser escaping & to &amp; and breaking &quot; to &amp;quot;
 	Fixed bi_adm edit pane that have old template parameters in it

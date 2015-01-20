@@ -14,7 +14,7 @@
   |	  Displayed ab test data have 2 numbers: on developer mode, and not on developer mode. Some (where displayed) were run with cache (CONS_CACHE) on
   |   AB test is made to detect choke points and see how the caching is improving performance
   | -----------------------------------------------
-  | Last ab test: 14.9.15 (beta 0.6) on an i7-3770 Windows 7 Apache 2.2 php 5.4. Intradebook.com site model
+  | Last ab test: 15.1.20 (beta 0.94) on an i7-3770 Windows 7 Apache 2.2 php 5.4. Daisuki.com site model
 -*/
 
 # ab -n50 total mean: 1ms
@@ -48,7 +48,7 @@ require CONS_PATH_INCLUDE."dbo/".CONS_AFF_DATABASECONNECTOR.".php";
 require CONS_PATH_SYSTEM."coreVar.php";
 require CONS_PATH_SYSTEM."core.php";
 # Create core version according to debug/developer mode (note: does NOT connect to database yet)
-# ab -n50 total mean: 16ms
+# ab -n50 total mean: 17ms
 
 if (CONS_DEVELOPER || isset($_GET['debugmode'])) {
 	require CONS_PATH_SYSTEM."coreFull.php";
@@ -97,25 +97,30 @@ if (CONS_AFF_ERRORHANDLER) { // override PHP error messaging? (if true, will not
 	$crap = set_error_handler('PresciaErrorHandler');
 	unset($crap);
 }
-# ab -n50 total mean: 19ms 16ms
+# ab -n50 total mean: 17ms 16ms
 
 require CONS_PATH_INCLUDE."getBrowser.php"; # this will also detect if we are on mobile, required at domainLoad
 $core->domainLoad(); // locks domain, load config, start i18n, parses requested URL
+
+# ab -50 total mean: 28ms 26ms
+
 define("CONS_FMANAGER",CONS_PATH_PAGES.$_SESSION['CODE']."/files/");
 $core->servingFile = $core->checkDirectLink(); // if serving a file, will run end here (if file is not set to statistics collection)
 if (CONS_CACHE && !$core->servingFile) $core->cacheControl->startCaches(); // detects which cache to use from auto-throttle system
 
 # -- database and metadata load
 if (!$core->dbconnect()) $core->offlineMode = true;
+# ab -n50 total mean: 32ms 32ms
+
 if (!$core->loadMetadata()) $core->errorControl->raise(1,"metamodel fault"); // loadMetadata loads dimconfig
 if ($core->debugmode) $core->applyMetaData(); // only in debug. Executes onMeta's and save metadata/sql changes
-# ab -n50 total mean: 546ms 28ms
+# ab -n50 total mean: 360ms 32ms
 
 # -- start parsing the request
 if (!$core->servingFile) {
 	// if serving file, we just want to enable the database and run onEcho plugins
 	$core->parseRequest();
-	# ab -n50 total mean: 557ms 29ms (27ms with cache enabled)
+	# ab -n50 total mean: 360ms 32ms (27ms with cache enabled)
 	
 	# -- which page I want and context are ready on parseRequest, load template, so get the template core (in case we need to dump an error, we can do it with the template)
 	require CONS_PATH_INCLUDE."template/tc.php";
@@ -151,12 +156,12 @@ if (!$core->servingFile) {
 	}
 		
 	# -- at this point, the framework overhead is done. From now on, it's mostly the site code.
-	# ab -n50 total mean: 575ms 38ms (36ms with cache enabled)
+	# ab -n50 total mean: 375ms 44ms (36ms with cache enabled)
 
 	# -- actions and cron run regardless of cache restrictions
 	$core->checkActions();
 	$core->cronCheck();
-	# ab -n50 total mean: 624ms 46ms (41ms with cache enabled)
+	# ab -n50 total mean: 402ms 46ms (41ms with cache enabled)
 
 	# -- cache test
 	if (CONS_CACHE && !isset($_REQUEST['nocache'])) {
@@ -181,7 +186,7 @@ if (!$core->servingFile) {
 		$PAGE = $core->showTemplate();
 		unset($core->template);
 	}
-	# ab -n50 total mean: 649ms 72ms (42m with cache enabled)
+	# ab -n50 total mean: 411ms 77ms (42m with cache enabled)
 	
 	# -- build headers
 	$core->headerControl->showHeaders();
@@ -228,4 +233,4 @@ if (CONS_GZIP_OK && $core->layout < 2 && strlen($PAGE)>CONS_GZIP_MINSIZE) {
 unset($PAGE);
 unset($core);
 
-# ab -n50 total mean: 673ms 74ms (47 with cache enabled)
+# ab -n50 total mean: 417ms 77ms (47 with cache enabled)

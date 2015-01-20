@@ -20,7 +20,7 @@
     <input type="hidden" name="akrreferer" value="{akrreferer}" /> {_}which module are we to return to (edit) after actions on this list{/}
     <input type="hidden" name="akrrefererkeys" value="{akrrefererkeys}" /> {_}keys to the module we are to return to{/}
     <input type="hidden" name="multiSelectedIds" id="multiSelectedIds" value="{multiSelectedIds}" /> {_}which items are selected on this list{/}
-	<input type="hidden" name="notitle" id="frm_notitle" value="1"/> {_}flag that prevents list title on ajax calls{/}
+	<input type="hidden" name="notitle" id="frm_notitle" value="1"/> {_}flag that prevents list title on ajax calls, set 0 when resetting search{/}
 	{skeys}
 {/removeonajax}
 {_removeonpopup}
@@ -43,7 +43,7 @@
 		<div class="lxmladm_subtitle">{_t}filter_options{/t}</div>
 		<div style="text-align:right;padding:5px;">
 		    {_filterOn} <input type="button" onclick="waitWhileLoad(); document.location='list.html?module={module}&searchFieldOn=1';" class="ladm_buttonred" value="{_t}reset{/t}" style="margin-right:20px"/>{/filterOn}
-		    <input class="ladm_buttongreen" type="submit" onclick="waitWhileLoad();" value="{_t}begin_search{/t}"/>
+		    <input class="ladm_buttongreen" type="submit" onclick="$('vaction').value='repage';$('p_init').value='0';$('frm_notitle').value='0';waitWhileLoad();" value="{_t}begin_search{/t}"/>
 		</div>
 
 		{_select_field}<span id="{field}_ara"><select name="{field}" style="width:{width}" id="{field}" onchange="selectChange('{field}');">{_optional}<option value=""></option>{/optional}{_options}<option value="{ids}" {selected|select}>{title} ({ids})</option>{/options}</select></span>{/select_field}
@@ -94,7 +94,7 @@
 
 		<div style="text-align:right;padding: 5px">
 		    {_filterOn} <input type="button" onclick="waitWhileLoad(); document.location='list.html?module={module}&searchFieldOn=1';" class="ladm_buttonred" value="{_t}reset{/t}" style="margin-right:20px"/>{/filterOn}
-		    <input class="ladm_buttongreen" type="submit" onclick="$('vaction').value='repage';waitWhileLoad();" value="{_t}begin_search{/t}"/>
+		    <input class="ladm_buttongreen" type="submit" onclick="$('vaction').value='repage';$('p_init').value='0';$('frm_notitle').value='0';waitWhileLoad();" value="{_t}begin_search{/t}"/>
 		</div>
 	</div>
 
