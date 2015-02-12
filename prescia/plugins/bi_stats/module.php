@@ -173,6 +173,8 @@ class mod_bi_stats extends CscriptedModule  {
 
 	function onEcho(&$PAGE){
 		
+		
+		
 		$core = &$this->parent;
 
 		$pageToBelogged = substr($core->original_context_str,1);
@@ -202,7 +204,7 @@ class mod_bi_stats extends CscriptedModule  {
 			}
 			$pageToBelogged .= $act;
 			$pageToBelogged = str_replace('"',"",$pageToBelogged); # there are exploits everywhere!
-
+			
 			# is this a BOT? atm we consider unknown browsers as bots to make this faster
 			$isBot = CONS_BROWSER == "UN";
 
@@ -239,14 +241,14 @@ class mod_bi_stats extends CscriptedModule  {
 			}
 
 			# -- BOT STATS (if it's a bot, leave after this part) --
-			if ($isBot) {
-				if ($this->logBOTS) {
-					$fd = fopen (CONS_PATH_LOGS.$_SESSION['CODE']."/bots".date("Ymd").".log", "a");
-					if ($fd) {
-						fwrite($fd,CONS_IP." ".(isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:"")." ? ".$this->parent->context_str.$this->parent->action."\n");
-						fclose($fd);
-					}
+			if ($this->logBOTS) {
+				$fd = fopen (CONS_PATH_LOGS.$_SESSION['CODE']."/bots".date("Ymd").".log", "a");
+				if ($fd) {
+					fwrite($fd,CONS_IP." ".(isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:"")." ? ".$this->parent->context_str.$this->parent->action."\n");
+					fclose($fd);
 				}
+			}
+			if ($isBot) {
 				$core->dbo->query("SELECT hits FROM ".$core->modules['statsbots']->dbname." WHERE data='".date("Y-m-d")."'",$r,$n);
 				if ($n==0) {
 					# first bot visit

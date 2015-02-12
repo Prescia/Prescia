@@ -9,17 +9,17 @@
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto
   | Free to use, change and redistribute, but please keep the above disclamer.
   | Uses: -
-  | Revision: 2014.10.22
-  | Latest versions at revision: CH=38, FF=33, SA=8, OP=25, IE=11
+  | Revision: 2015.2.9
+  | Latest versions at revision: CH=40, FF=45, SA=8, OP=25, IE=11
  
 -*/
 
 	# List of supported browsers:
 	# MSIE 5~		(9.x- legacy)	IE
-	# Firefox 1~	(12.x- legacy)	FF
+	# Firefox 1~	(18.x- legacy)	FF
 	# Opera 9~		(9.x- legacy)	OP
 	# Android 		(all legacy)	AN
-	# Chrome 1~		(17.x- legacy)	CH  (most android phones now use this, otherwise AN)
+	# Chrome 1~		(24.x- legacy)	CH  (most android phones now use this, otherwise AN)
 	# Safari 3~		(4.x- legacy)	SA	(note: some android phones use Safari 4)
 	# Konqueror		(legacy)		KO
 	# BlackBerry	(legacy)		MO	(note: Newer versions of these phones run Android, thus Android browser = safari/chrome)
@@ -51,8 +51,8 @@
 			$browser = $translation[CONS_BROWSER]." ".CONS_BROWSER_VERSION;
 			$legacy = (CONS_BROWSER == 'OP' && CONS_BROWSER_VERSION < 9.5) ||	/* OP-VERSION */
 					  (CONS_BROWSER == 'IE' && CONS_BROWSER_VERSION < 9) ||		/* IE-VERSION */
-					  (CONS_BROWSER == 'FF' && CONS_BROWSER_VERSION < 12) ||	/* FF-VERSION */
-					  (CONS_BROWSER == 'CH' && CONS_BROWSER_VERSION < 17) ||	/* CH-VERSION */
+					  (CONS_BROWSER == 'FF' && CONS_BROWSER_VERSION < 19) ||	/* FF-VERSION */
+					  (CONS_BROWSER == 'CH' && CONS_BROWSER_VERSION < 25) ||	/* CH-VERSION */
 					  (CONS_BROWSER == 'SA' && CONS_BROWSER_VERSION < 4) ||		/* SA-VERSION */
 					  CONS_BROWSER == 'KO' ||
 					  CONS_BROWSER == 'MO' ||
@@ -61,15 +61,19 @@
 			return array($browser,$legacy,defined(CONS_BROWSER_ISMOB)?CONS_BROWSER_ISMOB:CONS_BROWSER=='MO',CONS_BROWSER_SO,CONS_BROWSER,CONS_BROWSER_VERSION);
 		}
 		$browser = isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:"";
+		if ($browser != '')
+			$so = preg_match("@windows@i",$browser)?"Windows":
+							(preg_match("@android@i",$browser)?"Android":
+							 (preg_match("@linux@i",$browser)?"Linux":
+							  (preg_match("@mac@i",$browser)||preg_match("@ios@i",$browser)?"Mac OS":"??")
+							 )
+							);
+		else
+			$so = "??";
+		if ($browser == "" || preg_match("@spider|crawler|bot@i",$browser)) return array("UNKNOWN/",true,false,$so,"UN",0); // no agent or known spider/crawler
 		$ismob = preg_match("@mobile|android|iphone|ipad@i",$browser,$regs);
-		$so = preg_match("@windows@i",$browser)?"Windows":
-						(preg_match("@android@i",$browser)?"Android":
-						 (preg_match("@linux@i",$browser)?"Linux":
-						  (preg_match("@mac@i",$browser)||preg_match("@ios@i",$browser)?"Mac OS":"??")
-						 )
-						);
 		$legacy = false; // non w3c // ccs3+ sufficiently compliant
-		if ($browser == "") return array("UNKNOWN/",true,false,$so,"UN",0);
+		
 		if (strpos($browser,"MSIE") !== false || strpos($browser,"Opera")!== false) { # Old OPERAs reported as MSIE, IE 10- reported as MSIE
 			if (strpos($browser,"Opera")!== false) {
 				if (preg_match("@Opera/([0-9\.]*)@",$browser,$regs)==1) {
@@ -91,10 +95,10 @@
 					$v = $vi[0]; // w/o dot
 					if (isset($vi[1])) $v .= ".".$vi[1];
 					if ($v < 9) $legacy = true; 								/* old IE-VERSION */
-				} else {
-					$browser = "Internet Explorer";
-					$legacy = true;
-					$v = 0;
+					if ($v < 4) return array("UNKNOWN/Internet Explorer Poser",true,false,$so,"UN",0);	// too old to be true
+				} else { // harvester or bad MSIE tag
+					$browser = substr($browser,0,50)."...";
+					return array("UNKNOWN/".$browser,true,false,$so,"UN",0);
 				}
 				return array($browser,$legacy,$ismob,$so,"IE",$v);
 			}
@@ -117,7 +121,8 @@
 				$vi = explode(".",$regs[1]);
 				$v = $vi[0]; // w/o dot
 				if (isset($vi[1])) $v .= ".".$vi[1];
-				if ($v < 12) $legacy = true; 									/* FF-VERSION */
+				if ($v < 19) $legacy = true; 									/* FF-VERSION */
+				if ($v < 4) return array("UNKNOWN/Firefox Poser",true,false,$so,"UN",0);	// too old to be true, most firefox poser bots are 3.5 or 3.6
 			} else {
 				$browser = "Firefox";
 				$legacy = true;
@@ -129,7 +134,8 @@
 			$vi = explode(".",$regs[1]);
 			$v = $vi[0]; // w/o dot
 			if (isset($vi[1])) $v .= ".".$vi[1];
-			if ($v < 17) $legacy = true; 										/* CH-VERSION */
+			if ($v < 25) $legacy = true; 										/* CH-VERSION */
+			if ($v < 10) return array("UNKNOWN/Firefox Poser",true,false,$so,"UN",0);	// too old to be true
 			return array($browser,$legacy,$ismob,$so,"CH",$v);
 		} else if (strpos($browser,"Safari") !== false || (strpos($browser,"AppleWebKit") !== false && strpos($browser,"Android") === false)) {
 			if (preg_match("@Version/([0-9\.]*)@",$browser,$regs)==1) {
@@ -148,7 +154,8 @@
 			return array("Android Browser",true,$ismob,$so,"AN",0);
 		} else if (strpos($browser,"Konqueror/") !== false) {
 			return array("Konqueror",true,$ismob,$so,"KO",0);
-		} else if ($ismob || strpos($browser,"BlackBerry") !== false || strpos($browser,"SonyEricsson") !== false) {
+		} else if ($ismob || strpos($browser,"BlackBerry") !== false || strpos($browser,"SonyEricsson") !== false || strpos($browser,"Samsung") !== false) {
+			$browser = substr($browser,0,50)."...";
 			return array("MOBILE/".$browser,true,true,$so,"MO",0);
 		} else if (strlen($browser)>50) {
 			$browser = substr($browser,0,50)."...";

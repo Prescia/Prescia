@@ -67,7 +67,7 @@ class CCacheControl {
 	} # dumpTemplatecaches
 #-
 	function cacheuid($shared=false) { // returns a string with a unique cache key for the most common differences among users
-		return $_SESSION[CONS_SESSION_LANG].(!$shared && $this->parent->logged()?$_SESSION[CONS_SESSION_ACCESS_USER]['id']:'x');
+		return $_SESSION[CONS_SESSION_LANG].(!$shared && $this->parent->logged()?$_SESSION[CONS_SESSION_ACCESS_USER]['id']:'x').md5($this->parent->domain);
 	}
 #-
 	function getCachedContent($tag,$expiration=-1) { // $expiration=0 to ignore expiration alltogether

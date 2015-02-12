@@ -62,6 +62,7 @@
 			case CONS_TIPO_LINK:
 				$rmodule = $core->loaded($field[CONS_XML_MODULE]);
 				$where = $module->getRemoteKeys($rmodule,$data);
+			
 				if (count($where)==0) continue; // error on getRemoteKeys
 
 				$sql = "SELECT ".$rmodule->title." FROM ".$rmodule->dbname." as ".$rmodule->name." WHERE ".implode(" AND ",$where);

@@ -1,8 +1,11 @@
 <?
 
-
+	$graphWidth = 400;
+	
 	$core->addLink("calendar/dyncalendar.css");
 	$core->addLink("calendar/dyncalendar.js");
+	
+	if ($this->logBOTS) $core->log[] = "logBOTS is enabled, this should be disabled unless you are monitoring strange traffic";
 
 	// ######################################## MAIN #########################################
 	// -- outputs the raw data in javascript, so the client can build as per period request (easier on the server)
@@ -74,6 +77,17 @@
 	}
 
 	$yesterday = datecalc(date("Y-m-d"),0,0,-1);
+	
+	if (isset($_REQUEST['normalize']) && isset($_REQUEST['hour']) && isset($_REQUEST['changeto']) && is_numeric($_REQUEST['hour']) && is_numeric($_REQUEST['changeto'])) {
+		if ($_REQUEST['changeto'] < 2) $_REQUEST['changeto'] = 2;
+		$sql = "DELETE FROM ".$statsObj->dbname." WHERE uhits=0 AND data='".date("Y-m-d")."' AND hour=".$_REQUEST['hour'];
+		$core->dbo->simpleQuery($sql);
+		$sql = "UPDATE ".$statsObj->dbname." SET hits=".$_REQUEST['changeto'].", uhits=1 WHERE data='".date("Y-m-d")."' AND hour=".$_REQUEST['hour']." AND hits>".$_REQUEST['changeto']; 
+		if ($core->dbo->simpleQuery($sql))
+			$core->log[] = "Hour ".$_REQUEST['hour']." hits normalized to max ".$_REQUEST['changeto']." hits, non unique hit pages removed.";
+		else
+			$core->log[] = "Error trying to normalize ".$_REQUEST['hour']."h hits";
+	}
 
 	$sql = "SELECT data,hour,sum(hits),sum(uhits) FROM ".$statsObj->dbname." WHERE data>='$yesterday' GROUP BY data,hour ORDER BY data DESC";
 	$core->dbo->query($sql,$r,$n);
@@ -258,8 +272,7 @@
 	$refD = $core->loaded("statsref");
 	$refH = $core->loaded("statsrefdaily");
 
-	$graphWidth = 400;
-
+	
 	# day #
 	$sql = "SELECT sum(hits) as hits, referer FROM ".$refD->dbname." WHERE data > NOW() - INTERVAL 2 DAY GROUP BY referer ORDER BY hits DESC LIMIT 100";
 	$core->dbo->query($sql,$r,$n);
@@ -519,6 +532,26 @@
 	}
 	$core->runContent('STATSRT',$core->template,array("data > NOW() - INTERVAL 30 MINUTE","data_ini DESC",""),"_rvisitor",false,false,'counthitsrt');
 	
+	#################################### BOT HITS 24h ########################################
+	$core->template->assign("bothits",$core->dbo->fetch("SELECT hits FROM stats_bots WHERE data='".date("Y-m-d")."'"));
 	
+	#################################### LANGUAGE ############################################
+	$sql = "SELECT sum(uhits) as hits, lang FROM stats_hitsh WHERE data>NOW() - INTERVAL 1 MONTH GROUP BY lang ORDER BY lang ASC";
+	$core->dbo->query($sql,$r,$n);
 	
-	 
+	$t = 0;
+	$langs = array();
+	for ($c=0;$c<$n;$c++) {
+		$langs[$c] = $core->dbo->fetch_assoc($r);
+		$t += $langs[$c]['hits'];
+	}
+	if ($t==0) $t=1;
+	$temp ="";
+	$obj = $core->template->get("_lang");
+	for ($c=0;$c<$n;$c++) {
+		$langs[$c]['percent'] = $langs[$c]['hits']/$t;
+		$langs[$c]['width'] = ceil($graphWidth * $langs[$c]['percent']);
+		$langs[$c]['percent'] *= 100;
+		$temp .= $obj->techo($langs[$c]);
+	}
+	$core->template->assign("_lang",$temp);

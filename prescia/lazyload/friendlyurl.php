@@ -80,7 +80,7 @@ foreach ($m as $moduletxt) {
 
 		$this->storage['friendlyurldata'] = $result; // cache the result
 		$this->storage['friendlyurlmodule'] = $moduletxt;
-		$this->template->constants['CANONICAL'] = "http://".$this->domain.$this->context_str.(isset($result['urla'])?$result['urla'].".html":$this->original_action);
+		$this->template->constants['CANONICAL'] = "http://".$_SESSION['CANONICAL'].$this->context_str.(isset($result['urla'])?$result['urla'].".html":$this->original_action);
 
 		// fill up title, metas etc
 		if (isset($param['title'])) {

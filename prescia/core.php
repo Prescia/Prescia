@@ -24,7 +24,8 @@ class CPrescia extends CPresciaVar {
 		# NOTE this will load the site config.php after selecting the site code.
 
 		$uri = explode(":",isset($_SERVER['HTTP_HOST'])?$_SERVER['HTTP_HOST']:$_SERVER['SERVER_NAME']);
-		$this->domain = array_shift($uri); # removes protocol
+		$this->domain = strtolower(array_shift($uri)); # removes protocol
+		if (CONS_AUTOREMOVEWWW && substr($this->domain,0,4) == "www.") $this->domain = substr($this->domain,4);
 
 		if (CONS_SINGLEDOMAIN != '') { # single domain? use it
 			$_SESSION["DOMAIN"] = $this->domain;
@@ -58,10 +59,31 @@ class CPrescia extends CPresciaVar {
 				$this->errorControl->raise($errCode,$this->domain,"",!isset($_SESSION['CODE'])?'Domain not registered':'config.php not found (CODE: '.$_SESSION['CODE'].")");
 			}
 			$_SESSION["DOMAIN"] = $this->domain;
+			unset($_SESSION['CANONICAL']);
 		}
 
 		# Loads the selected domain/site configuration file
 		require CONS_PATH_PAGES.$_SESSION['CODE']."/_config/config.php";
+		
+		# Checks parseRewrite (language and canonical)
+		if (count($this->parseRewrite)>0) { 
+			if (isset($this->parseRewrite[$this->domain]))  { // language ?
+				if (!isset($_SESSION[CONS_SESSION_LANG]) && $this->parseRewrite[$this->domain][0] != '') {
+					$_SESSION[CONS_SESSION_LANG] = $this->intlControl->loadLocale($this->parseRewrite[$this->domain][0]);
+				}
+			}
+			if (!isset($_SESSION['CANONICAL'])) { // canonical?
+				$_SESSION['CANONICAL'] = $this->domain;
+				foreach ($this->parseRewrite as $domain => $settings) {
+					if ($settings[1]) {
+						$_SESSION['CANONICAL'] = $domain;
+						break;
+					}
+				}
+			}
+		} else
+			$_SESSION['CANONICAL'] = $_SESSION["DOMAIN"];
+		
 		if (CONS_USE_I18N) { # Checks which language we will serve control (IF ENABLED)
 			if (isset($_REQUEST['lang']) && !isset($_POST['haveinfo']) && strpos(CONS_POSSIBLE_LANGS.",",$_REQUEST['lang'].",") !== false) {
 				$_SESSION[CONS_SESSION_LANG] = $_REQUEST['lang'];
@@ -210,9 +232,8 @@ class CPrescia extends CPresciaVar {
 					}
 				}
 			}
-			$ext = strtolower($this->original_ext);
-			$this->close(false); # shuts down database if necessary, unloads template
-			$this->readfile($theFile,$ext,true,$this->original_action,false,CONS_CACHE && !isset($_REQUEST['nocache'])?CONS_DEFAULT_MMCACHETIME*1000:0);
+			$ext = strtolower($this->original_ext);		
+			$this->readfile($theFile,$ext,!$captureStats,$this->original_action,false,CONS_CACHE && !isset($_REQUEST['nocache'])?CONS_DEFAULT_MMCACHETIME*1000:0);
 			if ($captureStats && $this->dbconnect()) {
 				return true; // we keep going (only if we were able to reconnect to DB)
 			}
@@ -244,8 +265,11 @@ class CPrescia extends CPresciaVar {
 					$this->fastClose(404);
 				}
 			} else if ($this->original_action == "sitemap.xml" || $this->original_action == "sitemap") {
+				# IMPORTANT: if you are serving multiple domains, you can specify a diferent sitemap by adding /template/sitemap-DOMAIN.xml, for instance: /template/sitemap-alternate.com.xml will be used www.alternate.com
+				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap-".$this->domain.".xml"))
+					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap-".$this->domain.".xml","xml",true,"sitemap.xml");
 				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml"))
-					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml","txt",true,"sitemap.xml");
+					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml","xml",true,"sitemap.xml");
 				else
 					$this->fastClose(404);
 			}
@@ -1012,9 +1036,9 @@ class CPrescia extends CPresciaVar {
 			else {
 				$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: text/html; charset=".$this->charset);
 			}
-			$this->headerControl->addHeader(CONS_HC_PRAGMA,'Pragma: '.($this->layout!=2 && $this->cachetime>2000?'public':'no-cache'));
+			$this->headerControl->addHeader(CONS_HC_PRAGMA,'Pragma: '.($this->layout!=2 && CONS_DEFAULT_CACHETIME>2?'public':'no-cache'));
 			if (CONS_CACHE && $this->layout != 2)
-				$this->headerControl->addHeader(CONS_HC_CACHE,'Cache-Control: public,max-age='.floor($this->cachetime/1000).',s-maxage='.floor($this->cachetime/1000));
+				$this->headerControl->addHeader(CONS_HC_CACHE,'Cache-Control: public,max-age='.CONS_DEFAULT_CACHETIME.',s-maxage='.CONS_DEFAULT_CACHETIME);
 		}
 
 		# logs 404/403 in separate error code
@@ -1123,7 +1147,7 @@ class CPrescia extends CPresciaVar {
 
 			// METAS
 			if ($this->template->constants['CANONICAL'] == '') {
-				$this->template->constants['CANONICAL'] = "http://".$this->domain.$this->context_str.$this->action.".html";
+				$this->template->constants['CANONICAL'] = "http://".$_SESSION['CANONICAL'].$this->context_str.$this->action.".html";				
 				if (isset($_REQUEST['id']))
 					$this->template->constants['CANONICAL'] .= "?id=".$_REQUEST['id'];
 			}
@@ -1156,21 +1180,28 @@ class CPrescia extends CPresciaVar {
 					$metadata .= "\t<link rel=\"shortcut icon\" href=\"/favicon.".$ext."\" />\n";
 				}
 			}
-			// Alternate Language versions (only on root index)
+			// Alternate Language and domains versions (only on root index)
 			
-			if (CONS_USE_I18N && $this->context_str == "/" && $this->action == "index") {
-				$langs = explode(",",CONS_POSSIBLE_LANGS);
-				foreach ($langs as $lang) {
-					if ($lang != $_SESSION[CONS_SESSION_LANG]) {
-						if (count($this->languageTL)>0) {
-							foreach ($this->languageTL as $fl => $ln) {
-								if ($ln == $lang) {
-									$metadata .= "\t<link rel=\"alternate\" hreflang=\"$lang\" href=\"/$fl/index.html\"/>\n";
-									break;
+			if ($this->context_str == "/" && $this->action == "index") {
+				if (CONS_USE_I18N) {
+					$langs = explode(",",CONS_POSSIBLE_LANGS);
+					foreach ($langs as $lang) {
+						if ($lang != $_SESSION[CONS_SESSION_LANG]) {
+							if (count($this->languageTL)>0) {
+								foreach ($this->languageTL as $fl => $ln) {
+									if ($ln == $lang) {
+										$metadata .= "\t<link rel=\"alternate\" hreflang=\"$lang\" href=\"/$fl/index.html\"/>\n";
+										break;
+									}
 								}
-							}
-						} else
-							$metadata .= "\t<link rel=\"alternate\" hreflang=\"$lang\" href=\"".$this->template->constants['CANONICAL']."?lang=$lang\"/>\n";
+							} else
+								$metadata .= "\t<link rel=\"alternate\" hreflang=\"$lang\" href=\"".$this->template->constants['CANONICAL']."?lang=$lang\"/>\n";
+						}
+					}
+				}
+				foreach ($this->parseRewrite as $domain => $settings) {
+					if ($domain != $this->domain) {
+						$metadata .= "\t<link rel=\"alternate\" hreflang=\"".($settings[0] == ''?CONS_DEFAULT_LANG:$settings[0])."\" href=\"http://".$domain."\"/>\n";
 					}
 				}
 			}

@@ -277,6 +277,10 @@ class CPresciaFull extends CPrescia {
 				$nomecampo = strtolower($thiscampo->data[0]);
 		  		if ($campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_LINK) {
 		  			array_push($relation,array($module,$nomecampo,$campos[$nomecampo][CONS_XML_MODULE]));
+					// if this is a non-mandatory link to myself, called "id_parent", and I don't have parent ... well .. obviously this is it
+					if ($campos[$nomecampo][CONS_XML_MODULE] == $module && !isset($campos[$nomecampo][CONS_XML_MANDATORY]) && $nomecampo == "id_parent" && $this->modules[$module]->options[CONS_MODULE_PARENT] == '') {
+						$this->modules[$module]->options[CONS_MODULE_PARENT] = $nomecampo;
+					}
 				} else if ($campos[$nomecampo][CONS_XML_TIPO] == CONS_TIPO_SERIALIZED) {
 					// browse fields looking for links
 					foreach ($campos[$nomecampo][CONS_XML_SERIALIZEDMODEL] as $exname => &$exfield) {

@@ -4,27 +4,30 @@
 	
 	<div class="lxmladm_box" id="topmenudiv">
 		<div id="tabtop0" onclick="tab(0);" style="cursor:pointer;float:left;width:120px;border-bottom:1px solid #222222">
-			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Geral
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Main
 		</div>
 		<div id="tabtop6" onclick="tab(6);" style="cursor:pointer;float:left;width:100px;">
-			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Últimas 24h
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Recent24h
 		</div>
 		<div id="tabtop1" onclick="tab(1);" style="cursor:pointer;float:left;width:120px;">
-			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Horários
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Time
 		</div>
 		<div id="tabtop2" onclick="tab(2);" style="cursor:pointer;float:left;width:120px;">
-			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Páginas
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Pages
 		</div>
 		<div id="tabtop3" onclick="tab(3);" style="cursor:pointer;float:left;width:150px;">
-			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Referências e busca
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Referers
 		</div>
 		<div id="tabtop4" onclick="tab(4);" style="cursor:pointer;float:left;width:100px;">
-			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Caminho
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Path
 		</div>
 		<div id="tabtop5" onclick="tab(5);" style="cursor:pointer;float:left;width:100px;">
-			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Tecnologia
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Technology
 		</div>
-		<div id="tabtop7" onclick="document.location='https://www.google.com/webmasters/tools/home';" style="cursor:pointer;float:left;width:100px;">
+		<div id="tabtop7" onclick="tab(7);" style="cursor:pointer;float:left;width:100px;">
+			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Language
+		</div>
+		<div id="tabtop8" onclick="document.location='https://www.google.com/webmasters/tools/home';" style="cursor:pointer;float:left;width:100px;">
 			<img src="{SKIN_PATH}smtab.png" alt="" style="vertical-align:bottom"/> Webmasters
 		</div>
 		
@@ -33,15 +36,15 @@
 	
 	<div id="tab0">
 	<div class="lxmladm_box" style="width:1006px">
-		<b>Gráficos principais</b><br/>
+		<b>Main Statistics</b><br/>
 		<div id="tab0options">
 			<select id="graphictype" onchange="resetGraphics();" style="float:left">
-				<option value="h">Visitas</option>
-				<option value="u">Visitantes únicos</option>
-				<option value="hu">Páginas/Visitantes</option>
-				<option value="b">Aceitação/Rejeição</option>
-				<option value="r">Retornos em 24h</option>
-				<option value="k">Chegaram via Bookmark</option>
+				<option value="h">Visits</option>
+				<option value="u">Unique visitors</option>
+				<option value="hu">Pages/visitors</option>
+				<option value="b">Acceptance</option>
+				<option value="r">Returns in 24h</option>
+				<option value="k">From Bookmark</option>
 			</select>
 			<select id="graphicperiod" onchange="resetGraphics(false,true);" style="float:left">
 				<option value="m">Último mês</option>
@@ -51,14 +54,13 @@
 				<option value="e">Especificar intervalo</option>
 			</select>
 			<div id="especificardiv" style="display:none;float:left;margin-left:10px">
-				Período <input type="text" name="data_inicio" id="data_inicio" style="width:80px" value="{data_inicio|date|d/m/Y}"/>
+				Period <input type="text" name="data_inicio" id="data_inicio" style="width:80px" value="{data_inicio|date|d/m/Y}"/>
 				<img id='divcalendar_data_inicio' onclick="calendarHandler.showCalendar('data_inicio','divcalendar_data_inicio',-80,-8);" src="/pages/_js/calendar/gifs/dyncalendar.gif" style="width:16px;height:16px;position:relative;top:3px;left:2px" alt="{_t}calendar{/t}"/> -
 				<input type="text" name="data_fim" id="data_fim" style="width:80px" value="{data_fim|date|d/m/Y}"/>
 				<img id='divcalendar_data_fim' onclick="calendarHandler.showCalendar('data_fim','divcalendar_data_fim',-80,-8);" src="/pages/_js/calendar/gifs/dyncalendar.gif" style="width:16px;height:16px;position:relative;top:3px;left:2px" alt="{_t}calendar{/t}"/>
 				<input type="button" value=" atualizar " onclick="resetGraphics('e',true);"/>
 			</div>
-			<input type="button" value=" Exportar " style="float:right" onclick="window.open('stats_export.php','_blank');"/>
-			<input type="button" value=" Imprimir " style="float:right" onclick="printmode()"/>
+			<input type="button" value=" Print " style="float:right" onclick="printmode()"/>
 			<div style="clear:both"></div>
 		</div>
 	</div>
@@ -82,19 +84,19 @@
 			<div onclick="resetGraphics('h');" style="cursor:pointer;text-align:center;height:80px"
 				title="Visitas, ou pageviews, conta todo tipo de página apresentada no período"
 				>
-				Visitas (páginas vistas)<br/>
+				Visits<br/>
 				<canvas id="littleh" style="width:400px;height:40px;background:#fff"></canvas><br/>
 				<span id="littleh_total"></span>
 			</div>
 			<div onclick="resetGraphics('hu');" style="cursor:pointer;text-align:center;height:80px"
 				title="Quantidade média de páginas que cada visitante único (pessoa) visitou no site antes de sair">
-				Páginas/Visitantes<br/>
+				Page/Visitors<br/>
 				<canvas id="littlehu" style="width:400px;height:40px;background:#fff"></canvas><br/>
 				<span id="littlehu_total"></span>
 			</div>
 			<div onclick="resetGraphics('r');" style="cursor:pointer;text-align:center;height:80px"
 				title="Quantos visitantes únicos (pessoas) voltaram ao site pelo menos uma vez em menos de 24h depois da última visita">
-				Retornos em 24h<br/>
+				Returning in 24h<br/>
 				<canvas id="littler" style="width:400px;height:40px;background:#fff"></canvas><br/>
 				<span id="littler_total"></span>
 			</div>
@@ -102,19 +104,19 @@
 		<div style="width:490px;float:left;overflow:auto;height:240px">
 			<div onclick="resetGraphics('u');" style="cursor:pointer;text-align:center;height:80px"
 				title="Quantos visitantes únicos (pessoas) acessaram o site no período">
-				Visitantes únicos<br/>
+				Unique<br/>
 				<canvas id="littleu" style="width:400px;height:40px;background:#fff"></canvas><br/>
 				<span id="littleu_total"></span>
 			</div>
 			<div onclick="resetGraphics('b');" style="cursor:pointer;text-align:center;height:80px"
 				title="Taxa de quantos visitantes únicos (pessoas) permanesceram no site (aceitação) depois de visitar uma página, ou seja, visitaram mais de uma página. NOTA: estatísticamente, o valor ideal é acima de 20%">
-				Aceitação/Rejeição<br/>
+				Acceptance<br/>
 				<canvas id="littleb" style="width:400px;height:40px;background:#fff"></canvas><br/>
 				<span id="littleb_total"></span>
 			</div>
 			<div onclick="resetGraphics('k');" style="cursor:pointer;text-align:center;height:80px"
 				title="Quantos visitantes únicos (pessoas) chegaram ao site a partir de um bookmark ou digitaram o endereço do site direto no navegador">
-				Chegaram via Bookmark<br/>
+				From Bookmark<br/>
 				<canvas id="littlek" style="width:400px;height:40px;background:#fff"></canvas><br/>
 				<span id="littlek_total"></span>
 			</div>
@@ -125,15 +127,15 @@
 	
 	
 	<div class="lxmladm_box" style="position:relative;display:none" id="tab1">
-		<strong>Horários de maior visitação</strong><br/>
-		Azul sendo mais fraco, Vermelho o mais forte. <b>As últimas 4 semanas</b> são usadas como base, o valor apresentado é a média das 4 semanas<br/>
+		<strong>Peak visit times</strong><br/>
+		Blue being lower, Red being stronger. <b>Data from the last 4 weeks are used</b><br/>
 		<br/>
-		<strong>VISITAS (pageview)</strong>
+		<strong>VISITS (pageview)</strong>
 		<div style="width:1000px;height:255px;border:1px solid #b0b0b0;background:#ffffff;position:relative;">
 			{timelapse}
 		</div>
 		<br/><br/>
-		<strong>VISITANTES ÚNICOS (pessoas)</strong>
+		<strong>UNIQUE VISITORS (people)</strong>
 		<div style="width:1000px;height:255px;border:1px solid #b0b0b0;background:#ffffff;position:relative;">
 			{timelapse2}
 		</div>
@@ -141,7 +143,7 @@
 	
 	
 	<div class="lxmladm_box" style="position:relative;display:none" id="tab2">
-		<strong>Páginas mais visitadas nos últimos 31 dias</strong><br/>
+		<strong>Most visited pages on the last 30 days</strong><br/>
 		<div style="position:relative;">
 			<canvas id="pagescanvas" style="cursor:crosshair;position:relative;width:990px;height:300px;background:#fff" onmousemove="omop(event);" onmouseout="$('canvasoverp').style.display='none'"></canvas>
 			<div id="canvasovervarp" style="pointer-events:none;display:none;position:absolute;top:0px;left:0px;width:33px;height:300px;background:#ffffff;z-index:10000"></div>
@@ -158,7 +160,7 @@
 	
 	<div id="tab3" style="display:none">
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Referências (outro site linkando para este) hoje</strong><br/>
+			<strong>Referers (other sites linking yours) today</strong><br/>
 	
 			<div style="margin:0px 20px 0px 20px">
 				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
@@ -179,7 +181,7 @@
 		</div>
 	
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Referências (outro site linkando para este) últimos 30 dias</strong><br/>
+			<strong>Referers (other sites linking yours - 30 days</strong><br/>
 			<div style="margin:0px 20px 0px 20px">
 				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
 					<tr>
@@ -198,7 +200,7 @@
 		</div>
 	
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Página de entrada, por referência (últimos 30 dias)</strong><br/>
+			<strong>Entry page, per reference (30 days)</strong><br/>
 			<div style="margin:0px 20px 0px 20px">
 				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
 					<tr>
@@ -220,26 +222,26 @@
 	</div> {_}tab3{/}
 	
 	<div class="lxmladm_box" id="tab4" style="display:none">
-		<strong>Caminho usado</strong>
+		<strong>Path used</strong>
 		<form name="frmbase">
 			Página:
 			<select name="page" id="page">{_pages}<option value="{page}" {checked}>{_t}{page}{/t}</option>{/pages}</select>
-			<input type="button" onclick="atualize();" value=" Ver "/>
+			<input type="button" onclick="atualize();" value=" Go "/>
 		</form>
 		<br/>
 		<div id="content" style="height:250px;overflow:hidden;width:960px">
-			<div style="text-align:center">Aguarde</div>
+			<div style="text-align:center">Wait</div>
 		</div>
 	</div>{_}tab4{/}
 	
 	<div id="tab5" style="display:none">
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Navegador - Gráfico por tempo (30 dias)</strong><br/>
+			<strong>Browser - Time graphic (30 days)</strong><br/>
 			<canvas width="990" height="300" id="canvasbrowser"></canvas>
 		</div>
 	
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Navegador - Totais por tipo (30 dias)</strong>
+			<strong>Browser - Totals (30 days)</strong>
 			<div style="margin:0px 20px 0px 20px">
 				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
 				{_browser}
@@ -251,12 +253,12 @@
 				{/browser}
 				</tbody></table>
 				<br/><br/>
-				<strong>Dispositivos Mobile:</strong> {mobpercent|number|1}% das visitas se deu por um dispositivo mobile
+				<strong>Mobile:</strong> {mobpercent|number|1}% visit were done by mobile devices
 			</div>
 		</div>
 	
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Navegador - Totais por versão (30 dias)</strong><br/>
+			<strong>Browser - detailed (30 days)</strong><br/>
 	
 			<div style="margin:0px 20px 0px 20px">
 				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
@@ -273,7 +275,7 @@
 	
 	
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Resolução de tela - Por padrão (30 dias)</strong>
+			<strong>Screen resolution - Standard (30 days)</strong>
 			<div style="margin:0px 20px 0px 20px">
 				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
 					{_prop}
@@ -288,7 +290,7 @@
 		</div>
 	
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Resolução de tela - Detalhado (30 dias)</strong><br/>
+			<strong>Screen resolution - Detailed (30 days)</strong><br/>
 			<div style="margin:0px 20px 0px 20px">
 				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
 					{_res}
@@ -309,20 +311,23 @@
 			<div id="canvasovervart" style="pointer-events:none;display:none;position:absolute;top:0px;left:0px;width:10px;height:300px;background:#ffffff;"></div>
 			<div id="canvasovert" style="display:none;position:absolute;top:150px;left:490px;border:1px solid #000000;background:#ffffff;padding:2px;width:100px;height:28px;line-height:12px;color:#000000;font-size:10px;"></div>
 		</div>
-	
+		
+		<input id="normalizebutton" type="button" value=" Normalize " title=" Weird unique peak, think it is a bot and want it erased? click here " onclick="runnormalize()"/>
+		
 		<div class="lxmladm_box" style="position:relative" id="todaysummary">
 		</div>
 	
 		<div class="lxmladm_box" style="position:relative">
-			<strong>Visitantes atuais</strong>:<br/>
+			
+			<strong>Current visitors</strong>:<br/>
 			<table style="border:0px;width:900px" cellspacing="0">
 			<tr>
-				<td style="border-bottom:1px solid #ccc">Último hit</td>
-				<td style="border-bottom:1px solid #ccc">Página</td>
+				<td style="border-bottom:1px solid #ccc">Last hit</td>
+				<td style="border-bottom:1px solid #ccc">Page</td>
 				<td style="border-bottom:1px solid #ccc">Hits</td>
-				<td style="border-bottom:1px solid #ccc">Navegador</td>
+				<td style="border-bottom:1px solid #ccc">Browser</td>
 				<td style="border-bottom:1px solid #ccc">IP</td>
-				<td style="border-bottom:1px solid #ccc">Referência</td>
+				<td style="border-bottom:1px solid #ccc">Refferer</td>
 			</tr>
 			{_rvisitor}
 			<tr>
@@ -337,7 +342,26 @@
 			</table>
 		</div>
 	
-	</div>
+	</div>{_}tab6{/}
+	
+	<div id="tab7" style="display:none">
+		<div class="lxmladm_box" style="position:relative">
+			<strong>Language (30 days)</strong><br/>
+			<div style="margin:0px 20px 0px 20px">
+				<table cellspacing="0" style="margin-top:10px;width:900px"><tbody>
+				{_lang}
+				<tr>
+				  <td style="width:200px">{lang}</td>
+			  	  <td style="width:400px;border-bottom:1px #333333 solid"><div style="float:left;background:#333333;height:10px;width:{width}px;"></div></td>
+				  <td style="padding-left:2px;">{hits} ({percent|number|2}%)</td>
+				</tr>
+				{/lang}
+				</tbody></table>
+			</div>
+		</div>
+
+	</div>{_}tab7{/}
+	
 </div>
 
 <script type="text/javascript"><!--
@@ -1137,6 +1161,8 @@
 			canvas.closePath();
 		}
 	}
+	var weirdPeak = 0;
+	var normalAverage = 0;
 	function drawToday() {
 		GRAPHHEIGHT = 300;
 		canvas = $('canvas24').getContext('2d');
@@ -1174,13 +1200,17 @@
 
 		// draw times (and take the chance to detect higher)
 		canvas.beginPath();
-		biggest = 0;
+		var biggest = 0;
+		var biggestHour = 0;
 		canvas.fillStyle = "black";
 		canvas.font = "10px sans-serif";
 		canvas.textAlign = "center";
 		for(h=0;h<24;h++) {
 			canvas.dashedLine((h+1)*columnWidth,0,(h+1)*columnWidth,GRAPHHEIGHT,[10,10]);
-			if (statstoday[h][0]>biggest) biggest =statstoday[h][0];
+			if (statstoday[h][0]>biggest) {
+				biggest =statstoday[h][0];
+				biggestHour = h;
+			}
 			sum += statstoday[h][0];
 			sumu += statstoday[h][1];
 			canvas.fillText(h+"h",(h+1)*columnWidth,GRAPHHEIGHT-10);
@@ -1233,9 +1263,14 @@
 			canvas.fill();
 			canvas.stroke();
 			canvas.closePath();
-
 		}
-		$('todaysummary').innerHTML = "<strong>Totais das últimas 24 horas:</strong><br/>Visitantes: <strong>" + sum + "</strong><br/>Visitantes únicos: <strong>" + sumu + "</strong>";
+		$('todaysummary').innerHTML = "<strong>Totals for last 24h:</strong><br/>Visitors: <strong>" + sum + "</strong><br/>Unique Visiors: <strong>" + sumu + "</strong><br/>Bot hits today: <strong>{bothits}</strong>";
+		normalAverage = sum/24;
+		if (biggestHour < n && biggest > sum/3) {
+			weirdPeak = biggestHour;
+		} else {
+			$('normalizebutton').style.display = 'none';
+		}
 	}
 	function omot(e) {
 		var e = e || window.event;
@@ -1269,6 +1304,9 @@
 		$('canvasovervart').setOpacity(0.5);
 		$('canvasovert').style.display = '';
 
+	}
+	function runnormalize() {
+		document.location = 'stats_analytics.php?normalize=true&hour=' + weirdPeak + "&changeto="+Math.floor(normalAverage);
 	}
 
 	if (!is_legacy) {

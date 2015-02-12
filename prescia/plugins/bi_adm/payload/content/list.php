@@ -580,6 +580,8 @@
 			break;
 			case CONS_TIPO_TEXT:  ################################################################ NORMAL INPUT FIELDS (text, numbers)
 			case CONS_TIPO_VC:
+				if (isset($_REQUEST[$name]) && !is_array($_REQUEST[$name]) && $_REQUEST[$name] != "") 
+					$_REQUEST[$name] = cleanString($_REQUEST[$name],isset($field[CONS_XML_HTML]));
 			case CONS_TIPO_INT:
 			case CONS_TIPO_FLOAT:
 				if (isset($_REQUEST[$name]) && !is_array($_REQUEST[$name]) && $_REQUEST[$name] != "") {
@@ -1181,7 +1183,7 @@
 		}
 		$_REQUEST['multiSelectedIds'] = isset($_REQUEST['multiSelectedIds'])?str_replace(",,",",",",".implode(",",$_REQUEST['multiSelectedIds']).","):"";
 		echo $_REQUEST['multiSelectedIds'];
-		$this->parent->close(); // that's right, vaction=mark is an ajax call which returns only the list of selected items
+		$this->parent->close(true); // that's right, vaction=mark is an ajax call which returns only the list of selected items
 	}
 
 	// and here we go! this will fill the list and get us the total of items (real total, not displayed)

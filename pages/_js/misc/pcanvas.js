@@ -586,5 +586,5 @@ CCanvasControler.prototype = {
 		if (half) percent /=2;
 		a = Math.PI * percent;
 		return -(Math.cos(a)-1)/2;
-	}
+	},
 };

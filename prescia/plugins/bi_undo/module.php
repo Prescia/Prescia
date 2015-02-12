@@ -96,11 +96,12 @@ class mod_bi_undo extends CscriptedModule  {
 			// fill up $_REQUEST to simulate and edit/add
 			if (isset($history[$fname])) {
 				$realdados[$fname] = $history[$fname];
+				
 				# if this is a link, check if remote module exists. If this is mandatory, abort
-				if ($fields[CONS_XML_TIPO] == CONS_TIPO_LINK && $history[$fname]!=0) {
+				if ($fields[CONS_XML_TIPO] == CONS_TIPO_LINK && $history[$fname]!=0 && $history[$fname] != NULL) {
 					$remoteOk = true;
 					$remoteModule = $core->loaded($fields[CONS_XML_MODULE]);
-					$sql = $remoteModule->get_base_sql();
+					$sql = $remoteModule->get_base_sql("","","",true);
 					$sql['SELECT'] = array("count(*)"); # just want to check if it exists
 					foreach ($remoteModule->keys as $key) {
 						if ($key == $remoteModule->keys[0])
@@ -112,7 +113,7 @@ class mod_bi_undo extends CscriptedModule  {
 							break;
 						}
 					}
-					$n = $core->dbo->fetch($sql);
+					$n = $core->dbo->fetch($sql);					
 					if ($n == 0) $remoteOk = false;
 					if (!$remoteOk) {
 						// field does not exist, what now?
@@ -160,11 +161,12 @@ class mod_bi_undo extends CscriptedModule  {
 					}
 				}
 			}
+			
 			$ok = $core->runAction($module,$undodados['event']=='update'?CONS_ACTION_UPDATE:CONS_ACTION_INCLUDE,$realdados,'bi_undo');
 			if ($ok) {
 				$core->log[] = $core->langOut("undo_sucessfull");
 				$this->parent->setLog(CONS_LOGGING_SUCCESS);
-				$sql = "DELETE FROM ".$undo->dbname." WHERE id=".$_REQUEST['id']; # undoed ... so we don't need this log
+				$sql = "DELETE FROM ".$undo->dbname." WHERE id=".$id; # undoed ... so we don't need this log
 				$core->dbo->simpleQuery($sql);
 				if ($undodados['event'] == 'delete') {
 					$newKey = $core->lastReturnCode;

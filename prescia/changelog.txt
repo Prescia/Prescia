@@ -1,5 +1,40 @@
 TODO list is on site/github
 
+15.02.12 BETA 0.96
+	Automatic id_parent detection on CONS_MODULE_PARENT if a field is OBVIOUSLY aparent (otherwise still needs to be set with parent="field" on module)
+	getRemoteKeys won't return zero/null keys (a.k.a optionals)
+	Checkbox on History&Undo list to perform multiple undos
+		-> multiple UNDO's
+	Removed "action" notices from error list, so it doesn't exceed the "maximum number of errors" (1000) at errorControl
+	***FIXED*** Undo foreign key detection is now working
+	***FIXED*** Undo works properly
+	Fixed issue with escaping characters on search
+
+15.02.09 BETA 0.95 stable
+	Found harvester: YFF35 (#3 of most agressive harvesters on the internet past 30 days @ http://www.projecthoneypot.org/harvester_useragents.php )
+	Tweak on statistics to block the above, browser legacy/poser list updated
+15.02.08 BETA 0.95
+	Added parseRewrite array to allow you to specify different default languages when you have multiple domains on the same site, as well which is the main domain
+	Added Canonical on session to keep track which domain on a multi-domain site is the main canonical
+		Canonical use changed on main script
+		Canonical use changed on friendlyurl
+	Added constant CONS_AUTOREMOVEWWW (default true) which removes the www. from the domain on all tests and outputs
+	Added option to use sitemap-domain.xml so you can have different sitemaps to different domains (default is still sitemap.xml)
+	Added domain in the cache subsystem
+	Fixed collectStatsOnTheseFiles not recording statistics (readFile closed script)
+	Added language statistics on statistics pane. Also translated back to english as default
+15.02.02 BETA 0.94
+	More research on weird bot
+	Returned file manager to default page to reduce load on php
+15.01.31 BETA 0.94
+	Added Normalize option on 24h statistics to remove slashdot bots (will only remove if in the present day)
+	Removed "export" button from statistics
+	Trying to find weird bot messing statistics
+15.01.21 BETA 0.94
+	Added bot count display on 24h statistics
+	New spider/crawler detection. Some spiders use a VALID user-agent and change IP to prevent being banned/detected, and are reported as a valid browser, though (luckly) they report themselves as Spider or Crawler
+	Slight speed boost on browser/bot detection
+	Tweaks on cache system
 15.01.20 BETA 0.94 Stabilization version
 	Fixed small issue on first-time statistics by IP
 15.01.16 BETA 0.93

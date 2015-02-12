@@ -34,7 +34,7 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 						$data[$fnamedata."t"] = "";
 						$data[$fnamedata."s"] = "";
 						$file = CONS_FMANAGER.$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
-						$fileout = "files/".$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
+						$fileout = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
 						if ($data[$fname] == 'y' && locateAnyFile($file,$ext,CONS_FILESEARCH_EXTENSIONS)) {
 							$fileout .= ".".$ext;
 							$data[$fnamedata] = $fileout;
@@ -56,13 +56,13 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 							  }
 							}
 						} else if (isset($field[CONS_XML_NOIMG])) {
-							$data[$fnamedata] = "files/".$field[CONS_XML_NOIMG];
+							$data[$fnamedata] = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$field[CONS_XML_NOIMG];
 							$popped = explode("/",$data[$fnamedata]);
 							$data[$fnamedata."filename"] = array_pop($popped);
-							$h = getimagesize(CONS_PATH_PAGES.$_SESSION['CODE']."/".$data[$fnamedata]);
+							$h = getimagesize($data[$fnamedata]);
 							$data[$fnamedata."w"] = $h[0];
 							$data[$fnamedata."h"] = $h[1];
-							$data[$fnamedata."s"] = humanSize(filesize(CONS_PATH_PAGES.$_SESSION['CODE']."/".$data[$fnamedata]));
+							$data[$fnamedata."s"] = humanSize(filesize($data[$fnamedata]));
 							$data[$fnamedata."t"] = "<img src=\"".CONS_INSTALL_ROOT.$data[$fnamedata]."\" width='".$h[0]."' title=\"".$myTitle."\" height='".$h[1]."' alt='' />";
 						} else {
 							$data[$fname] = 'n';
@@ -70,7 +70,7 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 					 }
 				} else if ($data[$fname]== 'y') { // file w/o image, present
 					$file = CONS_FMANAGER.$params['module']->name."/".$fname.$keystring."_1";
-					$fileout = "files/".$params['module']->name."/".$fname.$keystring."_1";
+					$fileout = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$params['module']->name."/".$fname.$keystring."_1";
 					$fnamedata = $fname."_1";
 					if (locateAnyFile($file,$ext)) {
 						$data[$fnamedata] = CONS_INSTALL_ROOT.$fileout.$ext;
@@ -258,14 +258,16 @@ class CModule {
 			if ($rmodule->fields[$key][CONS_XML_TIPO] == CONS_TIPO_INT) {
 				if ($key == "id") {
 					$mykey = $this->get_key_from($rmodule->name,"id_".$rmodule->name);
-					if ($mykey != '' && isset($data[$mykey]))
+					if ($mykey != '' && isset($data[$mykey]) && $data[$mykey] != 0 && $data[$mykey] != NULL)
 						$where[] = $rmodule->name.".id='".$data[$mykey]."'" ;
-				} else if (isset($this->field[$key]) && isset($data[$key])) {
+				} else if (isset($this->field[$key]) && isset($data[$key]) && $key != $this->options[CONS_MODULE_PARENT]) {
+					// note we don't return id_parent. MY parent and the OTHER parent are DIFFERENT 
 					$where[] = $rmodule->name.".".$key."='".$data[$key]."'";
 				} // else I can't decide how to link it
 			} else if ($rmodule->fields[$key][CONS_XML_TIPO] == CONS_TIPO_LINK) {
 				$mykey = $this->get_key_from($rmodule->fields[$key][CONS_XML_MODULE],"id_".$rmodule->fields[$key][CONS_XML_MODULE]);
-				if ($mykey!='' && isset($data[$mykey]))
+				if ($mykey!='' && isset($data[$mykey]) && $data[$mykey] != 0 && $data[$mykey] != NULL && $key != $this->options[CONS_MODULE_PARENT])
+					// again note we ignore id_parent
 					$where[] = $rmodule->name.".".$key."='".$data[$mykey]."'";
 			} else if (isset($this->field[$key]) && isset($data[$key])) {
 				$where[] = $rmodule->name.".".$key."='".$data[$key]."'";
@@ -604,6 +606,7 @@ class CModule {
 	function get_key_from($module,$fast_reference = "",$all = false) {
 		# Returns which of my fields points to that module, with a fast_reference (works like a cache)
 		# all will return an array with all fields that point to said module, instead of the FIRST
+		
 		if (is_object($module)) $module = $module->name;
 		$results = array();
 		if ($fast_reference != "") { # checks if fast_refrence is correct
@@ -668,7 +671,7 @@ class CModule {
 		#	full ID: the specific thumbnail
 
 
-		# TODO: not working for serialized ($basefile) and this is also wrong, should allow field only
+		# TODO: not working for serialized ($basefile) and this is also wrong, should allow field only, instead deletes all
 
 
 		$dels = 0;
@@ -833,8 +836,8 @@ class CModule {
 
 			# perform upload
 			$thisFilename = $path.$filename."1";
-			//$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes); # <----------------- upload happens here
-			$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes,true); # <----------------- use this (note the true) for full debug
+			$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes); # <----------------- upload happens here
+			//$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes,true); # <----------------- use this (note the true) for full debug
 
 			$arquivo = explode(".",$thisFilename);
 			$ext = strtolower(array_pop($arquivo)); # <-- ext for the file

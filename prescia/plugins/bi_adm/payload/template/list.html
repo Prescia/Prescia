@@ -455,10 +455,19 @@ CAjaxList.prototype = {
 	},
 	startSelect:function(mode) { // does not exist in querymode
 		waitWhileLoad();
+		this.frm.vaction.selectedIndex=0;
+		new Ajax.Request('list.ajax?layout=2&ajaxmarkingon=true&markmode='+(mode?"true":"false"),{
+				method: 'post',
+				parameters: this.frm.serialize(true),
+				asynchronous: true,
+				onComplete:	this.selectioncallback.bind(this)
+			});
+			/*
 		new Ajax.Request('list.ajax?module={module}&layout=2&vaction=mark&markmode='+(mode?"true":"false"),
 			{asynchronous: true,
 			 onComplete:this.selectioncallback.bind(this)}
 		);
+		*/
 	},
 	selectioncallback:function(data) { // does not exist in querymode
 		remove_wwl();
@@ -466,7 +475,9 @@ CAjaxList.prototype = {
 		this.frm.elements['multiSelectedIds'].value = data==','?'':data;
 		this.checkboxautomaticfill = true;
 		selectall(this.frm,data != ',','checkbox_');
-		if ($('selectedItens')) $('selectedItens').innerHTML = ",{_t}selected_itens{/t}: "+(str_count(",",$('multiSelectedIds').value)-1);
+		var cid = str_count(",",$('multiSelectedIds').value)-1;
+		if (cid<0) cid=0;
+		if ($('selectedItens')) $('selectedItens').innerHTML = ",{_t}selected_itens{/t}: "+cid;
 		if ($('selectedItens2')) $('selectedItens2').innerHTML = $('selectedItens').innerHTML;
 		this.checkboxautomaticfill = false;
 	},

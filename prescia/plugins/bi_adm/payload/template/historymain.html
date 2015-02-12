@@ -3,17 +3,25 @@
 
 <div class="ladm_aviso">{_t}history_lasts_7days{/t}</div>
 
+<form name="fmu" id="fmu" action="multipleundo.php" method="post">
+	<input type="hidden" name="haveinfo" value="1"/>
+	<div style="float:left">
+		<img style="cursor:pointer" src="{SKIN_PATH}select_all.gif" width="16" height="12" alt="" title="{_t}select_all{/t}" onclick="selectall($('fmu'),true);" /><br/>
+		<img style="cursor:pointer" src="{SKIN_PATH}deselect_all.gif" width="16" height="12" alt="" title="{_t}deselect_all{/t}" onclick="selectall($('fmu'),false)" />
+	</div>
+	<input type="submit" value=" {_t}undo_all_selected{/t} " style="margin:10px;float:right"/>
 	<table cellspacing="0" width="100%">
 		<tr style="height:17px">
-			<td class="ladm_listtitle" style="height:17px;width:25px">&nbsp;</td>
+			<td class="ladm_listtitle" style="height:17px;width:120px">&nbsp;</td>
 			<td class="ladm_listtitle" style="height:17px;">
 				{_t}modulo{/t}
 			</td>
-			<td class="ladm_listtitle" style="height:17px;">
-				{_t}event{/t}
-			</td>
+			
 			<td class="ladm_listtitle" style="height:17px;">
 				{_t}data{/t}
+			</td>
+			<td class="ladm_listtitle" style="height:17px;">
+				{_t}event{/t}
 			</td>
 			<td class="ladm_listtitle" style="height:17px;">
 				{_t}author{/t}
@@ -22,22 +30,25 @@
 		{_events}
 		<tr>
 			<td class="ladm_line{#|each|2=even|odd}">
+				<input type="checkbox" id="id{id}" value="{id}" name="undo[]" />
 				<input style="font-size:9px;margin:0px;" type="button" class="ladm_buttonblue" onclick="waitWhileLoad();document.location='history.html?id={id}'" value="{_t}see{/t}"/>
 			</td>
 			<td class="ladm_line{#|each|2=even|odd}">
-				{_t}{modulo}{/t}
-			</td>
-			<td class="ladm_line{#|each|2=even|odd}">
-				{_t}{event|map|delete=deletion,update=update_undo}{/t}
+				{_t}{modulo}{/t} ({id})
 			</td>
 			<td class="ladm_line{#|each|2=even|odd}">
 				{data|datetime}
 			</td>
+			<td class="ladm_line{#|each|2=even|odd}">
+				{_t}{event|map|delete=deletion,update=update_undo}{/t}
+			</td>
+			
 			<td class="ladm_line{#|each|2=even|odd}">
 				{author_name}
 			</td>
 		</tr>
 		{/events}
 	</table>
-
+	<input type="submit"  value=" {_t}undo_all_selected{/t} " style="margin:10px;float:right"/>	
+</form>
 </div>

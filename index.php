@@ -150,7 +150,7 @@ if (!$core->servingFile) {
 	
 	foreach ($core->tClass as $class=>$script)
 		$core->template->varToClass[] = $class;
-	$core->loadIntlControl(); # load i18n variables into template system
+	$core->loadIntlControl(); # load i18n variables into template system, translate parseRewrite folder
 	if ($_SESSION[CONS_SESSION_NOROBOTS]) {
 		$core->headerControl->noIndex();
 	}

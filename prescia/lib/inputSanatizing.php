@@ -50,8 +50,6 @@
 			else
 				return addslashes($entrada); // escapes ', " and \
   		} else {
-  			//$entrada = str_replace("\\\"","&quot;",$entrada); # in case something was escaped
-  			//$entrada = str_replace("\\'","&#39;",$entrada); # in case something was escaped
 			$entrada = str_replace("'","&#39;",$entrada); # normal escape
 			$entrada = str_replace("\"","&quot;",$entrada); # normal escape
   			if ($dbo !== false)

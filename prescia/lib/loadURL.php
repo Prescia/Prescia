@@ -103,7 +103,9 @@
 	# Get number of views on a YOUTUBE video!
 	# Send video code, not url
 	function getYoutubeViews($code) {
-		# 2015.1.1: <div class="watch-view-count">16,520,660</div>
+		# 2015.1.28: <div class="watch-view-count">16,520,660</div>
+		#			 <strong class="watch-time-text">Published on Nov 30, 2011
+		#			 <button class="yt-uix-button yt-uix-button-size-default yt-uix-button-opacity yt-uix-button-has-icon no-icon-markup yt-uix-button-toggled yt-uix-tooltip" type="button" onclick=";return false;" title="Unlike" id="watch-like" aria-label="like this video along with 238,062 other people" data-like-tooltip="I like this" data-orientation="vertical" data-unlike-tooltip="Unlike" data-position="bottomright" data-force-position="true" data-button-toggle="true"><span class="yt-uix-button-content">238,062 </span></button></span><span ><button class="yt-uix-button yt-uix-button-size-default yt-uix-button-opacity yt-uix-button-has-icon no-icon-markup  yt-uix-tooltip" type="button" onclick=";return false;" title="I dislike this" id="watch-dislike" aria-label="dislike this video along with 11,897 other people" data-orientation="vertical" data-position="bottomright" data-force-position="true" data-button-toggle="true"><span class="yt-uix-button-content">11,897 
 		$html = loadURL('https://www.youtube.com/watch?v='.$code);
 		if ($html !== false) {
 			$html = $html[1];

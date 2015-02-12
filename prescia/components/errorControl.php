@@ -215,7 +215,6 @@ class CErrorControl {
 	}
 	function raise($errCode,$parameter="",$module="",$extended="") {
 		if (!CONS_ONSERVER && $errCode == 1000) return; # this will happen every single hit on development mode
-		$this->errorCount++;
 		if ($this->errorCount==CONS_MAX_ERRORS) $errCode = 178; // abort (gracefully)
 		if ($this->errorCount>CONS_MAX_ERRORS) die("178 too many errors, error during error report found");
 		#-- quickly set the fatal error flag
@@ -268,7 +267,7 @@ class CErrorControl {
 						$this->ERRORS[$errCode] == CONS_ERROR_FATAL_MAIL;
 		$storeInWarning = ($this->ERRORS[$errCode] != CONS_ERROR_MESSAGE);
 		$redWarning = $this->ERRORS[$errCode] != CONS_ERROR_NOTICE_SHOW && $this->ERRORS[$errCode] != CONS_ERROR_NOTICE && !$actionLog; # These are logs that, once displayed to the users, should be in red (actual errors)
-
+		if (!$actionLog) $this->errorCount++;
 		#--
 		$errstr = $this->parent->langOut('e'.$errCode)." (e$errCode) $module $parameter $extended";
 		$errstrfull = $errCode."|".$module."|".$parameter."|".$extended."|".implode("|",$this->parent->log);

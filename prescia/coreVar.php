@@ -4,8 +4,8 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","15.1.20 beta"); // (Y.m.d) ~ last stable: 0.93
-define ("AFF_VERSION",0.94);  
+define ("AFF_BUILD","15.2.9 beta"); // (Y.m.d) ~ last stable: 0.95
+define ("AFF_VERSION",0.96);  
 // Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 
 # -- XML parameter
@@ -116,6 +116,10 @@ class CPresciaVar {
 	var $doctype = "html"; # html or xhtml. xhtml is very restrictive, beware
 	var $debugFile = ''; # Set this to the HTML template to debug areas (full path)
 	var $noBotProtectOnAjax = false; # if true, disable bot protection on ajax. Enabled usually by newsletter system
+	var $parseRewrite = array(); # translate domains to path,lang and canonical (example: ["thisdomain.net"] => ["en",false] will force thisdomain always language en, but won't change the canonical) runs at domainLoad
+		// examples:
+		// "aoimirai.net" => array("en",true) 	<- if this domain is being served, serve as language "en", use this as main canonical on ALL domains 
+		// "aoimirai.com" => array("en","false)	<- if this domain is being served, serve as language "en", and this is not the main canonical (would be the above)
 	var $collectStatsOnTheseFiles = array(); # files inside the file manager that you wish to allow full run to collect stats (SLOW)
 	
 	# Filled at startup / action
