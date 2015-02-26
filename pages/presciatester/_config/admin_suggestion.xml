@@ -18,7 +18,7 @@
 	<new>edit.php?module=forumthread</new>
 	<list>list.php?module=forumthread</list>
 </FORUMTHREAD>
-<FORUMPOST icon="list" listing="forum_title,forumthread_title,author_name,date,whoflagged_name,props,ip">
+<FORUMPOST icon="list" listing="forum_title,forumthread_title,author_name,date,whoflagged_name,props,ip,includehtml">
 	<new>edit.php?module=forumpost</new>
 	<list>list.php?module=forumpost</list>
 </FORUMPOST>

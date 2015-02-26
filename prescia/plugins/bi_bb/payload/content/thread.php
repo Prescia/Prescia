@@ -37,7 +37,7 @@
 	// image meta
 	if ($core->storage['friendlyurldata']['image'] == 'y') {
 		$core->addScript("shadowbox"); 
-		$core->template->constants['METAFIGURE'] = str_replace("//","/",str_replace("files/","/",str_replace(CONS_FMANAGER,"/",$core->storage['friendlyurldata']['image_2'])));
+		$core->template->constants['METAFIGURE'] = $core->storage['friendlyurldata']['image_2'];
 	}
 	
 	//print_r($core->storage['friendlyurldata']);

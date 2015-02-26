@@ -16,13 +16,7 @@
 		define("CONS_DB_BASE","");
 		define("CONS_DB_USER","");
 		define("CONS_DB_PASS","");
-		// If this site has multiple domains AND we want each domain to foward to a different FOLDER, translate domain=>folder here:
-		$this->domainTranslator = array(#'www.prescia.net' => 'aff',
-										#'aff.daisuki.net.br' => 'aff',
-										#'www.prescia.net' => '',
-										#'www.daisuki.net.br' => '',
-										); // <-- if none are found will use root
-
+		
 		// You should have this enabled to help you while creating/debbuging the site, then disable it for performance, or keep only on production
 		//$dev = $this->addPlugin('bi_dev');
 
@@ -32,11 +26,7 @@
 		define("CONS_DB_BASE","");
 		define("CONS_DB_USER","root"); // Overridden by master, if set
 		define("CONS_DB_PASS","root"); // Overridden by master, if set
-		// If this site has multiple domains AND we want each domain to foward to a different FOLDER, translate domain=>folder here:
-		$this->domainTranslator = array(#'localhost' => '',
-										#'127.0.0.1' => '',
-										); // <-- if none are found will use root
-
+		
 		// you should have this enabled to help you while creating the site, then disable it for performance, or keep only on production (a.k.a. right here =p)
 		$dev = $this->addPlugin('bi_dev');
 	}
@@ -74,6 +64,7 @@
 
 	// Uncomment and change as needed
 	#$this->languageTL = array("en" => "en", "pt" => "pt-br"); # url/PATH/[subdir/] => url/[subdir/]?lang=PATH
+	#$this->forceVDIRTL = true; // using the tag {vdir|folder} will always add the languageTL in it, so {vdir|/} translates to /en/ or /pt/
 	#$this->forceLang = "en"; # force this language (kinda spoils i18n settings, this is used mostly for debugging)
 	#$this->charset = "utf-8"; # default charset (default is utf-8 already)
 	$this->doctype = "html"; // use html or xhtml. This will change how the page is served. Note xhtml is VERY STRICT, like ... VERY. Really, you will never use this

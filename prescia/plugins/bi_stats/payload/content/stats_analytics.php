@@ -535,6 +535,9 @@
 	#################################### BOT HITS 24h ########################################
 	$core->template->assign("bothits",$core->dbo->fetch("SELECT hits FROM stats_bots WHERE data='".date("Y-m-d")."'"));
 	
+	#################################### HONEYPOT ############################################
+	$core->template->assign("honeypot",isset($_SESSION[CONS_SESSION_HONEYPOTLIST])?count($_SESSION[CONS_SESSION_HONEYPOTLIST]):0);
+	
 	#################################### LANGUAGE ############################################
 	$sql = "SELECT sum(uhits) as hits, lang FROM stats_hitsh WHERE data>NOW() - INTERVAL 1 MONTH GROUP BY lang ORDER BY lang ASC";
 	$core->dbo->query($sql,$r,$n);
@@ -555,3 +558,5 @@
 		$temp .= $obj->techo($langs[$c]);
 	}
 	$core->template->assign("_lang",$temp);
+	
+	

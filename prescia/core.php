@@ -239,7 +239,7 @@ class CPrescia extends CPresciaVar {
 			}
 			$this->close(true); # should abort script if readfile didn't
 		}
-		# special cases (robots,favicon, sitemap)
+		# special cases (robots,favicon, sitemap, hpindex)
 		if (!isset($_SESSION[CONS_SESSION_NOROBOTS])) { # norobots controller
 			$_SESSION[CONS_SESSION_NOROBOTS] = (strpos(",".CONS_NOROBOTDOMAINS.",",$this->domain) !== false ||
 											  strpos(",".CONS_NOROBOTDOMAINS.",",str_replace("www.","",$this->domain)) !== false);
@@ -272,6 +272,12 @@ class CPrescia extends CPresciaVar {
 					$this->readfile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/sitemap.xml","xml",true,"sitemap.xml");
 				else
 					$this->fastClose(404);
+			} else if (!$this->isbot && CONS_HONEYPOT && $this->original_action == CONS_HONEYPOTURL && isset($_SERVER['HTTP_USER_AGENT'])) {
+				// caught you stupid ass bot
+				$_SESSION[CONS_SESSION_HONEYPOTLIST][] = $_SERVER['HTTP_USER_AGENT'];
+				cWriteFile(CONS_PATH_TEMP."honeypot.dat",serialize($_SESSION[CONS_SESSION_HONEYPOTLIST]));
+				$this->isbot = true;
+				$this->fastClose(404);
 			}
 		}
 		return false;
@@ -1166,8 +1172,8 @@ class CPrescia extends CPresciaVar {
 			$metadata .= "\t<meta property=\"og:url\" content=\"".$this->template->constants['CANONICAL']."\" />\n";
 			if (isset($this->template->constants['METAFIGURE']) && $this->template->constants['METAFIGURE'] != "") {
 				if ($this->template->constants['METAFIGURE'][0] != '/') $this->template->constants['METAFIGURE'] = "/".$this->template->constants['METAFIGURE'];
-				$metadata .= "\t<meta property=\"og:image\" content=\"/files".$this->template->constants['METAFIGURE']."\" />\n";
-				$metadata .= "\t<link rel=\"image_src\" href=\"/files".$this->template->constants['METAFIGURE']."\" />\n";
+				$metadata .= "\t<meta property=\"og:image\" content=\"".$this->template->constants['METAFIGURE']."\" />\n";
+				$metadata .= "\t<link rel=\"image_src\" href=\"".$this->template->constants['METAFIGURE']."\" />\n";
 			}
 			$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
 			if (locateFile($favfile,$ext)) {
@@ -1221,6 +1227,7 @@ class CPrescia extends CPresciaVar {
 		}
 
 		return $this->template->techo();
+		
 	} # showTemplate
 #-
 	function removeAutoTags(&$tp) {

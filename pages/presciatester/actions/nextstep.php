@@ -9,7 +9,7 @@
 			
 				$ok = $this->dimconfig['i_am_alive'] == 'presciacounter plugin is alive <3';
 				if (!$ok) {
-					$this->log [] = "ERROR: Plugin presciacounter was not loaded properly!";
+					$this->log [] = "<b>ERROR: Plugin presciacounter was not loaded properly!</b>";
 					break;
 				}
 				
@@ -326,9 +326,11 @@
 							'publicar' => 'y');
 				$ok = $this->runAction('SEO',CONS_ACTION_INCLUDE,$data);
 				if ($ok) {
+					// automatic log should have set we are in deep trouble for some "warnings", but they were expected, so success
+					$this->setLog(CONS_LOGGING_SUCCESS,"",true);
 					$this->log[] = "------------------------------------------------------------------------------";
-					$this->log[] = "PLEASE SET ALL PERMISSIONS TO TRUE ON EDITING PRESCIATOR ON WD40 GROUP BEFORE CONTINUING";
-					$this->log[] = "Remember the admin is at /admin/, and password should be master / presciatester{day}";
+					$this->log[] = "<b>PLEASE SET ALL PERMISSIONS TO TRUE ON 'PRESCIATOR' FOR WD40 GROUP BEFORE CONTINUING</b>";
+					$this->log[] = "Remember the admin is at /admin/, and password should be master / <b>presciatester{day}</b>";
 					$this->log[] = "------------------------------------------------------------------------------";
 					$this->dimconfig['presciastage'] = 'creation';
 					$this->saveConfig();
@@ -337,7 +339,7 @@
 			case 'creation': # just main fill, WITH ERRORS!
 			
 			
-				$this->authControl->logUser(1,CONS_AUTH_SESSION_NEW);
+				$this->authControl->logUser(1,CONS_AUTH_SESSION_NEW); // log master
 				$ok = true;
 				$this->log[] = "Alpha error: no title (expected error: 127)";
 				$data = array('id_parent' => 0,
@@ -429,7 +431,11 @@
 				$ok = !$this->runAction('presciaalpha',CONS_ACTION_INCLUDE,$data);
 				$this->errorState = false;
 				
-				// should have counted one change on each $a1+$b1 and $a2+$b2
+				
+			
+				
+				// should have counted one change on each $a1+$b1, $a2+$b2 and the edit to delete key+1 somefile
+				
 				
 				
 				
@@ -437,20 +443,104 @@
 				$this->authControl->logsGuest();
 				
 				if ($ok) {
+					// automatic log should have set we are in deep trouble for all the errors, set we are not, they were expected
+					$this->setLog(CONS_LOGGING_SUCCESS,"",true);
 					$this->dimconfig['presciastage'] = 'pass1';
 					$this->saveConfig();
 				}
 				
 			break;
-			case 'pass1':
-				$ok = true;
+			case 'pass1': // test file management
+			
+				$ok = true;	
+				//order to delete a specific file field from presciator ... should NOT delete all fields  
+				// alpha=key&beta=1& should have ALL files
+
+				$this->log[] = "Logging in with low-level user";
+				$uid = $this->dbo->fetch("SELECT id FROM auth_users WHERE login='wd40user'");
+				if ($uid === false) {
+					$ok = false;
+					$this->log[] = "Failed to fetch wd40 user";
+					return;
+				}
+				$this->authControl->logUser($uid,CONS_AUTH_SESSION_NEW); // log wd40
+				
+				// are files there?
+				$f = CONS_FMANAGER."presciator/somefile_key_1_1";
+				$yes1 = locateAnyFile($f,$e); // any file because it is a txt
+				$f = CONS_FMANAGER."presciator/someimage_key_1_1";
+				$yes2 = locateFile($f,$e);
+				$f = CONS_FMANAGER."presciator/conditionedimage_key_1_1";
+				$yes3 = locateFile($f,$e); // should be 100x100
+				$f = CONS_FMANAGER."presciator/conditionedimage_chave_1_1";
+				$yes3 = locateFile($f,$e2); // should be 200x200
+				
+				if ($yes1 && $yes2 && $yes3) {
+					$this->log[] = "File management test on presciator. All files detected - ok";
+					
+					$h = getimagesize(CONS_FMANAGER."presciator/conditionedimage_key_1_1.".$e);
+					$h2 = getimagesize(CONS_FMANAGER."presciator/conditionedimage_chave_1_1.".$e2);
+					if ($h[0] !== 100 || $h[1] != 100 || $h2[0] !== 200 || $h[2] != 200) {
+						$this->log[] = "<b>ERROR</b>: conditioned file-size were cropped to wrong size (tested key_1 and chave_1 conditionedimages)";
+						$ok = false;
+					}
+					else $this->log[] = "Conditioned file-size seems working";
+					
+					$this->log[] = "Testing delete a file, no error expected";
+					$data = array('alpha' => 'key',
+							  'beta' => 1,
+							  'somefile_delete' => 'on'
+							  );
+					$ok = $this->runAction('presciator',CONS_ACTION_UPDATE,$data); // will succeed, and delete somefile
+					$this->errorState = false;
+					
+					clearstatcache();
+					
+					$f = CONS_FMANAGER."presciator/somefile_key_1_1";
+					$yes1 = locateAnyFile($f,$e);
+					$f = CONS_FMANAGER."presciator/someimage_key_1_1";
+					$yes2 = locateFile($f,$e);
+					
+					if (!$yes1 && $yes2) $this->log[] = "Success, file has been deleted, other file fields intact!";
+					else {
+						$this->log[] = "<b>ERROR</b>: ".($yes1?"File was not deleted!":"").(!$yes2?"Other files were also deleted, should only delete one field!":"");
+						$ok = false;
+					}
+					
+				} else {
+					$this->log[] = "<b>ERROR</b>: some files on presciator key_1 were not found, all should be present:".($yes1?"somefile ok,":"somefile missing,").($yes2?"someimage ok,":"someimage missing,").($yes3?"conditionedimage ok.":"conditionedimage missing.");
+					$ok = false;
+				}
+			
+				$this->log[] = "Logging off ...";
+				$this->authControl->logsGuest();
+				
+				if ($ok) {
+					// automatic log should have set we are in deep trouble for all the errors, set we are not, they were expected
+					$this->setLog(CONS_LOGGING_SUCCESS,"",true);
+					$this->dimconfig['presciastage'] = 'pass2';
+					$this->saveConfig();
+				}
+				
 			break;
-			case 'pass2':
+			case 'pass2': // undo test 
 				$ok = true;
+			
+				$this->authControl->logUser(1,CONS_AUTH_SESSION_NEW);
+				
+				
+			
+				if ($ok) {
+					$this->dimconfig['presciastage'] = 'pass3';
+					$this->saveConfig();
+				}
 			break;
-			case 'passn': // error/end
+			case 'pass3': // end (delete all)
 				$ok = true;
+				
 				$this->log[] = "This is the end dude";
+				$this->dimconfig['presciastage'] = 'end';
+				$this->saveConfig();
 			break;
 
 		}

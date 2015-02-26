@@ -4,8 +4,8 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","15.2.9 beta"); // (Y.m.d) ~ last stable: 0.95
-define ("AFF_VERSION",0.96);  
+define ("AFF_BUILD","15.2.26 RC"); // (Y.m.d) ~ last stable: 0.97
+define ("AFF_VERSION",1.0);  
 // Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 
 # -- XML parameter
@@ -81,6 +81,7 @@ define ("CONS_SESSION_LOG_REQ","prescia_logreq"); # will replace the POST in cas
 define ("CONS_SESSION_LOGLEVEL","prescia_loglevel"); # level of log to display
 define ("CONS_SESSION_CACHE","prescia_cache"); # object cache for cacheControl
 define ("CONS_SESSION_NOROBOTS","prescia_robots"); # either this is a norobots or not domain
+define ("CONS_SESSION_HONEYPOTLIST","prescia_hpl"); # cache for honeypot bot list
 # -- actions
 define ("CONS_ACTION_SELECT",0); // the "action" of reading a data - used by permission controls
 define ("CONS_ACTION_INCLUDE",1);
@@ -95,6 +96,8 @@ define ("CONS_AUTH_SESSION_LOGGEDOUT",5); # was logged, but logged out as per ti
 define ("CONS_AUTH_SESSION_FAIL_INACTIVE",10); # login ok, but inactive
 define ("CONS_AUTH_SESSION_FAIL_EXPIRED",11); # login ok, but expired
 define ("CONS_AUTH_SESSION_FAIL_UNKNOWN",12); # no login/password pair found
+# -- others
+define ("CONS_CACHECONTROL_MOD","prescia_cachemod"); # cache control modifier
 
 # -- includes
 require_once CONS_PATH_SYSTEM."components/errorControl.php"; # manages ERROR control
@@ -126,6 +129,7 @@ class CPresciaVar {
 	var $offlineMode = false; # if true, means database is not online, and will try caches (automatic)
 	var $dbless = false; # we expect a database
 	var $maintenanceMode = false; # if file maint.txt at root, will be true and will put maint.txt as a msg
+	var $isbot = false; # if the user agent was recognized as a bot or valid user
 	
 	# URL/Domain requested (all filled on domainload)
 	var $domain = ""; # this domain 

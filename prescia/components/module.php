@@ -667,11 +667,10 @@ class CModule {
 	function deleteUploads($kA, $field = "", $ids = "", $basefile = "") {
 		# delete file uploads for the specified item
 		# if only the keys are sent, delete ALL files for this item
-		#	simple ID: all thumbnail for that particular field
-		#	full ID: the specific thumbnail
+		# otherwise, delete the specific field only
 
 
-		# TODO: not working for serialized ($basefile) and this is also wrong, should allow field only, instead deletes all
+		# TODO: not working for serialized ($basefile) 
 
 
 		$dels = 0;
@@ -679,25 +678,14 @@ class CModule {
 		 	$total = isset($this->fields[$field][CONS_XML_THUMBNAILS]) ? count($this->fields[$field][CONS_XML_THUMBNAILS]) : 1;
 		 	$path = CONS_FMANAGER.$this->name."/".(isset($this->fields[$field][CONS_XML_FILEPATH])?$this->fields[$field][CONS_XML_FILEPATH]:"");
 		 	if ($path[strlen($path)-1] != "/") $path .= "/";
-		 	$idc = explode("_",$ids);
-		 	if (count($idc) == count($this->keys)) { # simple ID (the IDs for the field)
-	 			$basefile = $field."_".$ids."_";
-	 			for ($c=1;$c<=$total;$c++) {
-	 				$fileName = $path.($c>1?"t/":"").$basefile.$c;
-	 				$ext = "";
-	 				if (locateAnyFile($fileName,$ext))
-	 					if (is_file($fileName) && unlink($fileName)) $dels++;
+ 			$basefile = $field."_".$ids."_";
+ 			for ($c=1;$c<=$total;$c++) {
+ 				$fileName = $path.($c>1?"t/":"").$basefile.$c;
+ 				$ext = "";
+ 				if (locateAnyFile($fileName,$ext))
+ 					if (is_file($fileName) && unlink($fileName)) $dels++;
 
-	 			}
-		 	} else { # full ID
-		 		$basefile = $field."_".$ids;
-		 		for ($c=1;$c<=$total;$c++) {
-		 			$fileName = $path.($c>1?"t/":"").$basefile."_".$c;
-		 			$ext = "";
-	 				if (locateAnyFile($fileName,$ext))
-	 					if (is_file($fileName) && unlink($fileName)) $dels++;
-		 		}
-		 	}
+ 			}
 		} else { # no field specified, delete ALL files for this item
 			$string_ids = "";
 			foreach ($kA as $id => $value) {

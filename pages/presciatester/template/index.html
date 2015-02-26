@@ -9,13 +9,15 @@
 	</div>
 </div>
 <div class="panel panel-warning">
-	<div class="panel-heading">Diagnostics</div>
+	<div class="panel-heading">Steps</div>
 	<div class="panel-body">
-		The current stage of this test is: {presciastage|onnull|<b>Something is wrong</b>}<br/><br/>
-		Diagnostics for this stage reports as follow:
-		<div>
-			{diagnostics|nl2br}
-		</div>
+		0. START: Creates databases and metafiles, should be 2 or 3 Prescia "warnings" screens before you get this<br/>
+		1. CREATION: Will add several data to all the databases, some trying to trick the system<br/>
+		<i></i>-- After this point, please log into the admin and set permissions to the group WD40 to ALL on the module PRESCIATOR</i><br/> 
+		2. PASS1: Tests basic errors and mandatory field failures, and then permissions<br/>
+		3. PASS2: Tests file management and deletion<br/>
+		4. PASS3: Tests the UNDO/HYSTORY system<br/>
+		5. END: All tests performed. Hit reset to restart.
 	</div>
 </div>
 

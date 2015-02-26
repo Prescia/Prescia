@@ -134,21 +134,29 @@ class CCacheControl {
 			$this->parent->cachetimeObj = 1000;
 			return;
 		}
-		// load default in case we fail to load cachecontrol.dat
-		$this->parent->cachetime = 1000*floor(CONS_DEFAULT_MIN_BROWSERCACHETIME+(CONS_DEFAULT_MAX_BROWSERCACHETIME - CONS_DEFAULT_MIN_BROWSERCACHETIME)/2);
-		$this->parent->cachetimeObj = 1000*floor(CONS_DEFAULT_MIN_OBJECTCACHETIME+(CONS_DEFAULT_MAX_OBJECTCACHETIME - CONS_DEFAULT_MIN_OBJECTCACHETIME)/2);
+		// session cache?
+		if (isset($_SESSION[CONS_CACHECONTROL_MOD])) {
+			$this->parent->cachetime = floor(1000*(CONS_DEFAULT_MIN_BROWSERCACHETIME + (CONS_DEFAULT_MAX_BROWSERCACHETIME - CONS_DEFAULT_MIN_BROWSERCACHETIME) * $_SESSION[CONS_CACHECONTROL_MOD])) * ($this->parent->isbot?2:1);
+			$this->parent->cachetimeObj = floor(1000*(CONS_DEFAULT_MIN_OBJECTCACHETIME + (CONS_DEFAULT_MAX_OBJECTCACHETIME - CONS_DEFAULT_MIN_OBJECTCACHETIME) * $_SESSION[CONS_CACHECONTROL_MOD])) * ($this->parent->isbot?2:1);
+			return;
+		} else {
+			// load default in case we fail to load cachecontrol.dat
+			$this->parent->cachetime = 1000*floor(CONS_DEFAULT_MIN_BROWSERCACHETIME+(CONS_DEFAULT_MAX_BROWSERCACHETIME - CONS_DEFAULT_MIN_BROWSERCACHETIME)/($this->parent->isbot?1:2));
+			$this->parent->cachetimeObj = 1000*floor(CONS_DEFAULT_MIN_OBJECTCACHETIME+(CONS_DEFAULT_MAX_OBJECTCACHETIME - CONS_DEFAULT_MIN_OBJECTCACHETIME)/($this->parent->isbot?1:2));
+		}
+		
 		// loads cachecontrol
 		if (is_file(CONS_PATH_CACHE."cachecontrol.dat")) {
-			$cc = unserialize(cReadFile(CONS_PATH_CACHE."cachecontrol.dat")); // lists the last 10 page times, first item is the average, second is the cache modifier
+			$cc = unserialize(cReadFile(CONS_PATH_CACHE."cachecontrol.dat")); // see updateCacheControl
 			if (is_array($cc)) {
 				$this->parent->storage['CORE_CACHECONTROL'] = $cc;
 				$average = $cc[0];
-				$cmod = ($average-CONS_PM_MINTIME)/(CONS_PM_TIME-CONS_PM_MINTIME);
-				if ($cmod<0)$cmod=0;
-				if ($cmod>1)$cmod=1;
-				$this->parent->cachetime = floor(1000*(CONS_DEFAULT_MIN_BROWSERCACHETIME + (CONS_DEFAULT_MAX_BROWSERCACHETIME - CONS_DEFAULT_MIN_BROWSERCACHETIME) * $cmod));
-				$this->parent->cachetimeObj = floor(1000*(CONS_DEFAULT_MIN_OBJECTCACHETIME + (CONS_DEFAULT_MAX_OBJECTCACHETIME - CONS_DEFAULT_MIN_OBJECTCACHETIME) * $cmod));
-				$this->parent->storage['CORE_CACHECONTROL'][1] = $cmod; // update cache
+				$_SESSION[CONS_CACHECONTROL_MOD] = ($average-CONS_PM_MINTIME)/(CONS_PM_TIME-CONS_PM_MINTIME);
+				if ($_SESSION[CONS_CACHECONTROL_MOD]<0)$_SESSION[CONS_CACHECONTROL_MOD]=0;
+				if ($_SESSION[CONS_CACHECONTROL_MOD]>1)$_SESSION[CONS_CACHECONTROL_MOD]=1;
+				$this->parent->cachetime = floor(1000*(CONS_DEFAULT_MIN_BROWSERCACHETIME + (CONS_DEFAULT_MAX_BROWSERCACHETIME - CONS_DEFAULT_MIN_BROWSERCACHETIME) * $_SESSION[CONS_CACHECONTROL_MOD])) * ($this->parent->isbot?2:1);
+				$this->parent->cachetimeObj = floor(1000*(CONS_DEFAULT_MIN_OBJECTCACHETIME + (CONS_DEFAULT_MAX_OBJECTCACHETIME - CONS_DEFAULT_MIN_OBJECTCACHETIME) * $_SESSION[CONS_CACHECONTROL_MOD])) * ($this->parent->isbot?2:1);
+				$this->parent->storage['CORE_CACHECONTROL'][1] = $_SESSION[CONS_CACHECONTROL_MOD]; // update cache
 
 			} // else will use default
 		} // else will use default
@@ -169,7 +177,7 @@ class CCacheControl {
 			$sum += $newCC[$c];
 		}
 		$average = $sum/count($newCC);
-		array_unshift($newCC,$cmod); // cmod already changed on startCaches
+		array_unshift($newCC,$cmod); // cmod already changed on startCaches (note due to session cache, the same session will always record the same average)
 		array_unshift($newCC,$average);
 		cWriteFile(CONS_PATH_CACHE."cachecontrol.dat",serialize($newCC));
 		if (CONS_FREECPU && $cmod >= 0.9) usleep(50);
@@ -201,8 +209,7 @@ class CCacheControl {
 		} else
 			unset($_SESSION[CONS_SESSION_CACHE][$tagns]);
 	}
-	function logCacheThrottle() {
-		if (!isset($this->parent->storage['CORE_CACHECONTROL'])) return;
+	function logCacheThrottle() { // saves a log of the last hour of cachecontrol in the log folder, it can be accessed or viewed by the console. This is not used other than logging
 		if (!isset($this->parent->storage['CORE_CACHECONTROL'])) $this->startCaches();
 		$average = $this->parent->storage['CORE_CACHECONTROL'][0];
 		$cmod =  $this->parent->storage['CORE_CACHECONTROL'][1];

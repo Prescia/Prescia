@@ -9,7 +9,7 @@
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto
   | Free to use, change and redistribute, but please keep the above disclamer.
   | Uses: -
-  | Revision: 2015.2.9
+  | Revision: 2015.2.14
   | Latest versions at revision: CH=40, FF=45, SA=8, OP=25, IE=11
  
 -*/
@@ -95,7 +95,7 @@
 					$v = $vi[0]; // w/o dot
 					if (isset($vi[1])) $v .= ".".$vi[1];
 					if ($v < 9) $legacy = true; 								/* old IE-VERSION */
-					if ($v < 4) return array("UNKNOWN/Internet Explorer Poser",true,false,$so,"UN",0);	// too old to be true
+					if ($v < 5) return array("UNKNOWN/Internet Explorer Poser",true,false,$so,"UN",0); // too old to be true
 				} else { // harvester or bad MSIE tag
 					$browser = substr($browser,0,50)."...";
 					return array("UNKNOWN/".$browser,true,false,$so,"UN",0);
@@ -122,7 +122,7 @@
 				$v = $vi[0]; // w/o dot
 				if (isset($vi[1])) $v .= ".".$vi[1];
 				if ($v < 19) $legacy = true; 									/* FF-VERSION */
-				if ($v < 4) return array("UNKNOWN/Firefox Poser",true,false,$so,"UN",0);	// too old to be true, most firefox poser bots are 3.5 or 3.6
+				if ($v < 4) return array("UNKNOWN/Firefox Poser",true,false,$so,"UN",0);	// too old to be true (lots of harversters are 3.5 and 3.6)
 			} else {
 				$browser = "Firefox";
 				$legacy = true;

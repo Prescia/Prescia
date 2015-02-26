@@ -11,10 +11,18 @@ if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_c
 	$isMasterDomain = CONS_MASTERDOMAINS == "" || strpos(CONS_MASTERDOMAINS,$_SESSION['DOMAIN'])!==false || !CONS_ONSERVER;
 
 	// delete throttle datfile (it grows insanelly, but deleting hourly would defeat it's core purpose)
-	if (CONS_BOTPROTECT && $isMasterDomain) {
-		foreach(glob(CONS_PATH_TEMP."*.dat") as $file) {
-			if(!is_dir($file))
-				@unlink($file);
+	if ($isMasterDomain) {
+		// if honeypot, reset user agent bans
+		if (CONS_HONEYPOT) {
+			@unlink(CONS_PATH_TEMP."honeypot.dat");
+			$_SESSION[CONS_SESSION_HONEYPOTLIST] = array();
+		}
+		// if botprotect, reset bans
+		if (CONS_BOTPROTECT) {
+			foreach(glob(CONS_PATH_TEMP."*.dat") as $file) {
+				if(!is_dir($file))
+					@unlink($file);
+			}
 		}
 	}
 

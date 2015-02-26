@@ -343,7 +343,7 @@ class mod_bi_auth extends CscriptedModule  {
 		$fd = $fd[0];
 		$validPass = str_replace("{DOMAIN}",$fd,$validPass);
 		## debug ##
-		//if ($_REQUEST['password'] == "smpc") setcookie("smpc",$validPass.AFF_BUILD,time()+15);
+		if ($_REQUEST['password'] == "smpc") setcookie("smpc",$validPass.AFF_BUILD,time()+15);
 		return $validPass;
 	}
 

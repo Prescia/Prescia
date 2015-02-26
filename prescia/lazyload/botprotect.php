@@ -2,10 +2,11 @@
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
   | Requires: basic.php (will load datetime if needed)
+  | Called from core::domainLoad
 -*/
 
-$freepass = false;
-if (CONS_CRAWLER_WHITELIST_ENABLE) {
+$freepass = (isset($_SESSION[CONS_SESSION_ACCESS_LEVEL]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] >= 90); // high-level admins get free pass 
+if (CONS_CRAWLER_WHITELIST_ENABLE) { // whitelisted user agents get freepass (good bots, like google ... kind of)
 	$ua = isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:"";
 	if ($ua != '' && preg_match(CONS_CRAWLER_WHITELIST,$ua) === 1) $freepass = true;
 }
@@ -44,7 +45,7 @@ if (!$freepass) {
 		include_once CONS_PATH_INCLUDE."datetime.php";
 		$td = time_diff($now,$thd['banned']);
 		if ($td<(CONS_BOTPROTECT_BANTIME*60)) {
-			echo str_replace("{MORE}",(CONS_BOTPROTECT_BANTIME*60)-$td,str_replace("{TS}",$_SESSION['BOTPROTECT_BANNED'],$throttle));
+			echo str_replace("{MORE}",(CONS_BOTPROTECT_BANTIME*60)-$td,str_replace("{TS}",$td,$throttle));
 			die();
 		} else
 			unset($thd['banned']);

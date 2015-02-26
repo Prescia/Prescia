@@ -100,6 +100,8 @@ if (CONS_AFF_ERRORHANDLER) { // override PHP error messaging? (if true, will not
 # ab -n50 total mean: 17ms 16ms
 
 require CONS_PATH_INCLUDE."getBrowser.php"; # this will also detect if we are on mobile, required at domainLoad
+$core->isbot =  CONS_BROWSER == 'UN'; // bots are not logged and have twice as much cache time
+if (!$core->isbot && CONS_HONEYPOT) include(CONS_PATH_SYSTEM."lazyload/honeypot.php"); // start up honeypot detection if enabled
 $core->domainLoad(); // locks domain, load config, start i18n, parses requested URL
 
 # ab -50 total mean: 28ms 26ms
@@ -191,6 +193,9 @@ if (!$core->servingFile) {
 	# -- build headers
 	$core->headerControl->showHeaders();
 	# -- any script want to check the raw text/HTML output?
+} else { // when serving a file directly, these were not set because checkAction was never loaded
+	$_SESSION[CONS_SESSION_ACCESS_LEVEL] = CONS_SESSION_ACCESS_LEVEL_GUEST;
+	$core->currentAuth = CONS_AUTH_SESSION_GUEST;
 }
 
 foreach ($core->onEcho as $scriptName) {
@@ -219,6 +224,13 @@ if ($totalTime > CONS_PM_TIME) {
 		fclose($fd);
 	}
 }
+
+# -- if honeypot is on, append trap
+if (CONS_HONEYPOT && !$core->isbot && $core->context_str == "/") { // note we don't add the honeypot if we already know this is a bot and on non root folders, no need to catch it again or go overboard
+	$hp = "\n<a href=\"/".CONS_HONEYPOTURL."/\" nofollow='true' style='width:0px;overflow:hidden;position:absolute;bottom:0px'>*</a>";
+	$PAGE = str_replace("</body>",$hp."</body>",$PAGE);
+}		
+
 # -- we are done here, close up whatever is no longer necessary and prepare to echo
 $core->close(false);
 

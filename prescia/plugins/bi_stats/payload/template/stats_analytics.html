@@ -1264,7 +1264,7 @@
 			canvas.stroke();
 			canvas.closePath();
 		}
-		$('todaysummary').innerHTML = "<strong>Totals for last 24h:</strong><br/>Visitors: <strong>" + sum + "</strong><br/>Unique Visiors: <strong>" + sumu + "</strong><br/>Bot hits today: <strong>{bothits}</strong>";
+		$('todaysummary').innerHTML = "<strong>Totals for last 24h:</strong><br/>Visitors: <strong>" + sum + "</strong><br/>Unique Visiors: <strong>" + sumu + "</strong><br/>Bot hits today: <strong>{bothits}</strong><br/>User agents caught on honeypot: <b>{honeypot}</b>";
 		normalAverage = sum/24;
 		if (biggestHour < n && biggest > sum/3) {
 			weirdPeak = biggestHour;

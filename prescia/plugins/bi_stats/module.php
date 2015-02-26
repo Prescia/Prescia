@@ -205,8 +205,8 @@ class mod_bi_stats extends CscriptedModule  {
 			$pageToBelogged .= $act;
 			$pageToBelogged = str_replace('"',"",$pageToBelogged); # there are exploits everywhere!
 			
-			# is this a BOT? atm we consider unknown browsers as bots to make this faster
-			$isBot = CONS_BROWSER == "UN";
+			# is this a BOT? atm we consider unknown browsers as bots (some obvious crawlers are already set to unknown, see getBrowser.php) to make this faster, if CONS_HONEYPOT is on, will also detect bots using a honeypot
+			$isBot = $core->isbot;
 
 			# -- Check for "ignore ip"
 			$iip = isset($this->parent->dimconfig['bi_statsignoreip'])?$this->parent->dimconfig['bi_statsignoreip']:'';
@@ -244,7 +244,7 @@ class mod_bi_stats extends CscriptedModule  {
 			if ($this->logBOTS) {
 				$fd = fopen (CONS_PATH_LOGS.$_SESSION['CODE']."/bots".date("Ymd").".log", "a");
 				if ($fd) {
-					fwrite($fd,CONS_IP." ".(isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:"")." ? ".$this->parent->context_str.$this->parent->action."\n");
+					fwrite($fd,date("H:i:s")." ".CONS_IP." [".(isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:"")."] ".$pageToBelogged."\n");
 					fclose($fd);
 				}
 			}
