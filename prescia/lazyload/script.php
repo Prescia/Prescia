@@ -11,13 +11,13 @@
 
 	// function addScript($scriptname,$parameters) {
 	switch (strtolower($scriptname)) {
-		case "bootstrap":
+		case "bootstrap": // parameter: setViewport (number or device-width)
 
 			if (strpos($this->template->constants['METATAGS'],"bootstrap/js/bootstrap.min.js")!== false) return; # no double ads (if added manually)
 			if (isset($this->storage['_scripts_bootstrap_added'])) return; # added here
 
 			if (!isset($parameters['setViewport'])) {
-				$parameters['setViewport'] = 992;
+				$parameters['setViewport'] = $this->isbot?'device-width':992;
 			}
 
 			$this->addMeta("\t<meta name=\"viewport\" content=\"width=".$parameters['setViewport'].", initial-scale=1\" />");

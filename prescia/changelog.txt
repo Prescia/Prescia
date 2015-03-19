@@ -1,5 +1,7 @@
 TODO list is on site/github
 
+15.03.12 RC 1.0
+	Fixed issue where 404 pages where still being logged when fetched from CACHE. We now have a cache for soft 404 errors so we know a page will 404 before it even starts if we are going to use a cache 
 15.02.25 RC 1.0
 	Tweaks on console and variables. Stable release. We are done for now
 

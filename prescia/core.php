@@ -18,11 +18,14 @@ class CPrescia extends CPresciaVar {
   		$this->maintenanceMode = CONS_ONSERVER && is_file("maint.txt"); # Creating a maint.txt file on root will display it's contents on the debug area, telling your site is on maintenance for instance
   	} # __construct
 #-
-	function domainLoad() { # DOMAINLOAD → parseRequest -> loadIntlControl -> checkActions -> renderPage -> showTemplate
-		# Checks from the HTTP_HOST (or SERVER_NAME) which site is being accessed
-		# Uses a session cache to speed this up, though the domain file is also cached for speed
-		# NOTE this will load the site config.php after selecting the site code.
 
+	/* domainLoad
+	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage* -> showHeaders -> showTemplate*
+	 * Checks from the HTTP_HOST (or SERVER_NAME) which site is being accessed
+	   Uses a session cache to speed this up, though the domain file is also cached for speed
+	   NOTE this will load the site config.php after selecting the site code.
+	 */
+	function domainLoad() { 
 		$uri = explode(":",isset($_SERVER['HTTP_HOST'])?$_SERVER['HTTP_HOST']:$_SERVER['SERVER_NAME']);
 		$this->domain = strtolower(array_shift($uri)); # removes protocol
 		if (CONS_AUTOREMOVEWWW && substr($this->domain,0,4) == "www.") $this->domain = substr($this->domain,4);
@@ -118,7 +121,7 @@ class CPrescia extends CPresciaVar {
 		# anti-bot (basically a anti-DOS tool)
 		if (CONS_BOTPROTECT && ($this->layout != 2 || !$this->noBotProtectOnAjax)) require CONS_PATH_SYSTEM."lazyload/botprotect.php";
 		
-	} # domainlock
+	} # domainLoad
 #-
 	function dbconnect() { # coreFull will override
 	 	# Performs the connection with the database (with usually one retry)
@@ -169,8 +172,12 @@ class CPrescia extends CPresciaVar {
 		return $this->intlControl->langOut($tag);
 	} # langOut
 #-
-	function parseRequest() { # domainLoad → PARSEREQUEST -> loadIntlControl -> checkActions -> renderPage -> showTemplate
-		# Handle several request exceptions, optimization and security issues related to URI
+	/* parseRequest 
+	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage* -> showHeaders -> showTemplate*
+	 * Handle several request exceptions, optimization and security issues related to URI
+	 */
+	function parseRequest() { 
+		
 
 		# you cannot have an action named default, alas it's the same as index!
 		if ($this->action == "default") $this->action = "index";
@@ -284,7 +291,7 @@ class CPrescia extends CPresciaVar {
 	}
 #-
 	/* loadIntlControl
-	* domainLoad → parseRequest -> LOADINTLCONTROL -> checkActions -> renderPage -> showTemplate
+	* domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage* -> showHeaders -> showTemplate*
 	* will load language from url (languageTL) on top of existing language settings, then apply all language settings
 	*/
 	function loadIntlControl() {
@@ -471,7 +478,7 @@ class CPrescia extends CPresciaVar {
 	}# addLink
 #--
 	/* checkActions
-	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage -> showTemplate
+	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage* -> showHeaders -> showTemplate*
 	 * Once everything is in order to render the page, checks if there are pending actions to be performed, such as handling a $_POST
 	 *
 	 * IMPORTANT: For actions to work properly, send haveinfo=true ON POST or whatever (value doesn't matter) in the query.
@@ -753,6 +760,7 @@ class CPrescia extends CPresciaVar {
 			if ($_SESSION[CONS_SESSION_CONFIG][1] != date("i"))
 				unset($_SESSION[CONS_SESSION_CONFIG]);
 		}
+		if (isset($_REQUEST['nocache'])) $this->dimconfig['_404cache'] = array();
 	} # loadDimconfig
 #-
 	/* loadModule
@@ -917,7 +925,7 @@ class CPrescia extends CPresciaVar {
 
 #-
 	/* renderPage
-	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage -> showTemplate
+	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage* -> showHeaders -> showTemplate*
 	 * Runs the control scripts (which will most likely change the views), deals with 404 errors and some optimizations. Also sets the header for the current charset
 	 * NOTE: this might run twice on fastClose
 	 */
@@ -1022,13 +1030,11 @@ class CPrescia extends CPresciaVar {
 			$this->loadedPlugins[$scriptName]->onShow();
 		}
 	}
-#-
-	/* showTemplate
-	 * domainlock -> parseRequest -> loadIntlControl -> checkActions -> renderPage -> showTemplate
-	 * Basically echos the template (view), filling up constants and other framework optimizations into it
+	/* showHeaders
+	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage* -> showHeaders -> showTemplate*
+	 * Echoes the master headers and cache headers, also raise soft  404/403 warning
 	 */
-	function showTemplate() {
-
+	function showHeaders() {
 		if (!$this->headerControl->softHeaderSent) { // we know headers already sent and can't be resent
 			# Header / cache
 			if ($this->action != "404" && $this->action != "403") $this->headerControl->addHeader(CONS_HC_HEADER,200);
@@ -1049,6 +1055,13 @@ class CPrescia extends CPresciaVar {
 
 		# logs 404/403 in separate error code
 		if ($this->action == '404' || $this->action == '403') $this->errorControl->raise(103,$this->context_str.$this->action,"404x403",vardump($this->warning));
+	}
+#-
+	/* showTemplate
+	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage* -> showHeaders -> showTemplate*
+	 * Basically echos the template (view), filling up constants and other framework optimizations into it
+	 */
+	function showTemplate() {
 
 		if (count($this->log)>0) {
 			$output = "";

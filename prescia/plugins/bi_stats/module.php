@@ -192,7 +192,7 @@ class mod_bi_stats extends CscriptedModule  {
 		if ($core->action == '404' || $core->action == '403') $this->doNotLogMe = true;
 
 		if (!$this->doNotLogMe || $this->forceLogMe) {
-
+			
  			# what page are we logging (original call always)
 			
 			$act = $core->original_action;

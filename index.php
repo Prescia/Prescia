@@ -166,27 +166,44 @@ if (!$core->servingFile) {
 	# ab -n50 total mean: 402ms 46ms (41ms with cache enabled)
 
 	# -- cache test
+	$is404 = isset($core->dimconfig['_404cache']) && is_array($core->dimconfig['_404cache']) && isset($core->dimconfig['_404cache'][$core->context_str.$core->original_action]);
 	if (CONS_CACHE && !isset($_REQUEST['nocache'])) {
 		$core->cacheControl->cachepath = CONS_PATH_CACHE.$_SESSION['CODE']."/caches/";
-		$core->cacheControl->cacheseed = ''; // language and user id are automatic
+		$core->cacheControl->cacheseed = ''; // language and user id are automatic		
 		if ($core->cacheControl->canUseCache($core->offlineMode)) { # we can use the cache, load it up
+			if ($is404) {
+				$core->warning[] = "404 because cached as 404";
+				$core->action = "404";
+				$core->template->constants['ACTION'] = "404";
+			}
 			$usedCache =true;
+			$core->showHeaders();
 			$PAGE = $core->cacheControl->renderCache();
 		} else { # can't use cache, build page normally (same as on the next ELSE)
 			$core->renderPage();
 			$core->template->constants['ACTION'] = $core->action; // yes, render could change it
 			$core->template->constants['CONTEXT'] = $core->context_str;
+			$core->showHeaders();
 			$PAGE = $core->showTemplate();
 			unset($core->template); // free memory
-			if ($core->layout < 2 ) $core->cacheControl->setCache($PAGE);
+			if ($core->layout < 2 && count($core->log)==0) $core->cacheControl->setCache($PAGE);
 		}
 	} else { # cache disabled or can't use cache, build page normaly (same as on the ELSE above)
 		// note: core::loadMetadata already run a dumpTemplateCaches if that was required
 		$core->renderPage();
 		$core->template->constants['ACTION'] = $core->action; // yes, render could change it
 		$core->template->constants['CONTEXT'] = $core->context_str;
+		$core->showHeaders();
 		$PAGE = $core->showTemplate();
 		unset($core->template);
+	}
+	if (!$is404 && $core->action == '404') {
+		if (!is_array($core->dimconfig['_404cache']))
+			$core->dimconfig['_404cache'] = array();
+		if (!isset($core->dimconfig['_404cache'][$core->context_str.$core->original_action])) {		
+			$core->dimconfig['_404cache'][$core->context_str.$core->original_action] = true;
+			$core->saveConfig(true);
+		}
 	}
 	# ab -n50 total mean: 411ms 77ms (42m with cache enabled)
 	
@@ -197,6 +214,7 @@ if (!$core->servingFile) {
 	$_SESSION[CONS_SESSION_ACCESS_LEVEL] = CONS_SESSION_ACCESS_LEVEL_GUEST;
 	$core->currentAuth = CONS_AUTH_SESSION_GUEST;
 }
+
 
 foreach ($core->onEcho as $scriptName) {
 	$core->loadedPlugins[$scriptName]->onEcho($PAGE);
