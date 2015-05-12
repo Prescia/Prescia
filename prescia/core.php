@@ -191,6 +191,8 @@ class CPrescia extends CPresciaVar {
 					$_REQUEST = $_SESSION[CONS_SESSION_LOG_REQ];
 				}
 				$_SESSION[CONS_SESSION_LOG_REQ] = array();
+				if (isset($_SESSION[CONS_SESSION_LOGLEVEL]))
+					$this->loglevel = $_SESSION[CONS_SESSION_LOGLEVEL];
 			} else if (isset($_SESSION[CONS_SESSION_LOG_REQ]))
 				unset($_SESSION[CONS_SESSION_LOG_REQ]);
 		}
@@ -880,7 +882,7 @@ class CPrescia extends CPresciaVar {
 		else {
 			switch ($level) {
 				case CONS_LOGGING_WARNING: // replaces notice or sucess, but not error
-					if ($this->loglevel != CONS_LOGGING_SUCCESS) $this->loglevel = CONS_LOGGING_WARNING;
+					if ($this->loglevel != CONS_LOGGING_ERROR) $this->loglevel = CONS_LOGGING_WARNING;
 				break;
 				case CONS_LOGGING_SUCCESS: // replaces only notice
 					if ($this->loglevel == CONS_LOGGING_NOTICE) $this->loglevel = CONS_LOGGING_SUCCESS;

@@ -4,7 +4,7 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","15.3.12 RC"); // (Y.m.d) ~ last stable: 1.0 RC
+define ("AFF_BUILD","15.5.10 FINAL unpublished"); // (Y.m.d) ~ last stable: 1.0 RC
 define ("AFF_VERSION",1.0);  
 // Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 
@@ -31,7 +31,7 @@ define ("CONS_XML_SERIALIZED",23); # how this field deals with serialization: 0/
 define ("CONS_XML_CUSTOM",21); # this field will will NOT be subject to ANY system check. Be careful
 define ("CONS_XML_NOIMG",22); # default image to be returned if no image is set
 define ("CONS_XML_AUTOPRUNE",16); # used in enums, this is used to limit how many items of each class can exist
-define ("CONS_XML_FILTEREDBY",17); # manually sets how this field should be filtered
+define ("CONS_XML_FILTEREDBY",17); # manually sets how this field should be filtered (array)
 define ("CONS_XML_READONLY", 18); # not editable on admin panes
 define ("CONS_XML_TWEAKIMAGES",19); # see documentation. Uses watermark/tweaker for images
 define ("CONS_XML_SPECIAL",25); # login, mail, ucase, lcase, path, google, youtube, time, cpf, cnpj, id

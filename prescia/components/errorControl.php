@@ -158,7 +158,7 @@ class CErrorControl {
 								303 => CONS_ERROR_NOTICE_SHOW, # Login attempt failed: login inactive
 								304 => CONS_ERROR_NOTICE_SHOW, # Login attempt failed: login expired
 								305 => CONS_ERROR_NOTICE_SHOW, # Login attempt failed: unknown login/password pair
-								306 => CONS_ERROR_WARNING, # A user took an action that did not succeed
+								306 => CONS_ERROR_WARNING_SHOW, # A user took an action that did not succeed
 
 								# 04xx available
 
@@ -209,6 +209,7 @@ class CErrorControl {
 								# 10xx Debug notification
 								1000 => CONS_ERROR_NOTICE, # Debugmode: recreating metacache
 								1001 => CONS_ERROR_NOTIFYMAIL, # Use this for debug purposes (will mail th admin)
+								1002 => CONS_ERROR_NOTICE, # Debugmode: cron executed
 
 					);
 
@@ -266,7 +267,7 @@ class CErrorControl {
 						$this->ERRORS[$errCode] == CONS_ERROR_NOTICESTOP ||
 						$this->ERRORS[$errCode] == CONS_ERROR_FATAL_MAIL;
 		$storeInWarning = ($this->ERRORS[$errCode] != CONS_ERROR_MESSAGE);
-		$redWarning = $this->ERRORS[$errCode] != CONS_ERROR_NOTICE_SHOW && $this->ERRORS[$errCode] != CONS_ERROR_NOTICE && !$actionLog; # These are logs that, once displayed to the users, should be in red (actual errors)
+		$redWarning = $this->ERRORS[$errCode] != CONS_ERROR_MESSAGE && $this->ERRORS[$errCode] != CONS_ERROR_NOTICE_SHOW && $this->ERRORS[$errCode] != CONS_ERROR_NOTICE && !$actionLog; # These are logs that, once displayed to the users, should be in red (actual errors)
 		if (!$actionLog) $this->errorCount++;
 		#--
 		$errstr = $this->parent->langOut('e'.$errCode)." (e$errCode) $module $parameter $extended";

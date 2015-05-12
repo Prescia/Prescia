@@ -102,6 +102,7 @@ class CHeaderControl {
 				return false;
 			}
 			$_SESSION[CONS_SESSION_LOG] = $this->parent->log;
+			$_SESSION[CONS_SESSION_LOGLEVEL] = $this->parent->loglevel;
 			$this->parent->dbo->close();
 			ob_end_clean();
 			if ($redirmode != "200")

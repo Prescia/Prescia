@@ -292,6 +292,8 @@
 			if (isset($field[CONS_XML_DEFAULT]) && !isset($data[$name])) {
 				if ($field[CONS_XML_TIPO] == CONS_TIPO_LINK && $field[CONS_XML_DEFAULT] == "%UID%" && defined("CONS_AUTH_USERMODULE") && $field[CONS_XML_MODULE] == CONS_AUTH_USERMODULE && $_SESSION[CONS_SESSION_ACCESS_LEVEL]>0 && isset($_SESSION[CONS_SESSION_ACCESS_USER]['id']))
 					$data[$name] = $_SESSION[CONS_SESSION_ACCESS_USER]['id'];
+				else if ($field[CONS_XML_TIPO] == CONS_TIPO_DATE)
+					$data[$name] = fd($field[CONS_XML_DEFAULT],$core->intlControl->getDate());
 				else
 					$data[$name] = $field[CONS_XML_DEFAULT];
 			} else if (isset($field[CONS_XML_TIMESTAMP]) || isset($field[CONS_XML_UPDATESTAMP])) {
@@ -826,21 +828,23 @@
 						if ($field[CONS_XML_TIPO] == CONS_TIPO_LINK && $field[CONS_XML_MODULE] == $module->name) {
 							if (in_array($name,$addedAsRelate) && $rmodule->linker) break; // add only once linker modules (A<->A relations)
 							$rm++;
-							/*
-							$keyflat = array();
-							$keyquery = array();
-							foreach($rmodule->keys as $rkey) {
-								if ($rmodule->fields[$rkey][CONS_XML_TIPO] == CONS_TIPO_LINK) {
-									// to me?
-									if ($rmodule->fields[$rkey][CONS_XML_MODULE] == $module->name) {
-										// yes, always add
-										
-									}
-								}
-							}*/
+							
 							$output = array('module'=>$name,
 											'referer' => 'affreferer='.$module->name."&affrefererkeys=".$data[$module->keys[0]],
 											'keys'=>$fname."=".$data[$module->keys[0]]);
+
+							if (isset($field[CONS_XML_FILTEREDBY]) && $field[CONS_XML_FILTEREDBY] != '') {
+								foreach ($field[CONS_XML_FILTEREDBY] as $fbname) {
+									if ($field[CONS_XML_TIPO] == CONS_TIPO_LINK)
+										$mykey = $module->get_key_from($rmodule->fields[$fbname][CONS_XML_MODULE]);
+									else 
+										$mykey = $fbname;
+									if (isset($data[$mykey]))
+										$output['keys'] .= "&".$fbname."=".$data[$mykey];
+									
+								
+								}
+							} 
 
 							if (in_array($name,$module->options[CONS_MODULE_MERGE])) { // fill inside of MERGE
 								$content = "";

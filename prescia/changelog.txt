@@ -1,5 +1,22 @@
 TODO list is on site/github
 
+15.05.10 FINAL 
+	Fixed issue where a date with a default value would full the admin pane edit with an invalid date
+	Fixed where a remote module link where the link requires a filter (example: if city requires estate), the filter is detected and also sent
+	Fixed error on action (e306) not displaying
+	Fixed loglevel not showing colors on the debug pane
+	Rollback edit.php to 15.3.12 because above fixes messed up the main edit.php, rewriten right
+
+15.05.08 FINAL (internal - not public)
+	Prescia version added to login pane on admin plugin
+	
+================================--------------------------=================================== Below is beta/RC
+
+15.04.30 RC 1.0 pre-final (getYoutubeViews on beta)
+	Daily cache clean-up eased up across hours if too much
+	Fixed issue where admin list pane hid _removeonpopup and _removeonajax when on mobile mode
+	Changed getYoutubeViews to fetch publich date, likes and dislikes (BETA)
+
 15.03.12 RC 1.0
 	Fixed issue where 404 pages where still being logged when fetched from CACHE. We now have a cache for soft 404 errors so we know a page will 404 before it even starts if we are going to use a cache 
 15.02.25 RC 1.0

@@ -319,29 +319,28 @@
 						$str = "edit.php?module=".$_REQUEST['affreferer'];
 						$refererModule = $core->loaded($_REQUEST['affreferer']);
 						$_REQUEST = array('module' => $_REQUEST['affreferer']);
+						$filteredBy = array();
 						if (isset($_POST['affrefererkeys']) && $_POST['affrefererkeys'] != '') { // loads the referer keys
 							$keys = explode("_",$_POST['affrefererkeys']);
 							foreach	($refererModule->keys as $key) {
 								$_REQUEST[$key] = array_shift($keys); // if fowarder off
 								$str .= "&".$key."=".$_REQUEST[$key];
+								// there is a filteredBy at this key, add it too
+								//if (isset($refererModule->fields[$key][CONS_XML_FILTEREDBY]) && $refererModule->fields[$key][CONS_XML_FILTEREDBY] != '' && isset($_REQUEST[$refererModule->fields[$key][CONS_XML_FILTEREDBY]]) && !in_array($refererModule->fields[$key][CONS_XML_FILTEREDBY],$filteredBy)) {
+								//	$filteredBy[] = $refererModule->fields[$key][CONS_XML_FILTEREDBY]; // fields added later
+								//} 
 							}
 						}
-
-						// prepares my keys in regard of the refered keys
 						/*
-						foreach ($module->keys as $aKey) {
-							if ($aKey == "id")
-								$rKey = $refererModule->get_key_from($module->name,"id_".$module->name);
-							else if ($module->fields[$aKey][CONS_XML_TIPO] == CONS_TIPO_LINK) {
-								$rKey = $refererModule->get_key_from($module->fields[$aKey][CONS_XML_MODULE]);
-							} else {
-								$rKey = $aKey;
-							}
-							if ($rKey != "" && isset($refererModule->fields[$rKey])) {
-								$str .= "&".$rKey."=".$_POST[$key];
+						foreach ($filteredBy as $fname) {
+							if (!in_array($fname,$refererModule->keys) && count($keys)>0) {
+								$_REQUEST[$key] = array_shift($keys); // if fowarder off
+								$str .= "&".$key."=".$_REQUEST[$key];
 							}
 						}
 						*/
+						 
+
 						$core->headerControl->internalFoward($str);
 						$core->action = "edit"; // if internalFoward is disabled
 						$pa_dealt = true;

@@ -8,3 +8,4 @@
 	$core->template->assign("ip",CONS_IP);
 	$core->template->assign("servertime",date("H:i d/m/Y"));
 	$core->template->assign("system",$b[3]);
+	$core->template->assign("pversion",AFF_VERSION." #".AFF_BUILD);

@@ -6,6 +6,8 @@
 
 
 if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_cronD'] && $forceCron != 'hour')) { // Daily cron
+
+	if ($this->debugmode) $this->errorControl->raise(1002,$forceCron,"CRON");
 	$this->loadAllmodules();
 
 	$isMasterDomain = CONS_MASTERDOMAINS == "" || strpos(CONS_MASTERDOMAINS,$_SESSION['DOMAIN'])!==false || !CONS_ONSERVER;
@@ -108,12 +110,14 @@ if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_c
 
 	if (!$this->nearTimeLimit()) {
 		# clean up object cache
-		recursive_del(CONS_PATH_CACHE.$_SESSION['CODE']."/",false,'cache');
+		$allok = recursive_del(CONS_PATH_CACHE.$_SESSION['CODE']."/",false,'cache',500);
+		if (!$allok) $this->dimconfig['_recurseDelOverflow'] = 1;
+		else $this->dimconfig['_recurseDelOverflow'] = 0;
 	}
 
 	$this->dimconfig['_cronD'] = date("d");
 	$this->dimconfig['_errcontrol'] = 0;
-
+	
 	// cron notifies
 	foreach ($this->onCron as $scriptName) {
 		$this->loadedPlugins[$scriptName]->onCron(true);
@@ -172,6 +176,12 @@ if ($forceCron=='hour' || $forceCron=='all' || $this->dimconfig['_cronH'] != dat
 		$this->cacheControl->logCacheThrottle();
 	}
 	
+	if (!$this->nearTimeLimit() && isset($this->dimconfig['_recurseDelOverflow']) && $this->dimconfig['_recurseDelOverflow'] == 1) {
+		# clean up object cache, unable to complete on daily clean up
+		$allok = recursive_del(CONS_PATH_CACHE.$_SESSION['CODE']."/",false,'cache',250);
+		if (!$allok) $this->dimconfig['_recurseDelOverflow'] = 1;
+		else $this->dimconfig['_recurseDelOverflow'] = 0;
+	}
 
 	if (CONS_CRONDBBACKUP && !$this->nearTimeLimit() && ($this->dimconfig['_scheduledCronDay'] == 0 || date("d") == $this->dimconfig['_scheduledCronDay']) && $this->dimconfig['_scheduledCronDayHour'] == date("H")) {
 

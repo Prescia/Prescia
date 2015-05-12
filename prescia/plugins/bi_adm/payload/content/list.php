@@ -250,7 +250,7 @@
 
 	// Header and general module data
 	$core->template->assign("name",$module->name);
-	if ($core->layout > 1) {
+	if ($core->layout > 1 && $core->layout < 3) {
 		$core->template->assign("_removeonpopup"); // the default remover comes after, we want before so the list also is affected
 	}
 	if ($notitle) {
