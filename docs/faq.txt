@@ -1,0 +1,44 @@
+Early version of the FAQ. More questions? use our foruns or mail prescia@prescia.net
+
+CMS
+---
+
+My content manager results 404 but the page exists
+> check the reason for the 404 on the debug bar of the bi_dev (or check all of them):
+	>404 because of untreated virtualFolder at actions
+		The page is not valid, check it again ... if the page was valid, onCheckActions of the cmd would trigger $core->ignore404
+	>404 because of path not found at renderPage
+	>404 because file not found
+		Your default.php on either action or content changed the behaviour and disabled $core->ignore404, check it out
+	>404 because template not found: _cms.html
+		Most likelly you have no _cms.html set in root
+
+CMS changes metadata/title after I set it on content
+> The CMS runs after the content, so it will replace it unless you lock the title change with $core->storage['LOCKTITLE'] = true;
+
+Loads the wrong frame
+>The system per default loads the frame you specify at the root default.php. If you want a different one, you will have to code. Either create conditionals at the root default.php for your cms pages, or create the folder in the contents/ and put a new default.php loading the different frame
+
+Loads an empty page
+>The default.php that is running for your CMS is not calling the $this->loadTemplate() function (alas, this function must ALWAYS be called in your content code)
+
+I have many virtual folders on the CMS, I want some to load different frames
+>You will have to do that manually on the default.php, or extend your CMS to have which frame is to be served.
+
+Modules/Plugins
+---------------
+
+My plugin function (like notifyevent) is not being called
+>Make sure the pluging is properly connected to the module. It should be both ways: the module (XML) should point o the plugin in the "plugins" tag even if you load the plugin manually on PHP
+
+404 page not found!?
+--------------------
+
+A page is returning 404, but it should exist!
+> Enable the bi_dev plugin, this will add a bar at the bottom of your page that can be seen by clicking on the /\ symbol. The reason for any 404 will be there
+
+I get a maintenance warning in my page
+> Delete/rename the file maint.txt at root. It is supposed to be there only when you are actually performing maintenance where the server can still run
+
+I get a 503 maintenance page
+> Delete/rename the file heavymaint.html at root. It is supposed to be there only when you are actually performing maintenance where you don't want the server to run

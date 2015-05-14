@@ -1,0 +1,475 @@
+____ Prescia Framework ____
+The VERY quick reference guide
+Last updated: 2015.5.15, for version 1.0 final
+
+
+1. DATAFLOW:
+
+	Where you will code your site starts with ###
+
+	/index.php
+	Loads settings.php 
+	core::domainLoad() 
+		Detect which domain to serve
+		Load your config.php
+		Load i18n variables and settings
+		Breaks down the request to detect action, context, extension, etc..
+	core::dbconnect() (automatoc)
+		Connects to the database
+	core::loadMetadata()
+		Loads metadata for each module/plugin
+		[plugins]::onMeta 
+			Runs onMeta for each plugin IF AND ONLY IF running on debugmode
+			If you build and register a plugin, it will run too 
+	core::parseRequest() 
+		Finalizes the request detection, add messages that were logged to the output
+	Initializes the template 
+	core::loadIntlControl() 
+		Detects which i18n to serve
+	core::checkActions() 
+		Runs actions for this request, start by detecting if the request exists (virtual)
+		Performs authentication
+		Treats the special scripts ajaxQuery, ajaxqueryunique and download
+		[plugins]::onCheckActions 
+			Runs whatever actions are defined on each loaded plugin
+			If you build and register a plugin, it will run too 
+		## actions/default.php ##
+			Runs the default.php
+			If you are inside a virtual folder, runs the topmost default.php available
+		## actions/[requested action].php ##
+			Runs your code
+			This code should NEVER make any reference to the template
+			This code CAN change which page (action) will be shown
+			Ajax codes can end the script here (use $this->close())
+	core::cronCheck() 
+		Checks if the system (or plugins) require automatic actions
+		[plugins]::onCron 
+
+	At this point, the framework will decide to serve a cache version or not, follows dataflow if it DOES NOT serve the cache:
+	
+	core::renderPage() 
+		This will actually build your output template
+		[plugins]::onRender
+			Early rendering of each plugin
+		## content/default.php ##
+			Runs the folder default content controler. At this point, you should load your template/HTML
+			You should also run any code that is common to all pages for this folder/context
+		## content/[requested action].php ##
+			Runs your code to this specific action
+		[plugins]::onShow
+			Later rendering of each plugin, after you run your own code
+	core::showHeaders()
+		Prepares output headers
+	core::showTemplate()
+		Prepares debug messages
+		Fills dinamic config variables (dimconfig)
+		Fills meta data, canonical, og, link rel, favicon etc...
+		Add meta for alternate i18n versions
+		Perform i18n cleanup (see item 4 of this file)
+		Prepare a printver link if you need it
+		ECHOS (transforms in string) the template
+	core::cacheControl::setCache
+		Sets the cache of the resulted page. This will be served if earlier the framework decided to serve the cached version
+	[plugins]::onEcho
+		Perform onEcho actions of plugins (note that at this point, the page is a string)
+	Runs performance and evaluations of this hit
+	Echoes the page (in Gzip if possible)
+	
+	SUMARY:
+	
+	domainLoad -> dbconnect -> loadMetadata (onMeta) -> parseRequest -> loadIntlControl -> checkActions (onCheckActions, your code) -> cronCheck (onCron) -> renderPage (onRender, your code, onShow) -> showTemplate -> (onEcho)  
+
+2. Making a cached content
+
+	// The following line will check if there is already a cache for "tag", as long as its less than 60s old:
+	$temp = $this->cacheControl->getCachedContent('tag',60);
+	// if there is no cache ...
+	if ($temp === false) {
+		// build $temp whatever way you need
+		//...
+		// now set the cache into "tag", the true means this cache is common for all users (set false if not, which will serve only for the LOGGED user, but is the same for unlogged)
+		$this->cacheControl->addCachedContent('tag',$temp,true);
+	}
+	// show/use $temp
+
+3. PLUGINS
+	BI_STATS
+		Will gather statistics for each hit on the site
+		To use: simply add the plugin in the config.php, after loading the database, like this (suggested: last plugin to be loaded):
+		$this->addPlugin('bi_stats');
+
+		Statistics will be gathered in the tables created as described in the meta.xml of the plugin. It's suggested you use one administrative plugin to check these tables, like the bi_adm
+		Note that BI_STATS is i18n aware, and gather pretty much all information it can, it will also try to avoid logging bots
+		
+	BI_DEV
+		Enables some developer tools/helpers, useful specially in the local production machine
+		To use: Add the following lines in the config.php after the database is loaded. You can do that only in the local site 
+			(inside the "IF" that toggles if the database to be loaded is local or server)
+
+		$dev = $this->addPlugin('bi_dev');
+		$dev->administrativePage = "/adm/";
+
+		The second line specifies where the administrative area is located. If you don't have one, simply do not add this
+
+		BI_DEV will add time and mysql data on each page so you can check what is going on. It will also perform checks on your meta.xml and structures for some obvious mistypes/errors
+		Call any page with the query "?dev_help=true" to check other capabilities
+	
+	BI_FM
+		Adds a "protected" folder inside the file system, acessible only by authorized users
+	
+	BI_CMS
+		Will locate {CONTENTMAN} and {CONTENTMAN#} in any page and create database entries that allow you to fill in these contents in the administrative pane. 
+			It will also allow you to create pages that do not exist in the templates (called virtual pages).
+		NOTE: CONTENTMAN1 HAS NO USE, use CONTENTMAN
+		Pages that are managed totally by the CMS system (virtual) will use the _cms.html template
+		Note that FBI_CMS is i18n aware
+		To use, simply add the plugin in your config.php (suggested latter, so it is the last to handle 404):
+		$this->addPlugin('bi_cms');
+		
+	BI_AUTH and BI_GROUPS (which loads BI_PERMISSIONS)
+		Adds authentication capability into the system. Requires BI_GROUPS. The default _config.php have this commented, just remove the following commented lines:
+		//$this->addPlugin('bi_groups'); // required for AUTH
+		//$auth = $this->addPlugin('bi_auth'); // user/auth system
+		Very usefull to start your administrative pane. Note that group 100 is the master group, which IGNORES permissions (alas, it has full permissions)
+		
+	BI_SEO
+		When enabled, allows you to create alias to pages (which might or not exist)
+		Redirected (aliases) pages can also have the title and meta tags changed
+		
+	BI_UNDO
+		Saves data from every change using the system so you can undo them. Standard duration of data is 7 days.
+		
+	BI_ADM
+		Creates an administrative area (usually /adm/) that reads the meta.xml to create all necessary editors
+		It will also use other modules functions, and have it's own administrative functions
+		The password will be set as defined inside bi_auth/module.php
+		Note you have 2 passwords: a soft password (set in the database) that is the admin password, and a hard password (set in the config.php) for "master"
+		The "master" password have level 100 and can access ALL sites
+		
+	BI_BB
+		Creates a basic FORUM, BLOG or ARTICLE structure (can work with all at the same time), hugelly configurable.
+		Note this configuration for the Prescia site:
+		
+		$bb = $this->addPlugin('bi_bb'); // Starts the plugin, retrieve it as a variable to change settings
+		$bb->bbfolder = "bb"; // The base folder where all content is, is "bb/"
+		$bb->registrationGroup = 4; // If you enable registration on the site, new users will be put inside this group
+		$bb->areaname = "community"; // Name of the area this plugin handle
+		$bb->homename = "Prescia"; // Name of the link to the homepage
+		$bb->noregistration = false; // either to allow or not user registration using the public page
+		$bb->blockforumlist = false; // either to list or not all the availale content at the index (it uses different templates for forum(bb), blog or article)
+		$bb->showlastthreads = 0; // how many threads to show at the index (0 = none)
+		$bb->mainthreadsAsBB = true; // threads at the index should be treated as a forum(bb) or a blog/article
+		$bb->ignorefolders = ""; // comma delimited folders that are to be treated as NOT part of the BI_BB. For instance, if you install this at root, be sure to add the admin pane folder here
+		
+		Templates are used from the plugin folder, but you can replace with your own by setting the following plugin variables (suggestion: copy the default one and change from there):
+		
+		$bb->bbpage = "thread"; # TEMPLATE to use as a bb forum (list of threads), will search your base template folder, if nothing found, the default is used (same on the others below)
+		$bb->blogpage = "blog"; # TEMPLATE to use as a blog thread (list of blogs)
+		$bb->articlepage = "article"; # TEMPLATE to use as article thread (list of articles)
+
+4. TEMPLATING: 
+
+	Content tags that are removed in given situations:
+
+					layout 0 (normal)		layout 1 (popup)		layout 2 (ajax)		CONS_BROWSER_ISMOB
+		_ajaxonly		REMOVE					REMOVE					KEEP				<- as layout
+		_removeonpopup	KEEP					REMOVE					REMOVE				<- as layout
+		_removeonajax	KEEP					KEEP					REMOVE				<- as layout
+		_removemob		KEEP					KEEP					KEEP				REMOVE
+		_onserver		NEST					NEST					NEST				NEST		<- removes when LOCAL
+		
+	Tags that are ALWAYS present:
+	
+	PAGE_TITLE : The page title, set inside the <TITLE>
+	IMG_PATH : path to the files folder, usually CONS_INSTALL_ROOT.CONS_PATH_PAGES.$_SESSION['CODE']."/files/"
+	FMANAGER_PATH : path to the file manager folder, usually CONS_INSTALL_ROOT.CONS_FMANAGER
+	BASE_PATH  : path to the root of the installation (CONS_INSTALL_ROOT)
+	JS_PATH : path to the common javascript libraries (CONS_INSTALL_ROOT.CONS_PATH_JSFRAMEWORK)
+	SESSION_LANG : i18n language being used ($_SESSION[CONS_SESSION_LANG]),
+	CHARSET : which charset to use
+	DOMAIN_NAME : domain being served
+	METAKEYS : meta keys that will be used to fill the meta tag
+	METADESC : meta description that will be used to fill the meta tag
+	CANONICAL : canonical URL of the current page
+	HEADCSSTAGS : HTML tags that contain CSS tags, echoed before javascript calls
+	HEADJSTAGS : HTML tags that contain javascript source calls
+	HEADUSERTAGS : User meta tags, which will be appended to the <head>
+	METATAGS : Actual META TAGS, built from the above
+	
+	These are filled only at checkActions:
+	 
+	ACTION : Page/action being served - w/o extention
+	CONTEXT : Folder/context being served
+	ORIGINAL_ACTION : Original action call (with extention)
+	
+	Also see item 12 of this file
+
+5. Template Core parameters (TC, lib/template)
+
+	Template Core will automatically add a {endbody} tag just before a </body> element, used by some plugins
+
+	When outputing a data like {something}, you can use parameters by adding a function with |, like {something|number}
+	Here is a breakdown of those functions:
+
+	integer :shows only an integer number (round)
+	float :alias for number
+	number|#decimals|decimal separator|thousand separator : formats a number
+	truncate|#size (not counting trail)|trail (standard is "…")|[true]|[true]
+		First TRUE to strip HTML codes : truncates the text with the size, adds the trail code if necessary, and can remove HTML
+		Second TRUE will keep <br/> and change </p> into <br/>. All other tags are removed
+	nl2br :quite obvious
+	onnull|show this :if the variable is blank/null, show something
+	toplain :HTML is shown as plain text (simple < to &lt; translation)
+	html :prepares the text to fit into a INPUT/TITLE tag
+	htmlentities :uses htmlentities_ex to process the data
+	url :puts http:// if not in the data
+	deutf :removes utf8
+	uc :alias for ucwords
+	up :uppercase
+	ucwords :runs ucwords, also process portuguese signs
+	noenvelope :trims and removes tags which envelope the data
+	nohtml :removes HTML
+	each|numeric map for each|default value: on each iteraction in a loop, will display whatever is set on each set of numbers: each|2=odd|even will display odd,even,odd,even ...
+	map|the map itself|default value :converts values, ex: "0=zero,1=one,2=two|something else" %%1 will return the variable as if no map was specified
+	select :alias for selected
+	selected :adds selected='selected' if variable set
+	check :alias for checked
+	checked :adds checked='checked' if variable set
+	month :shows the month label of a date or datetime entry
+	date|formats :output in data format, if no format specified, uses the current standard
+	datetime|format :same as date, but puts time too
+
+6. Other usefull TAG replacements
+
+	Automatically adds {endbody} just before a </body> tag
+
+	Auto filled on lists when using the template system or runContent:
+		# - iteraction number starting in 1
+		islast = 1 if the iteraction is the last in the list, 0 otherwise
+		isfirst = 1 if the iteraction is the first in the list, 0 otherwise
+			Example: {isfirst|map|1=This is the first item on the list|Not the first item}
+	--
+	CLASSES:
+		vdir|path : remove redundant paths and fixes them to work relative to the current page
+		query_strings|comma separated items not to include : prepares all the query ($_REQUEST) as in HTML query as in a=a&b=b&c=c
+		seo|file :only if SEO module enabled, will display the filename as per alias on the SEO module (or "file" if not set)
+	--
+	Image/upload files:
+		{file} = y/n if file is uploaded
+		{file_#} = raw URL for file (# is thumbnail, with 1 being the original file even if there are no thumbnails or not an image)
+			PLEASE remember to add a / (or the install root) before {file_#}
+		{file_#w} = width
+		{file_#h} = height
+		{file_#t} = tag (will fill flash too)
+		{file_#s} = file size
+		{file_#filename} = filename (following system rules) w/o path
+	--
+	VC with special for videos will auto output:
+		{file_url} = path for youtube or vimeo
+		{file_embed} = path for iframe embeded video, which is:
+			vimeo = http://player.vimeo.com/video/xxxxxx
+			youtube = http://www.youtube.com/embed/xxxx
+		You can also fecth youtube's thumbnail like this:
+			http://img.youtube.com/vi/{link}/0.jpg
+		(note: if the user post a vimeo code, this will result in a corrupt image. Unfortunatelly, vimeo uses a totally different URL for the thumb)
+	--
+	In any loop or echo using runContent, for each item on the database, it will also exclude the following tag if nothing is in the database:
+		{_toggle_[dbitem]}
+		if you get $data from runcontent and echo later, toggles won't work. In this case, just loop thru templateParams['excludes']
+	--
+	To group items in a list, using a different template (like a header), use:
+		$this->templateParams['grouping'] = '[field_that_must_change/group]:[tag_to_use]'
+		Example:
+			{_header}<h1>{header}</h1}{/header}
+			{_list}...{/list}
+
+		$this->templateParams['grouping'] = 'header:_header';
+		... fullPage (or runContent) normally, but better be ordered by the group
+
+7. Metadata XML
+	For modules:
+		dbname (database name)
+		Keys (comma delimited)
+		Title
+		Volatile (true)
+		Multikeys (these keys will auto restart when the main key is different)
+		Parent (which field is this field's parent (usually id_parent)
+		Plugins (comma delimited)
+		Order (field +/-, comma delimited)
+		permissionoverride (9 characters A - allow, C - custom or D - deny for affbi_permissions, order: USER (read, write, create), GROUP (r,w,c), ALL (r,w,c))
+		Linker (true)
+		Systemmodule (true)
+		autoclean (SQL WHERE to when to delete items)
+		backup (no) will not be included on the monthly auto backup
+		meta (whatever you want, not used)
+		FOR bi_adm:
+		listing (comma delimited fields to show on admin list, use #module to list other module's counter to this - if this field is not specified, will automatically generate)
+		warning (a warning about how this module works, that affbi_adm WILL display in the list/edit panes)
+		merge (another module) that will be shown as if part of this module. MUST have a link to this module
+		tabs (allows for tabs in the list pane of the admin, as if pre-configured searches. Separated by |)
+	For fields
+		mandatory (true)
+		join (left|inner <- default)
+		unique (true)
+		html (for text fields - WARNING: this will allow HTML. Also, remember to add this if you wish to store serialized data, though that would need also the "custom" tag)
+		size (for text fields)
+		timestamp (true)
+		updatestamp (true)
+		filetypes (comma delimited extensions)
+		filemaxsize (in bytes)
+		thumbnails (thumbnails delinited by |, each is W,H)
+		filepath (for upload fields)
+		restrict (restrict to a certain user level)
+		default (default value, use %UID% for current user ID on USER LINKS)
+		ignorenedit (will not set this to null/blank if nothing is sent)
+		forcesimple (for simpler text HTML fields)
+		condthumbnails (specifies conditional thumbnail cut according to a enum, format: enum_name:[x,y;][x,y;][x,y;][x,y;][x,y;]
+		tweakimages (how to deal with each image on the thumbnails set, delimited by |, currently working:
+			stamp:over(filename@x,y)[r]
+			stamp:under(filename@x,y)[r]
+			croptofit[:top left right bottom]
+		noimg (default image to show if image not set, relative to files/)
+		special: (see meta)
+			urla (same as setting urlaformat)
+			login
+			mail
+			ucase
+			lcase
+			path
+			onlinevideo (accepts youtube or vimeo)
+			time
+			date
+		urlaformat/furlformat (how to build the friendly url - strongly suggested to come before any timestamp/updatestamp in the meta if you use a date in this)
+		autoprune (comma delimited list of numbers) used only on ENUM, defines how many items of each enum value can exist. For instance: autoprune="0,3,2" in a ENUM='a','b','c' means you can have infinite "a", 3 "b" and 2 "c". Exceeding values will be set to the default
+		isowner (sets a user as owner ... default is the first user link)
+		meta (adds metadata, these are USUALLY not used, exceptions bellow)
+			masked - will use password type instead of text type
+			password - will not only use password type, but will also NOT output the data if you are not master level (recommended to use ignorenedit in conjunction with this)
+		filteredBy - which >>fields<< will filter this one (comma delimited)
+		readonly (this field will not be editable in admin panes. It's probably controlled by modules)
+		custom (true) (all text parsing is disabled)
+		hashkey (true) adds this field as an index. You should add this to any foreign key you expect to use a lot
+		conditional (bi_adm) - a condition with field=something or field!=something, where field must be an enum, INTERFACE
+	For Types
+		INT
+		TINYINT
+		BIGINT
+		SMALLINT
+		FLOAT
+		VARCHAR
+		VC
+		BOL
+		BOOLEAN (store 'y'/'n')
+		ENUM (same format as sql)
+		TXT
+		TEXT 64Kb
+		MEDIUMTEXT 16Mb
+		LONGTEXT 4Gb
+		DATE
+		DATETIME
+		OPT/OPTIONS (same format as enum)
+		FILE
+		UPLOAD
+		SERIALIZED (allows nesting more types, will merge them into an array and store at this field)
+		[module] 
+
+8. MONITOR XML
+	In the administrative pane of bi_adm, you can have icons that show you notifications or counters, these are called monitors
+
+	Itens can have any name (ignored)
+	Each item can have these (marked with (*) are mandatory):
+		MODULE (*) - the module being monitored
+		SQL (*) - the WHERE statement to filter items to be monitored
+		MONITOR_LEVEL - which level this item is to be displayed. Defaults are 'low' and 'high', but can be anything with a notify[__].png image in the administrative folder
+		MONITOR_TEXT - text (translated by u18n) that describes ONE item
+		MONITOR_TEXT_PLURAL - describes 0, 2 or more
+		
+	Monitored items will be displayed on the monitor area of the admin
+
+9. Bulding TREE structures (nested)
+	{_dirs}
+		{chields} = number of child nodes. Use this to test if there are child nodes (ex.: {chields|map|0=last node|have children})
+		{id} = mandatory item id (might be a string)
+		{nid} = unique item number
+		{title} = mandatory item title
+		{_insubdirs}{subdirs}{/insubdirs} = will display child nodes inside {subdirs}
+	{/dirs}
+	{_dirs_subdirs}
+		{chields} = number of child nodes. Use this to test if there are child nodes (ex.: {chields|map|0=last node|have children})
+		{id} = mandatory item id (might be a string)
+		{nid} = unique item number
+		{title} = mandatory item title
+		{_insubdirs}{subdirs}{/insubdirs} = will display child nodes inside {subdirs}
+	{/dirs_subdirs}
+
+	SAMPLE:
+	<ul>
+	{_dirs}
+		<li><span style="float:right;{chields|map|0=display:none}">→</span><a href="#" onclick="menuClick('{id}','{chields}','{link}');">{title}</a>
+	   	{_insubdirs}<ul>{subdirs}</ul>{/insubdirs}
+	   	</li>
+	{/dirs}
+	{_dirs_subdirs}
+		<li><span style="float:right;{chields|map|0=display:none}">→</span><a href="#" onclick="menuClick('{id}','{chields}','{link}');">{title}</a>
+  		{_insubdirs}<ul>{subdirs}</ul>{/insubdirs}
+  		</li>
+	{/dirs_subdirs}
+	</ul>
+
+	PHP:
+	$tree = $categoryObj->getContents("","","","",$sql);
+	$this->template->getTreeTemplate("_dirs","_dirs_subdirs",$tree,0);
+
+10. CMS TAGS (only if bi_cms enabled):
+	{CONTENTMAN_TITLE}
+	{CONTENTMAN}
+	{CONTENTMAN#}
+	{_breadcrubs}<a href="{page}.html">[{title}]</a> {_hasnext}\{/hasnext}{/breadcrubs}
+
+	Also, pages that do not exist but are added in the CMS, will use the _cms.html page to output
+
+11. Template CALLBACKS:
+	function (&$template, &$params, $data, $processed = false) {..}
+	>> must return $data <<
+	if processed is TRUE, this is the SECOND (or more) time this function is being called on the SAME item
+	Do not remove a content with $data['_something'] = '', instead add it to $params['excludes'] ($params['excludes'][] = "_something";
+	Note that params also have 'core' and 'module' objects
+
+12. List of meta tags automatically filled by the core
+
+	PRIORITY for title and metas:
+
+		config (title, meta tag, meta desc) @ index, from config, no lock
+		SEO (title, meta tag, meta desc) @ plugin checkAction, LOCKS (storage['LOCKTITLE'])
+		CMS (title, meta tag, meta desc) @ plugin onShow, if not LOCKED, LOCKS (storage['LOCKTITLE'])
+
+		Locks: LOCKTITLE, LOCKDESC, LOCKKEYS
+
+		To change one of them, the best place is at the content, but you should locktitle or the CMS might change it
+
+
+	meta description	(at template->constants['METADESC']) @ see above
+	meta keywords		(at template->constants['METAKEYS']) @ see above
+	link canonical		(at template->constants['CANONICAL']) @ core showTemplate
+	link rel shortcut icon	(from favicon file on files/) @ core showTemplate
+	meta robots			(according to CONS_SESSION_NOROBOTS, which is true when visiting a CONS_NOROBOTDOMAINS domain) @ core showTemplate
+	
+	Also see item 4 of this file
+
+13. QUICK FUNCTION REFERENCE
+
+	Commonly used functions (note: most of the time, $core is referenced as $this)
+
+	[mod]->get_base_sql($where,$order,$limit)
+	$core->runContent($module,&$tp,$sql,$tag,$usePage,$cacheTag,$callback)
+	[mod]->runContent(&$tp,$sql,$tag,$usePage,$cacheTag,$callback)
+	[mod]->getContents($order,$treeTitle,$where,$treeSeparator,$sql)
+	$core->lastReturnCode
+	$core->template->createPaging("_pagetag",$total,$pagestart,$numberofitemsperpage);
+
+
+
+
+
+
+>EOF

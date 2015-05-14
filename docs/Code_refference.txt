@@ -1,0 +1,569 @@
+____ Prescia Framework ____
+The VERY quick reference guide
+Last updated: 2014.6.30, 
+
+#######################################
+THIS IS OBSOLETE IN REGARD OF FINAL 1.0
+#######################################
+
+For reference on the values on meta.xml, template classes, auto tags and others, see "Usage_refference.txt"
+
+VALUES WITH * ARE PROTECTED/PRIVATE TO THE CLASS
+TABLE OF CONTENTS:
+	Template Core
+	Core
+	CoreFull
+	compoments/module.php
+==================================================================================================================
+
+Template Core - this is the template object
+
+	$debugmode			bol				pause and show errors
+	$path				string			FULL path to templates
+	$cachepath			string			FULL path to caches
+	$cacheSeed			string			unique key to the current page
+	$decimais			int				how many decimal digits to show in numbers
+	$std_date			string			standard date format ("dd/mm/yyyy") 
+	$std_datetime		string			standard timedate format ("hh:nn dd/mm/yyyy")
+	$str_monthlabels	array			array of 12 strings representing the monthes in the current language set (i18n)
+	$str_decimal		string			decimal separator
+	$str_tseparador		string			thousands separator
+	$lang_replacer		array			translation tags for "_t" tags as tuples "tag" => "translation"
+	$constants			array			array of constants to be replaces in tags automatically
+
+	__construct($parent = null, $mypath = "", $debugmode = false)
+		Params: $parent = parent template (null for master)
+				$mypath = path for the templare library
+				$debugmode = set or not the degubmod on this child node
+		If there is a parent, will load all settings from it
+
+	addcontent($nome, $tipo, $conteudo)
+		Params: $nome = Tag name for this content (ex.: {name})
+				$tipo = Parameters for this content (classes to be run)
+				$content = What is currently inside this tag
+		Adds a new content to the template
+
+	assign($mkey,$valor)
+		Params: $mkey = $tag to have content replaced
+				$valor = $value to be set in tags
+		Replaces the values of all tags $mkey for $valor
+		
+	assignFile($tag, $file, $checkfirst = false)
+		Params: $tag = where to put the file
+				$file = FULL path for the file to be loaded
+				$checkfirst = will check if the $tag exists before performing the action (improves performance if there is a chance the tag doesn't exists)
+		Fills a whole file (will turn it into a template object) inside a template $tag
+
+	*applyCachedLang()
+		Applies all translations based on the data at $lang_replacer
+	
+	append($content)
+		Params: $content =  a new string or template to be added to the template
+		Adds a new content to the template, works for both string or new template
+		
+
+	clear($preserve_constants = true)
+		$Params: preserve_constants = either if the constants in this template are to be preserved or not
+		Completely clears the template and some of it parameters
+
+	copyfrom($outro)
+		Params: $outro = Other template to copy into this
+		Copy data from other object into this
+		NOTE: This is similar to clone, except this was implemented for php4 compatibility.
+
+	createPaging($tag, $total_itens,$p_init=0,$p_size=30, $numberOfPagesToShow=7) 
+		Params:
+			$tag: which content tag the paging exists (ex "_paging")
+			$total_itens: Total number of itens
+			$p_init: initial item
+			$p_size: size of pages
+			$numberOfPagesToShow: how many pages are to be show at the paging bottom (current to be centered, if possibble)
+		Builds a paging menu based on the parameters. All the structure is inside the provided $tag
+		The templates inside such tag MUST be:
+				
+		{_has_page_previous} removed if there is no page before the current
+		{_has_page_next} removed if there is no page after the current
+		{page_previous} filled with data for the previous page
+		{page_next} filled with data for the next page
+		{p_total} filled with the number of total PAGES
+		{last_page} filled with data for the last page
+		{_pages} a template that will be repeated the number of times specified on $numberOfPagesToshow, MUST have the following tags: 
+			{qs} The query string, parset to remove some paging data
+			{p_number} Current page number
+			{current_page} 0 or 1 if this is the current page
+			{p_init} Item that starts the current page
+		
+		HTML sample:
+		
+		{_paginacao}
+			<ul>
+			{_has_page_previous}<li><a title="{_t}anterior{/t}" href="{vir|/}?{qs}&p_init={page_previous}">{_t}anterior{/t}</a></li>{/has_page_previous}
+			{_pages}<li><a title="{_t}page{/t} {p_number}" href="{vir|/}?{qs}&p_init={p_init}" {current_page|map|1=class="pag-atual"}>{p_number}</a></li>{/pages}
+			{_has_page_next}<li><a title="{_t}proxima{/t}" href="{vir|/}?{qs}&p_init={page_next}">{_t}proxima{/t}</a></li>{/has_page_next}
+			</ul>
+		{/paginacao}
+		
+	fetch($arquivo)
+		Params: $arquivo = FULL path to the file to be loaded
+		Loads a file into the template (full replace)
+
+	fill($arrayin, $emptyme)
+		Params: $arrayin = An array to fill the template with, in format $tag => $content
+				$emptyme = Will remove all tags from this array, example: "_removeme"
+		Applies all data from the $arrayin in the current templare, recursively into sub-templates
+
+	*flushCache
+		For performance reasons, all replacements (fill, assign, and others) are not immediatly applied to the template
+		This function (called internally when necessary) is the one responsable for actually aplying them
+
+	fullpage($tag,&$dbo,$dbr,$n,$params=array(),$callback=array(),$overflowprotect=0)
+		Function Params:
+			$tag = The tag to be used on paging (ex: "_item")
+			$dbo = The database object
+			$dbr = Either a database resourse or an array
+			$n = Number of items to be shown
+			$params = A set of parameters on how to handle the paging
+			$callback = a function called on each iteraction that can change data, follows the format:
+				[functionName]($template,$params,$item)
+				Will return the new data array to be shown
+			overflowprotect = hard-limit on how many items to be shown, since this function can handle nesting and tree display, which could create a huge table even if the IPP is small
+		Params for the $params array (usually automatically generated):
+			p_init = starting page
+			p_size = how many items to show (IPP)
+			excludes = array with tags to be removed from each iteraction (callback can set/change this on each iteraction) 
+			no_paging = disable the automatic paging and shows ALL items, ignoring IPP
+			grouping = groups items in order, this is a string in "X:Y" format, and for will group every item which X data in the database is the same in the Y tag (sql must order by X) 
+		Loops thru a list filling the $tag with it's contents
+		Can use a database sql set or an array
+		The function will also set the following template's object variables:
+			$lastReturnedSet
+			$firstReturnedSet
+
+	getAllTags($forcelower = false)
+		params: forcelower = will force the returned tags to be all lowercases
+		Returns all tags on the current level of the template
+	
+	&get($nome, $noerror = true)
+		params: $nome = name of the tag to be returned
+				$noerror = generate an error if not found?
+		Return the tag (a template object or string)
+	
+	gettxt($nome, $noerror = true)
+		params: $nome = name of the tag to be returned
+				$noerror = generate an error if not found?
+		Same as $get but will automatically parse to be always a string
+
+	getTreeTemplate($dt,$sdt,&$tree,$startingId)
+		Params:
+			$dt : parent template
+			$sdt : child template
+			$tree : tree to be displayed
+			$startingId : searches the tree item with this "id" to be the root of the displayed tree
+		Initiate a tree structure using the parent template $dt and children template $sdt, using $tree as a source
+		
+		Template example
+		
+		{_dirs}
+			{chields} = number of child nodes. Use this to test if there are child nodes (ex.: {chields|map|0=last node|have children})
+			{id} = mandatory item id (might be a string)
+			{nid} = unique item number
+			{title} = mandatory item title
+			{_insubdirs}{subdirs}{/insubdirs} = will display child nodes inside {subdirs}
+		{/dirs}
+		{_dirs_subdirs}
+			{chields} = number of child nodes. Use this to test if there are child nodes (ex.: {chields|map|0=last node|have children})
+			{id} = mandatory item id (might be a string)
+			{nid} = unique item number
+			{title} = mandatory item title
+			{_insubdirs}{subdirs}{/insubdirs} = will display child nodes inside {subdirs}
+		{/dirs_subdirs}
+		
+		Note that each nested child will be filled in {subdirs} using the $sdt template (in the case, {_dirs_subdirs})
+	
+	*getTreeTemplate_ex(&$dt,&$sdt,&$tree,$level = 0,$parent=0,$fulldir="/")
+		Internal function called by getTreeTemplate for the tree building
+		
+	getPagingLinks($total_itens,$p_init,$p_size)
+		Params:
+			$total_itens: Total numbers of items
+			$p_init: initial item (of current page)
+			$p_size: Size of each page (IPP)
+		Returns an array with all the data to be used on a paging system, the array is filled as:
+			0 = Total number of PAGES
+			1 = Item that starts the LAST PAGE
+			2 = CURRENT PAGE
+			3 = Item that starts the PREVIOUS PAGE
+			4 = Item that starts the NEXT PAGE
+
+	havetag($conteudo)
+		Params: $conteudo = which tag you are looking for 
+		Returns true|false if the tag exists
+
+	reset()
+		Completely resets the object
+
+	*runclasses($arrayin=false)
+		Called automatically to full classes on the template
+		
+	*runclass($params,$content,$arrayin)
+		Called automatically to run a specific class on a specific template
+				
+	tbreak($entrada)
+		Params:
+			$entrada = String to be parsed
+		Parses a string into an objecto to the template
+		
+	techo($arrayin, $emptyme, $recursive)
+		Params:
+			$arrayin = Data to be filled into the template
+			$emptyme = Array of tags to be deleted (ex: "_remove")
+			$recursive = either to fill the arrayin into nested
+		Fills the template with the tags, also fills translate and flash ({_t}algo{/t}) data (){_FLASHME}arquivo|largura|altura{/FLASHME})
+==================================================================================================================
+Core: This is the system ifself, Available functions:
+
+	addPlugin($script,$relateToModule="",$renamePluginTo="",$noRaise=false)
+		Params:
+			$script = Which plugin will be loaded
+			$relatetoModule = Links this plugin to a database (usually, the plugin will link itself)
+			$noRaise = prevents errors being rased it the plugin cannot be loaded
+		Loads a plugin
+
+	addLink($file,$preceed=false)
+		Params:
+			$file = Which file is to be added
+				Automatically tests the file in: [site]/files/$file, js/$file, $file
+			$preceed = Adds the file before all others or at the end
+		Adds a file into the metadata (header) of the output HTML
+		Returns true|false if file was found and linked
+
+	addMeta($str)
+		Params: $str = string to be added into META field (header)
+
+	*builddomains()
+		Automatically rebuilds the domain cache if necessary
+		
+	checkActions()
+		check if any action was requested by the page (also verified maintenance maint.txt)
+		hint: send "haveinfo=1" in the request to automatically load all modules (safer)
+		Can also verify downloads and ajaxQuery automaticaly
+		Runs actions on plugins and loads page actions
+		initiate basic lockPermission
+	
+	checkHackAttempt($command)
+		Params: $command: which command is to be processed
+			Verified if the $command is a hack attempt. If it is, immediatly aborts the script, other wise returns the $command itself
+	
+	close($stop)
+		Params: $stop = either it is to completely stop the stript
+		Ends the script by cleaning up memory and variables
+
+	cronCheck()
+		Run scheduled cron calls
+
+	deleteAllFrom(&$module,$data,$zerothem=false,$startedAt)
+		Params: $module = which module have data being deleted
+				$data = keys of item in that module that are being deleted
+				$zerothem = other modules that link to the deleted item will be zeroed instead of removed
+				$startedAt = which module started deleteAllFrom (prevents recursivity)
+		Deletes (or sets to 0) all links to an item that is to be deleted
+		This basically fills the gap of myISAM not having foreing key checks
+
+	domainlock()
+		Detect which domain is being called and loads its settings
+		Also changes domains based on aff_changelocalsite
+		
+	dbconnect()
+		Connects to the database
+			
+	fastClose($action, $context)
+		Ends the script by generating an error page (usually 404), trying to end gracefully
+		To end abruptly, use close()
+	
+	frame($f1,$f2,$f3,$f4)
+		Loads files in order, one inside the other
+		Each file ($f1) comes as a tuple string as "file:TAG" where file is the file to be loaded, and TAG where the next file/content comes
+		The LAST tag will be where the actually site fits
+
+	feedReader($url,$cancache)
+		Params: $url = URL of a feed (RSS)
+				$cancache = either if the url data can be cached or not
+		Reads a RSS and returns it's contents in an array
+	
+	fullSearch($parameters, $groupPerModule)
+		Params: $parameters = array of parameters:
+				$groupPerModule = returns the data per module or in any order (|rueZfalse)
+		Returns a list of results on ALL databased based on $parameters. Check extra/fullSearch.php for parameter list
+	
+	getTemplate($action,$context,$PluginCheck,$secondPass)
+		Params: $action = which file is to be loaded
+				$context = folder/context where file should be
+				$PluginCheck = true|false tests if the file can be loaded dinamically by a plugin
+				$secondPass = we are calling this for the second time (after a fail)
+		Searches for a template file and return the full path, or false
+	
+	langOut($tag)
+		Params: $tag = what is to be translated
+		Translates $tag into a proper data based on the i18n array
+		
+	loadDimconfig($force = false)
+		Params: $force = force load or allows cached data to be loaded
+		Loads the site config
+	
+	loadIntlControl
+		Loads all the i18n data and translation tags
+		Can also translate the context from site/en to site/?lang=en
+	
+	loadPermissions()
+		load all permissions for metadata
+	
+	loadMetadata()
+		Loads all database metadata (cached) or builds it (coreFull)
+		
+	loadmodule($name, $dbname)
+		Params: $name = Module name
+				$dbname = Database associated to this module
+		Loads one module (only the interface)
+		
+	loadAllmodules()
+		Loads ALL modules, including interface and options. This basically loops loadmodule
+		Also loads plugins
+	
+	loaded($moduleName)
+		Returns the specified module or false. If the module exists but were not fully loaded, loads it
+		
+	lockPermissions()
+		Based on current action/context/user logged, load all permissions form metadata
+	
+	logged()
+		Returns if a user is logged true|false (false means guest user)
+	
+	nearTimeLimit()
+		Returns true|false if the script is near the time limit (usually withing 5 seconds of it)
+	
+	notifyEvent(&$module,$action,$data,$startedAt,$early)
+		Params: &module = module that performed an action
+				&action = which action was run on said module (an actions constant, like CONS_ACTION_INCLUDE)
+				$data = data that was changed on the module (or keys if it is being deleted)
+				$startedAt = which module started this change
+				$early = some actions require two passes (delete), specified if this is the first (true) or not
+		System wide notification of an action being performed on the database, so other modules might act on it
+		$startedAt is important to prevent loops
+		
+	onShow()
+		Runs the onShow scripts to generate a page (usually the last step on the page generation)
+	
+	queryOk($testFields)
+		Params: $testFields = array of fields to be tested
+		Verified the _POST for all the specified fiels, testing them if they are hack attempts, if they exist, and even if they are numeric (add # before the field name, like #id)
+		Returns true if all fields are valid and exists, false if there is some fields missing or invalid
+		Will stop the script if any field is considered a hack attempt (calls checkHackAttempt)
+	
+	parseRequest()
+		Parses the page and also tries to run the domain translator (subdomain = folder)
+		Can handle special requests like robots.txt, favicon, and multimedia files by itself, ending the script here
+		Prepared layout treatment (0 = normal, 1 = without frame, 2 = raw, 3 = mobile)
+		Runs botprotection
+		Loads any log that is pending inside the session
+		Transpate "folder/" to "folder/index.html" 
+	
+	prepareMail($name,$fillArray)
+		Params: $name = Name of the mail template to be used
+				$fillArray = array of tags=>content to be filled inside the array
+		Prepared a template with full valid external URL's and the data provided to be used as an E-mail
+		Also adds some constants to guarantee the E-mail is readable.
+		DOES NOT SEND THE MAIL, returns a template object
+	
+	readfile($file,$ext,$exit,$filename,$forceattach)
+		Params:
+			$file = File to be loaded
+			$ext = Forces this file extension ("" to auto detect)
+			$exit = Outputs the file and stops script (true|false)
+			$filename = Name of the file to be presented to the output
+			$forceattach = Usually the file is set as inline (displays on browser), but this will force it to be an attachment (download)
+		Loads and displays a file, setting proper HTTP headers so it is properly downloaded
+		If also closes database connection during the upload, and restarts it if you do not specify the script to stop
+	
+	registerTclass($script,$class)
+		Params: $script = Script object
+				$class = Name of the class
+		Register a script as handler of a template class
+	
+	removeAutoTags()
+		Automatically removes tags from template (usually related to layout)
+		
+	
+	renderPage($pass)
+		Renders the current page (but do not parse it to string, onShow does that)
+		Calls onRender, load templates, tests 404, remove automatic tags and run custom contents from the page
+		Finally prepares onShow for plugins
+		If may require 2 passes on some cases, $pass is the number of times it is being run (some actions cannot be performed on the second+ pass)
+	
+	rss($data, $echoHeader, $imgtitle, $imgurl, $imglink)
+		Params: $data = RSS data (see extra/rss.php)
+				$echoHeader = either if it is to create the RSS header
+				$imgtitle = title for the RSS header image
+				$imgurl = FULL path for the RSS image
+				$imglink = If the user clicks the RSS image, where to go
+		Generates an RSS with the data provided. See extra/rss.php
+	
+	runAction($module,$action,$data,$startedAt="")
+		Params: $module = Module that is running the action
+				$action = action constant that is being run (ex: CONS_ACTION_UPDATE)
+				$data = data to be run (this will build the SQL inside the module object)
+				$startedAt prevents loops if this is being run automatically by notifyEvents
+		Runs an action (include, edit, delete) in a database
+		Automatically treats images, foreing keys, safety, etc
+		Returns true|false 
+	
+	runContent($module,&$tp, $sql, $tag, $usePaging, $cacheTAG, $callback)
+		Params:
+			$module = which module will load data
+			$tp = template into which to apply
+			$sql = full SQL, just the id, or the array(where, order, limit) format
+			$usePaging = true|false to use paging data from request
+			$cacheTAG = which cache tag to use if caching is enabled
+			$callback = callback function to use on each iteraction, function in the format [nomedafuncao]($template,$params,$item)
+		runs a content (display) from the specified module (calls the module runContent)
+
+	saveConfig($NO_RAISE)
+		Saves system settings
+		If an error happens, $NO_RAISE prevents if from being raised
+		
+	showTemplate()
+		Shows the template (final stage)
+		Applies all automation, like i18n, dinamic configuration, metadata, canonical settings, etc
+
+==========================================================================
+CoreFull: This is the version run during debugmode, this won't use any caches and, instead, will use raw data and generate them
+		This is safer, but about 4 times slower than the normal (cached) version.
+		Force this by setting debugmode=true on the query
+		Some functions have different behaviours then Core, as listed:
+
+	addPlugin($script,$relateToModule,$renamePlugin,$noRaise)
+		Aside from the basics on Core, will also check if the metadata for the monitor.xml is set
+	
+	applyMetaDada()
+		Runs the metadata checks of all modules, and also checks for errors
+	
+	check_sql()
+		Checks for missing database tables or missing database fields, and adds them
+		Also checks for missing keys or unique keys (used for faster hash)
+	
+	checkConfig()
+		Loads the site dinamic config and checks if all variables exist. If not, set defaults on them
+
+	checkinstall()
+		Checks if the system is properly installed with all folders created.
+		Also checks if it can change files in the necessary folders
+	
+	dbconnect()
+		Aside from the basics on Core, will try multiple times to connect to the database.
+		It will also try to CREATE the database if it is missing
+	
+	 loadMetadata
+	 	Performs a basic install of folders and configs, and then proceeds for reading the metadata and creating all databased and meta caches.
+	 	This is where the meta.xml is read and implemented
+	 	Also reads custom.xml after the main meta.xml
+	 
+	 loadmodule
+	 	Aside from the basics on Core, will prevent resetting a module when it is only redefining it from custom.xml
+	 
+	 *processParameters($thiscampo,$fields,$module)
+	 	Will break a XML tag for $thiscampo and detect it's parameters. From that, will fill the parameters of the field.
+	 	Called by loadMetadata on each field of a database
+	 
+	 save_model()
+	 	Saves caches for modules and permissions
+	 	
+==================================================================================================================
+Modules - components/module.php - each module is represented by this object
+
+	prepareDataToOutput($template,$params,$data,$processed)
+		This function is defined in the main namespace, and thus can be called at any time
+		Params: $template - where to output data
+				$params - parameters to output the data
+					'module' - which module is calling this function
+					'excludes' - RETURNED list of items that should be excluded from the templace, set as "_toggle_[module_name]"
+					
+				$data - the data itself
+				$processed - it this has run once already (in case this is a callback)
+		This function prepares special fields from the module to be outputed. It will fill:
+			For each IMAGE/FLASH (image is the actual field name PLUS "_" and thumbnail number, starting at 1 for the image itself, so the first image is  "[image]_1"):
+				[image] = FULL path to image
+				[image]w = width 
+				[image]h = height
+				[image]t = complete image HTML tag
+				[image]s = image size (not numeric)
+				[image]filename = only the filename of the image (no path)
+				If there are no images on this specific item, but the field have the CONS_XML_NOIMG setting, will fill these data with the standard CONS_XML_NOIMG image
+			For files that are not images, only [image], [image]s and [image]filename will be filled
+			For strings set as CONS_XML_SPECIAL == 'onlinevideo'
+				[field]_url = link to the video
+				[field]_embed = link to the flash embed link
+		Also, if a field is blank, it will add it to the $params['excludes'] array as "_toggle_[field]"
+		Returns the processed data
+
+	Following functions are inside the module object:
+	
+	$name = Module name
+	$parent = Links to the CORE
+	$title = Which field represents the title of this module
+	$dbname = Which database is linked to this module
+	$keys = array of main keys (the current 2.0 version cannot handle properly multi keys)
+	$plugins = list of plugins this module uses
+	$order = which field is to be used to order this list (default)
+	$permissionOverride = a string with 9 positions for permissions (c, a, d for custom, allowed, denied) that override any options
+	$unique = array of unique items
+	$hash = array of hash keys that will improve search
+	$linker = true|false if this database is just a link between two (set automatically on basic)
+	$options = array of customized options for this module
+		Default options:
+			CONS_MODULE_VOLATILE => true|false if the module is "volatile", thus free of any other module or file, and no foreign key control or I/O must be monitored
+			CONS_MODULE_MULTIKEYS => array of multikeys
+			CONS_MODULE_SYSTEM => true|false if this module is a system module and, thus, does not need to be seen by the user
+			CONS_MODULE_AUTOCLEAN => SQL WHERE statement run on cron to auto-prune old data
+			CONS_MODULE_PARENT => Another module that is parent for this module (ex.: nested data)
+			CONS_MODULE_META => Meta data about this module
+	$fields = array of database fields, generated by the Corefull (metadata)
+	$freeModule = true|false if this module is connected to a user/group
+	$loaded = the module is fully loaded or just it's interface
+	
+	__construct($parent, $name, $dbname)
+		Default constructor, reads the name and database name of the module (parent is always the core)
+	
+	*autoPrune($enumPruneCache,$data) {	
+		Autoprune controler called by the cron.
+		Basically, this sets a number of items that can exist on each ENUM. For instance, an ENUM = 'a','b','c' with a autoprune 1,3,0 (0 means infinite) will work in this way:
+		When a database changes, this system counts how many items on each enum exist. If more than the specified number exists, it is transfered to the next.
+		If this transfer causes overflow on the next, the oldest is transfered to the next and so on.
+	
+
+	check_mandatory($data, $action) 
+		Params:
+			$data = array of data being sent to the module
+			$action = CONS_ACTION_UPDATE or CONS_ACTION_INCLUDE
+		Checks if the $data for an $action have all mandatory fields. $action can be an CONS_ACTION_INCLUDE or CONS_ACTION_UPDATE
+		Returns true|false	
+	
+	
+	deleteUploads($kA, $field, $ids) 
+		Params:
+			$kA = array with all valid keys of the module
+			$field = which file/field is to be deleted
+			$ids = which thumbnail is to be deleted
+		Deletes all files relative to this item or only the specified ones
+		If field is specified, only said field is deleted
+		If a full id set is specified (ex.: 1_5) only the specified thumbnail is deleted
+		If no field nor id is specified, all files related to this item are deleted
+	
+	function generateBackup($echo=false)
+	
+	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNotify = false) 
+	
+	function prepareUpload($name,$kA,&$data) 
+	
+	function runAction($action,$data,$silent=false,$mfo=false,$startedAt="") 
+	
+	function runContent(&$tp,$sql="",$tag="",$usePaging=false, $cacheTAG = false,$callback = false)
+	
