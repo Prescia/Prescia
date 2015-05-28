@@ -1,4 +1,4 @@
-<?php
+<? #<- please ensure short tags is enabled on your apache
   /* -------------------------------- Prescia ENTRYPOINT
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ for Prescia (BSD/open source)
@@ -10,14 +10,16 @@
   | + Prescia code has been optimized for APACHE server, several changes needed for proper IIS operation
   | + Initial code dates back of 2004 and might be obsolete, but still operational
   | + Requires short tags
-  | + The ab test requires: (1) set a single domain on CONS_SINGLEDOMAIN, (2) disable CONS_CACHE, CONS_BOTPROTECT and CONS_FREECPU
-  |	  Displayed ab test data have 2 numbers: on developer mode, and not on developer mode. Some (where displayed) were run with cache (CONS_CACHE) on
+  | + The ab test requires: (1) set a single domain on CONS_SINGLEDOMAIN, (2) disable CONS_CACHE, CONS_ECONOMICMODE, CONS_BOTPROTECT and CONS_FREECPU
+  |	  Displayed ab test data have up to 4 numbers:
+  |		on developer mode		not on developer mode		not on developer mode, CACHE ON				not on developer mode, CACHE ON, ECONOMICMODE ON	
   |   AB test is made to detect choke points and see how the caching is improving performance
   | -----------------------------------------------
-  | Last ab test: 15.1.20 (beta 0.94) on an i7-3770 Windows 7 Apache 2.2 php 5.4. Daisuki.com site model
+  | Last ab test: 15.5.17 (1.01) on an i7-3770 Windows 7 Apache 2.2 php 5.4. Daisuki.com site model
 -*/
 
 # ab -n50 total mean: 1ms
+
 ob_start();
 
 #- Paths (relative to root (THIS FILE))  Must end with /
@@ -48,7 +50,8 @@ require CONS_PATH_INCLUDE."dbo/".CONS_AFF_DATABASECONNECTOR.".php";
 require CONS_PATH_SYSTEM."coreVar.php";
 require CONS_PATH_SYSTEM."core.php";
 # Create core version according to debug/developer mode (note: does NOT connect to database yet)
-# ab -n50 total mean: 17ms
+# ab -n50 total mean: 17ms	16ms
+
 
 if (CONS_DEVELOPER || isset($_GET['debugmode'])) {
 	require CONS_PATH_SYSTEM."coreFull.php";
@@ -97,32 +100,30 @@ if (CONS_AFF_ERRORHANDLER) { // override PHP error messaging? (if true, will not
 	$crap = set_error_handler('PresciaErrorHandler');
 	unset($crap);
 }
-# ab -n50 total mean: 17ms 16ms
+# ab -n50 total mean: 20ms	16ms	16ms	16ms
 
 require CONS_PATH_INCLUDE."getBrowser.php"; # this will also detect if we are on mobile, required at domainLoad
 $core->isbot =  CONS_BROWSER == 'UN'; // bots are not logged and have twice as much cache time
 if (!$core->isbot && CONS_HONEYPOT) include(CONS_PATH_SYSTEM."lazyload/honeypot.php"); // start up honeypot detection if enabled
 $core->domainLoad(); // locks domain, load config, start i18n, parses requested URL
 
-# ab -50 total mean: 28ms 26ms
-
 define("CONS_FMANAGER",CONS_PATH_PAGES.$_SESSION['CODE']."/files/");
-$core->servingFile = $core->checkDirectLink(); // if serving a file, will run end here (if file is not set to statistics collection)
+$core->servingFile = $core->checkDirectLink(); // if serving a file, will end here (if file is not set to statistics collection)
 if (CONS_CACHE && !$core->servingFile) $core->cacheControl->startCaches(); // detects which cache to use from auto-throttle system
 
 # -- database and metadata load
 if (!$core->dbconnect()) $core->offlineMode = true;
-# ab -n50 total mean: 32ms 32ms
+# ab -n50 total mean: 30ms	27ms	26ms	26ms
 
 if (!$core->loadMetadata()) $core->errorControl->raise(1,"metamodel fault"); // loadMetadata loads dimconfig
 if ($core->debugmode) $core->applyMetaData(); // only in debug. Executes onMeta's and save metadata/sql changes
-# ab -n50 total mean: 360ms 32ms
+# ab -n50 total mean: 363ms 	28ms	28ms	28ms
+
 
 # -- start parsing the request
 if (!$core->servingFile) {
 	// if serving file, we just want to enable the database and run onEcho plugins
 	$core->parseRequest();
-	# ab -n50 total mean: 360ms 32ms (27ms with cache enabled)
 	
 	# -- which page I want and context are ready on parseRequest, load template, so get the template core (in case we need to dump an error, we can do it with the template)
 	require CONS_PATH_INCLUDE."template/tc.php";
@@ -149,21 +150,21 @@ if (!$core->servingFile) {
 	$core->template->current_language = $_SESSION[CONS_SESSION_LANG];
 	require CONS_PATH_SYSTEM."tcexternal.php"; // template classes not built-in into the core (plugins)
 	$core->template->externalClasses = new CKTCexternal($core);
-	
 	foreach ($core->tClass as $class=>$script)
 		$core->template->varToClass[] = $class;
+	
 	$core->loadIntlControl(); # load i18n variables into template system, translate parseRewrite folder
 	if ($_SESSION[CONS_SESSION_NOROBOTS]) {
 		$core->headerControl->noIndex();
 	}
 		
 	# -- at this point, the framework overhead is done. From now on, it's mostly the site code.
-	# ab -n50 total mean: 375ms 44ms (36ms with cache enabled)
+	# ab -n50 total mean: 373ms 	36ms	36ms	36ms
 
 	# -- actions and cron run regardless of cache restrictions
 	$core->checkActions();
 	$core->cronCheck();
-	# ab -n50 total mean: 402ms 46ms (41ms with cache enabled)
+	# ab -n50 total mean: 378ms 	47ms	47ms	36ms
 
 	# -- cache test
 	$is404 = isset($core->dimconfig['_404cache']) && is_array($core->dimconfig['_404cache']) && isset($core->dimconfig['_404cache'][$core->context_str.$core->original_action]);
@@ -205,22 +206,22 @@ if (!$core->servingFile) {
 			$core->saveConfig(true);
 		}
 	}
-	# ab -n50 total mean: 411ms 77ms (42m with cache enabled)
+	# ab -n50 total mean: 417ms 	76ms	50ms	47ms
 	
 	# -- build headers
 	$core->headerControl->showHeaders();
-	# -- any script want to check the raw text/HTML output?
+	
 } else { // when serving a file directly, these were not set because checkAction was never loaded
 	$_SESSION[CONS_SESSION_ACCESS_LEVEL] = CONS_SESSION_ACCESS_LEVEL_GUEST;
 	$core->currentAuth = CONS_AUTH_SESSION_GUEST;
 }
 
-
+# -- any script want to check the raw text/HTML output?
 foreach ($core->onEcho as $scriptName) {
 	$core->loadedPlugins[$scriptName]->onEcho($PAGE);
 }
 
-if ($core->servingFile) $core->close(true); // end here
+if ($core->servingFile) $core->close(true); // end here if we were serving a file (we got here because the file were on statistics list)
 
 # -- collect and serve
 $error = ob_get_contents();
@@ -232,9 +233,9 @@ if ($error != "") {
 	else
 		$PAGE .= $error;
 }
-# -- performance monitor
+# -- performance monitor for cache throttle and overload warning
 $totalTime = scriptTime() * 1000;
-if (CONS_CACHE) $core->cacheControl->updateCacheControl($totalTime);
+if (CONS_CACHE && !CONS_ECONOMICMODE) $core->cacheControl->updateCacheControl($totalTime);
 if ($totalTime > CONS_PM_TIME) {
 	$fd = fopen (CONS_PATH_LOGS.$_SESSION['CODE']."/pm.log", "a");
 	if ($fd) {
@@ -244,7 +245,7 @@ if ($totalTime > CONS_PM_TIME) {
 }
 
 # -- if honeypot is on, append trap
-if (CONS_HONEYPOT && !$core->isbot && $core->context_str == "/") { // note we don't add the honeypot if we already know this is a bot and on non root folders, no need to catch it again or go overboard
+if (CONS_HONEYPOT && !CONS_ECONOMICMODE && !$core->isbot && $core->context_str == "/") { // note we don't add the honeypot if we already know this is a bot and on non root folders, no need to catch it again or go overboard
 	$hp = "\n<a href=\"/".CONS_HONEYPOTURL."/\" nofollow='true' style='width:0px;overflow:hidden;position:absolute;bottom:0px'>*</a>";
 	$PAGE = str_replace("</body>",$hp."</body>",$PAGE);
 }		
@@ -263,4 +264,4 @@ if (CONS_GZIP_OK && $core->layout < 2 && strlen($PAGE)>CONS_GZIP_MINSIZE) {
 unset($PAGE);
 unset($core);
 
-# ab -n50 total mean: 417ms 77ms (47 with cache enabled)
+# ab -n50 total mean: 418ms 	80ms	51ms	47ms

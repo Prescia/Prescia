@@ -1,6 +1,17 @@
 TODO list is on site/github
 
-15.05.10 FINAL 
+15.05.28 1.01 FINAL
+	Released to public, no changes since 15.05.19
+
+15.05.19 1.01 (internal)
+	Fixed Related Module links (15.05.10 rollback didn't include the template)
+	
+15.05.17 1.01 (internal)
+	Implemented delayedconn (db connect is delayed until database is really used)
+	Implemented CONS_ECONOMICMODE (shuts down some non-essential systems to improve performance)
+	Small fixes
+
+15.05.10 FINAL (released to public on 15.05.11)
 	Fixed issue where a date with a default value would full the admin pane edit with an invalid date
 	Fixed where a remote module link where the link requires a filter (example: if city requires estate), the filter is detected and also sent
 	Fixed error on action (e306) not displaying

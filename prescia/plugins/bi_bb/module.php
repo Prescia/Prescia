@@ -145,6 +145,7 @@ class mod_bi_bb extends CscriptedModule  {
 	}
 
 	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNotify =false) {
+		if ($module === false) return;
 		if (!$earlyNotify &&
 			$module->name == "forumpost" &&
 			$startedAt != "forumpost" &&

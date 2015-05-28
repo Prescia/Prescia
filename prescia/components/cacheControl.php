@@ -129,11 +129,17 @@ class CCacheControl {
 		$this->parent->storage['CORE_CACHECONTROL'] = array();
 		$this->parent->storage['CORE_CACHECONTROL'][] = CONS_PM_MINTIME; // actual cache
 		$this->parent->storage['CORE_CACHECONTROL'][] = 0.5; // factor
+		if (CONS_ECONOMICMODE) { // economic mode, assume full cache
+			$this->parent->cachetime = 1000*floor(CONS_DEFAULT_MIN_BROWSERCACHETIME+(CONS_DEFAULT_MAX_BROWSERCACHETIME - CONS_DEFAULT_MIN_BROWSERCACHETIME)*($this->parent->isbot?2:1));
+			$this->parent->cachetimeObj = 1000*floor(CONS_DEFAULT_MIN_OBJECTCACHETIME+(CONS_DEFAULT_MAX_OBJECTCACHETIME - CONS_DEFAULT_MIN_OBJECTCACHETIME)*($this->parent->isbot?2:1));
+			return;
+		}
 		if (!CONS_ONSERVER) { // local, we want to see up-to-date, so force 1s caches
 			$this->parent->cachetime = 1000;
 			$this->parent->cachetimeObj = 1000;
 			return;
 		}
+			
 		// session cache?
 		if (isset($_SESSION[CONS_CACHECONTROL_MOD])) {
 			$this->parent->cachetime = floor(1000*(CONS_DEFAULT_MIN_BROWSERCACHETIME + (CONS_DEFAULT_MAX_BROWSERCACHETIME - CONS_DEFAULT_MIN_BROWSERCACHETIME) * $_SESSION[CONS_CACHECONTROL_MOD])) * ($this->parent->isbot?2:1);

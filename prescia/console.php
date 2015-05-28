@@ -145,6 +145,7 @@
 				echo "CONS_HTTPD_ERRDIR: ".CONS_HTTPD_ERRDIR."<br/>";
 				echo "CONS_HTTPD_ERRFILE: ".CONS_HTTPD_ERRFILE."<br/>";
 				echo "CONS_MASTERMAIL: ".CONS_MASTERMAIL."<br/>";
+				echo "CONS_ECONOMICMODE: ".(CONS_ECONOMICMODE?'true':'false')."<br/>";
 				echo "CONS_ACCEPT_DIRECTLINK: ".(CONS_ACCEPT_DIRECTLINK?"true":"false")."<br/>";
 				echo "CONS_SITESELECTOR: ".(CONS_SITESELECTOR?"true":"false")."<br/>";
 				echo "CONS_NOROBOTDOMAINS: ".CONS_NOROBOTDOMAINS."<br/>";
@@ -184,7 +185,9 @@
 		}
 
 		if ($words[0] == 'cache') {
-			if (is_file(CONS_PATH_LOGS."cachecontrol.dat")) {
+			if (CONS_ECONOMICMODE)
+				echo "Economic mode on, cache control disabled";
+			else if (is_file(CONS_PATH_LOGS."cachecontrol.dat")) {
 				$cc = unserialize(cReadFile(CONS_PATH_LOGS."cachecontrol.dat"));
 				if ($cc !== false) {
 					echo "Date, Page average loadtime, Cache throttle %\n<br/>";

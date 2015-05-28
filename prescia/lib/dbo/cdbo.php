@@ -20,6 +20,7 @@ class CDBO {
   	public $quickmode = true; // if false, will store all query logs into $log, otherwise only errors
   	public $allow_select_fast_foward = true; // allows array_break to fast-foward SELECT section and quickly detect FROM/JOIN
 	public $errorRaised = false;
+	public $delayedconn = 0; // 0 = disconnected, 1 = waiting, 2 = connected 
 
   	public function __construct($host="", $user="", $password="", $database="", $debug = false) {
 		$this->host = $host;
@@ -51,6 +52,11 @@ class CDBO {
   		if ($user != "") $this->user = $user;
   		if ($password != "") $this->password = $password;
   		if ($database != "") $this->database = $database;
+		if ($this->delayedconn == 0) { // delayed connection, connects only if you really use DB
+			$this->delayedconn = 1;
+			return true;
+		}
+		$this->delayedconn = 2;
   		$sd = getmicrotime();
 
   		/*
@@ -77,7 +83,8 @@ class CDBO {
 		return false; // WHEN EXTENDING, REMOVE THIS
 
 		// COPY/PASTE ALL CONTENT TO GUARANTEE DEBUGMODE AND BENCHMARK ARE IN PLACE
-
+		
+		if ($this->delayedconn == 1) $this->connect();
 		if (!$this->connection) return false;
 		if (is_null($debugmode)) $debugmode = $this->debugmode;
     	$this->dbc++;
@@ -109,6 +116,7 @@ class CDBO {
 
 		// COPY/PASTE ALL CONTENT TO GUARANTEE DEBUGMODE AND BENCHMARK ARE IN PLACE
 
+		if ($this->delayedconn == 1) $this->connect();
 		if (!$this->connection) return false;
 		if (is_null($debugmode)) $debugmode = $this->debugmode;
 		if (is_array($sql)) $sql = $this->sqlarray_echo($sql);
@@ -137,6 +145,7 @@ class CDBO {
 		# fetches ONE value of ONE table, as in SELECT id FROM ...
 		return false; // WHEN EXTENDING, REMOVE THIS
 		// COPY/PASTE ALL CONTENT TO GUARANTEE DEBUGMODE AND BENCHMARK ARE IN PLACE
+		if ($this->delayedconn == 1) $this->connect();
 		if (!$this->connection) return false;
     	$this->dbc++;
     	if (is_array($sql)) $sql = $this->sqlarray_echo($sql);

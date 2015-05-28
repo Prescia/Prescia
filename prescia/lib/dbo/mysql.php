@@ -18,6 +18,11 @@ class CDBO_mysql extends CDBO {
   		if ($user != "") $this->user = $user;
   		if ($password != "") $this->password = $password;
   		if ($database != "") $this->database = $database;
+		if ($this->delayedconn == 0) { // delayed connection, connects only if you really use DB
+			$this->delayedconn = 1;
+			return true;
+		}
+		$this->delayedconn = 2;
   		$sd = getmicrotime();
 
 		$this->connection =mysql_connect($this->host,$this->user,$this->password); // do not mute this
@@ -63,6 +68,7 @@ class CDBO_mysql extends CDBO {
 
 	function query($sql, &$result, &$numrows, $debugmode= null) {
 		# debugmode will ECHO the error. It NEVER DIES
+		if ($this->delayedconn == 1) $this->connect();
 		if (!$this->connection) return false;
     	$this->dbc++;
     	if (is_array($sql)) $sql = $this->sqlarray_echo($sql);
@@ -87,6 +93,7 @@ class CDBO_mysql extends CDBO {
     } // query
 
 	function simpleQuery($sql,$debugmode  = null) {
+		if ($this->delayedconn == 1) $this->connect();
 		if (!$this->connection) return false;
 		if (is_array($sql)) $sql = $this->sqlarray_echo($sql);
 		$this->dbc++;
@@ -112,6 +119,7 @@ class CDBO_mysql extends CDBO {
 	} // simpleQuery
 
 	function fetch($sql, $abortOnError = false) {
+		if ($this->delayedconn == 1) $this->connect();
 		if (!$this->connection) return false;
     	$this->dbc++;
     	if (is_array($sql)) $sql = $this->sqlarray_echo($sql);

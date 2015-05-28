@@ -313,7 +313,7 @@ class CErrorControl {
 		}
 
 
-		if ($actionLog) {
+		if ($actionLog && !CONS_ECONOMICMODE) {
 			if (isset($_SESSION['CODE']) && !is_dir(CONS_PATH_LOGS.$_SESSION['CODE']."/")) safe_mkdir(CONS_PATH_LOGS.$_SESSION['CODE']."/");
 			$fd = fopen (CONS_PATH_LOGS.$_SESSION['CODE']."/act".date("Ymd").".log", "a");
 		  	if ($fd) {

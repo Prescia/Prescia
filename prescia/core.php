@@ -119,7 +119,7 @@ class CPrescia extends CPresciaVar {
 
 
 		# anti-bot (basically a anti-DOS tool)
-		if (CONS_BOTPROTECT && ($this->layout != 2 || !$this->noBotProtectOnAjax)) require CONS_PATH_SYSTEM."lazyload/botprotect.php";
+		if (!CONS_ECONOMICMODE && CONS_BOTPROTECT && ($this->layout != 2 || !$this->noBotProtectOnAjax)) require CONS_PATH_SYSTEM."lazyload/botprotect.php";
 		
 	} # domainLoad
 #-
@@ -178,7 +178,6 @@ class CPrescia extends CPresciaVar {
 	 */
 	function parseRequest() { 
 		
-
 		# you cannot have an action named default, alas it's the same as index!
 		if ($this->action == "default") $this->action = "index";
 

@@ -8,7 +8,6 @@
 	define("CONS_FMANAGER_SAFE"				,"download"); // folder used by bi_fm, with permissions. If no entry (or module), nobody have permission to read the file outside of the admin pane
 														// IMPORTANT: if you change the safe folder, be sure to change it on the .htaccess
 	define("CONS_FLATTENURL"				,"-"); // spaces will turn into this for filenames
-													 
 	define("CONS_AUTOREMOVEWWW"				,true); // will automatically remove www. from all internal variables, so you don't need to bother duplicating data like www.site.com and site.com
 	
 	# -- CACHE and PERFORMANCE --
@@ -27,6 +26,7 @@
 	# -- Master overrides --
 	define("CONS_SINGLEDOMAIN"				,""); // set the name of the folder inside /pages/ that will ALWAYS result this install, thus disabling domain handling (faster)
 	define("CONS_SITESELECTOR"				,true); // on first access, will ask which site to serve. Works only on production
+############
 # CHANGE THIS OR MASTER USERS CAN'T LOG:
 	define("CONS_MASTERPASS"				,""); // if not "", this will override $masterOverride in ALL sites, accepts {CODE} {YEAR} {MONTH} {DAY} {DOMAIN}
 ############
@@ -56,6 +56,7 @@
 		define ("CONS_DEFAULT_MMCACHETIME",3600); // default cache in seconds, for direct link resources on the files folder, should be larger (these are usually images, etc)
 		define ("CONS_HIDE_MYSQLDOWN"	,true); // If DB is gone, try to use caches and serve them (or abort with a 503 error instead an ugly SQL error)
 		define ("CONS_MASTERDOMAINS"	,"www.prescia.net"); # these can access the master control (if available)
+		define ("CONS_ECONOMICMODE"		,false); // If true, disables lots of features to improve performance
 
 		define ("CONS_TIMELIMIT"		,40); # PHP time limit.
 		define ("CONS_TIMEWARNING"		,35); # time considered too long to proceed (about 5~10 below CONS_TIMELIMIT), will try a soft abort
@@ -78,11 +79,12 @@
 
 		define ("CONS_DEVELOPER"		,true);
 		define ("CONS_FOWARDER"			,true);
-		define ("CONS_CACHE"			,true);
+		define ("CONS_CACHE"			,true); // disable for ab
 		define ("CONS_DEFAULT_CACHETIME",10);
 		define ("CONS_DEFAULT_MMCACHETIME",30); 
 		define ("CONS_HIDE_MYSQLDOWN"	,false);
 		define ("CONS_MASTERDOMAINS"	,"localhost,127.0.0.1");
+		define ("CONS_ECONOMICMODE"		,false); // If true, disables lots of features to improve performance, disable for ab
 
 		define ("CONS_TIMELIMIT"		,90);
 		define ("CONS_TIMEWARNING"		,85);

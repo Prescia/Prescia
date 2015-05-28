@@ -172,10 +172,10 @@ class mod_bi_stats extends CscriptedModule  {
 
 
 	function onEcho(&$PAGE){
-		
-		
-		
+			
 		$core = &$this->parent;
+		
+		if (CONS_ECONOMICMODE && $core->isbot) return; 
 
 		$pageToBelogged = substr($core->original_context_str,1);
 		if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
@@ -470,7 +470,7 @@ class mod_bi_stats extends CscriptedModule  {
 		}
 
 		## BENCHMARK ##
-		if (isset($core->dimconfig['nobenchstats']) && strpos(','.$core->dimconfig['nobenchstats'],','.$core->action) !== false) {
+		if (CONS_ECONOMICMODE || (isset($core->dimconfig['nobenchstats']) && strpos(','.$core->dimconfig['nobenchstats'],','.$core->action) !== false)) {
 			return; # ignore benchmark on this page
 		}
 		$totalTime = scriptTime() * 1000;

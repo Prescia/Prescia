@@ -1,4 +1,17 @@
-<?
+<? /* -------------------------------------------------
+ * action/default.php
+ * This file runs ALWAYS (if on the proper folder, ofc), and is the VERY FIRST to run. Only codes that run before are onMeta and onCheckActions from plugins
+ * Right after this, the page/action file (if any) will run.
+ * All files inside action/ run BEFORE THE TEMPLATE IS LOADED, so don't even try to access or change what you need to echo
+ * Also, since the template was not loaded, you CAN change what page to serve by directly changhing $this->action
+ * AGAIN: All files in this folder are for ACTIONS only, no OUTPUT can be performed here (unless this is an ajax request).
+ * 
+ * If you want this to run for sub-folders, just call this from them (like include CONS_PATH_PAGES.$_SESSION['CODE']."/actions/default.php")
+ * 
+ * Did I say you should not OUTPUT or try to access the TEMPLATE in here? ok...
+ * 
+ * Yes you can remove all this comments when you are done
+*/ 
 
 	// change how the debug messages show?
 	# $this->debugFile = CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html";

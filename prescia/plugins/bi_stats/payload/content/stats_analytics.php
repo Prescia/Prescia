@@ -533,7 +533,7 @@
 	$core->runContent('STATSRT',$core->template,array("data > NOW() - INTERVAL 30 MINUTE","data_ini DESC",""),"_rvisitor",false,false,'counthitsrt');
 	
 	#################################### BOT HITS 24h ########################################
-	$core->template->assign("bothits",$core->dbo->fetch("SELECT hits FROM stats_bots WHERE data='".date("Y-m-d")."'"));
+	$core->template->assign("bothits",CONS_ECONOMICMODE?'economic mode on':$core->dbo->fetch("SELECT hits FROM stats_bots WHERE data='".date("Y-m-d")."'"));
 	
 	#################################### HONEYPOT ############################################
 	$core->template->assign("honeypot",isset($_SESSION[CONS_SESSION_HONEYPOTLIST])?count($_SESSION[CONS_SESSION_HONEYPOTLIST]):0);

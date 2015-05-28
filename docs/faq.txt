@@ -42,3 +42,15 @@ I get a maintenance warning in my page
 
 I get a 503 maintenance page
 > Delete/rename the file heavymaint.html at root. It is supposed to be there only when you are actually performing maintenance where you don't want the server to run
+
+Misc
+----
+What EconomicMode does?
+> It disables a lot of high-level functions to improve performance. You will notice some, probably:
++ Disables nocache and forcecron request processing
++ Disables CONS_BOTPROTECT
++ Assume biggest caching times on cache control (twice for bots)
++ Disables logging of actions
++ Disables all bot logs
++ Disables benchmarking (from statistics)
++ Disables CONS_HONEYPOT trap (but still captures them)

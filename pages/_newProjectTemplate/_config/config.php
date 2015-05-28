@@ -11,7 +11,7 @@
 	define("CONS_CRONDBBACKUP_MAIL",''); // if set, will mail a zipped backup of the database when cron backup runs
 
 	if (CONS_ONSERVER) { // <-- settings for your online "final" server
-		define("CONS_INSTALL_ROOT","/"); // if Simpla is installed in other than the ROOT folder, fill this (must end and start with /)
+		define("CONS_INSTALL_ROOT","/"); // if Prescia is installed in other than the ROOT folder, fill this (must end and start with /)
 		define("CONS_DB_HOST","localhost"); // leave empty if not using a database. The framework will enter dbless mode
 		define("CONS_DB_BASE","");
 		define("CONS_DB_USER","");
@@ -21,7 +21,7 @@
 		//$dev = $this->addPlugin('bi_dev');
 
 	} else { // <------------- settings for your local production machine
-		define("CONS_INSTALL_ROOT","/"); // if AFF is installed in other than the ROOT folder, fill this (must end and start with /)
+		define("CONS_INSTALL_ROOT","/"); // if Prescia is installed in other than the ROOT folder, fill this (must end and start with /)
 		define("CONS_DB_HOST","localhost"); // leave empty if not using a database. The framework will enter dbless mode
 		define("CONS_DB_BASE","");
 		define("CONS_DB_USER","root"); // Overridden by master, if set
@@ -44,7 +44,7 @@
 		#$advadm->admFolder = "adm";
 		#$advadm->admRestrictionLevel = 10; // minimum level to access admin
 
-	#$bb = $this->addPlugin('bi_bb'); // Bulleting Board
+	#$bb = $this->addPlugin('bi_bb'); // Bulleting Board (can also handle BLOGS and ARTICLE sites)
 		#$bb->bbfolder = "bb";
 		#$bb->registrationGroup = 4;
 		#$bb->areaname = "Blog";
@@ -57,7 +57,7 @@
 	#$this->addPlugin('bi_cms'); // suggest to leave later so it's also the last to handle 404
 	$stats = $this->addPlugin('bi_stats'); // statistics (must be always the last)
 		#$stats->admFolder = "adm";
-		$stats->detectVisitorByIP = true; // if we get hits from the same IP in a sort period, but the visit cookies are not set (disabled?), consider it the same person. If cookies are present, then you can have mode than one visitor per IP
+		$stats->detectVisitorByIP = true; // if we get hits from the same IP in a short period, but the visit cookies are not set (disabled?), consider it the same person. If cookies are present, then you can have mode than one visitor per IP
 		#$stats->admRestrictionLevel = 10; // what we consider an admin level
 		#$stats->doNotLogAdmins = false; // set true not to count people logged with admin level
 		#$stats->logBOTS = false; // FOR DEBUG, NEVER TURN THIS ON, YOU WERE WARNED =p read bi_stats on this
@@ -65,7 +65,7 @@
 	// Uncomment and change as needed
 	#$this->languageTL = array("en" => "en", "pt" => "pt-br"); # url/PATH/[subdir/] => url/[subdir/]?lang=PATH
 	#$this->forceVDIRTL = true; // using the tag {vdir|folder} will always add the languageTL in it, so {vdir|/} translates to /en/ or /pt/
-	#$this->forceLang = "en"; # force this language (kinda spoils i18n settings, this is used mostly for debugging)
+	#$this->forceLang = "en"; # force this language (kinda spoils i18n settings, this is used mostly for debugging or single-language sites)
 	#$this->charset = "utf-8"; # default charset (default is utf-8 already)
 	$this->doctype = "html"; // use html or xhtml. This will change how the page is served. Note xhtml is VERY STRICT, like ... VERY. Really, you will never use this
 	# $this->collectStatsOnTheseFiles = array(); # list of files (files/..., do not start with /) that will be captured but won't terminate the script, allowing onEcho to run (alas, statistics gathering)
