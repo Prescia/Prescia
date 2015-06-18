@@ -7,6 +7,9 @@ class mod_bi_bb extends CscriptedModule  {
 
 	########################
 	var $bbfolder = "/bb/"; //  If the forum works at the root, just leave "". If you want more than one, use SEO plugin to redirect them here
+	var $forceParentFolder = false; // if you have a thread like /bb/FORUM/THREAD and the user access just as /bb/THREAD, it will usually work.
+									// if this varible is "false", will let it happen, only fixing the canonical
+									// if this variable is "true", will cause a header redirect to the correct (/bb/FORUM/THREAD) url 
 	var $registrationGroup = 4; # when a new user register, he is put into this group
 	var $ignoreTagsSmallerThen = 3; # tags smaller than this number of characters are ignored
 	// -- how to display a thread/blog/article
@@ -21,7 +24,7 @@ class mod_bi_bb extends CscriptedModule  {
 	var $areaname = "forum"; # title of the area, when not provided. Be sure to have i18n tags for it
 	var $homename = "home"; # title of the "home" link at the frame
 	var $noregistration = false; # set true to disable user registration features
-	// -- folders to ignore (do not treat as bb)
+	// -- folders to ignore (do not treat as a forum of bb)
 	var $ignorefolders = ""; // leave empty or it will ignore root. Use this for sub-folders that are not part of the bi_bb, thus all bi_bb scripts will be ignored. Comma delimited
 	######################
 

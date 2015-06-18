@@ -9,6 +9,38 @@
 	if (!isset($core->storage['friendlyurldata']) ||
 	    !isset($core->storage['friendlyurlmodule'])) $core->fastClose(404);
 
+	// ############################# URL handling
+	// this is necessary because all the virtual and SEO names changed what will be served, but what the script runs is this file.
+	// we need to change what will be logged and the canonical or it will be logged/canonical as "thread.php"
+	// this script also detects ill formed forum links (missing parents) and handle them
+	
+	$pageToBelogged = substr($core->original_context_str,1); // <-- will be used to get statistics, but we also use to detect wrong URL (missing parent)
+	if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
+	$act = $core->original_action;
+	if (strpos($act,".")!==false) {
+		$act = explode(".",$act); // remove extension:
+		array_pop($act);
+		$act = implode(".",$act);
+	}
+	$rootLog = $pageToBelogged;
+	$pageToBelogged .= $act;
+	$root = $this->bbfolder;
+	if ($root != "") {
+		$root = substr($root,1);
+		$pageToBelogged = substr($pageToBelogged,strlen($root));
+	}
+	// fix canonical
+	$core->template->constants['CANONICAL'] = "http://".$_SESSION['CANONICAL']."/".$root.$pageToBelogged.".html";				
+	// change context back so statistics work (was consumed on UDM)
+	$core->original_context_str = "/".$root.$rootLog; // for the statistics
+	// detect wrong parent
+	if ($rootLog == $root && $core->storage['friendlyurldata']['forum_urla'] != '') {	
+		$core->template->constants['CANONICAL'] = "http://".$_SESSION['CANONICAL']."/".$root.$core->storage['friendlyurldata']['forum_urla']."/".$act.".html"; 
+		if ($this->forceParentFolder) $core->headerControl->internalFoward($core->template->constants['CANONICAL']."?lang=".$_SESSION[CONS_SESSION_LANG],301); 
+	} 
+	// ############################# END URL HANDLING
+
+
 	$this->parent->template->constants['PAGE_TITLE'] .= " - ".$core->storage['friendlyurldata']['forum_title']." - ".$core->storage['friendlyurldata']['title'];
 
 	// user options (ipp)
@@ -62,25 +94,7 @@
 	}
 	$core->template->assign("pg",ceil(($mode=='bb'?$totalPost:$totalPost-1)/$ipp));
 
-	// views (use statistics plugin)
-	$pageToBelogged = substr($core->original_context_str,1);
-	if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
-
-	if ($pageToBelogged == "" && $core->storage['friendlyurldata']['forum_urla'] != '') { 
-		$pageToBelogged = $core->storage['friendlyurldata']['forum_urla']."/"; // don't get the root statistics one, get the one inside the forum
-		$core->original_context_str = "/".$pageToBelogged; // tell the system we are inside the forum, so statistics are gathered correctly
-		// also, do not let bots index this page, since this is the wrong one (correct have the folder)
-		$core->headerControl->noIndex();
-	} 
 	
-	$act = $core->original_action;
-	if (strpos($act,".")!==false) {
-		$act = explode(".",$act); // remove extension:
-		array_pop($act);
-		$act = implode(".",$act);
-	}
-	$pageToBelogged .= $act;
-
 	$v = $core->loadedPlugins['bi_stats']->getCounter($pageToBelogged);
 	$core->template->assign("v",$v>0?$v:1);
 

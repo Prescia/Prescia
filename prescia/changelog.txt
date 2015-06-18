@@ -8,6 +8,7 @@ TODO list is on site/github
 	Headers respect cacheControl->noCache 
 	Headers send correct "no-cache, no-store" if not to cache (regardless of reason)
 	Mobile version of administrative pane correctly fills out top frame and statistics
+	Intense chance on how bi_bb handles URL and threads with parents. Now it will force parents to be present on the URL, if not it can either work but set on canonical, or perform a header redirect
 
 15.06.14 1.02 FINAL (internal)
 	Fixed tiny error on PrepareMail timestamping

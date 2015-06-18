@@ -204,6 +204,8 @@ class mod_bi_stats extends CscriptedModule  {
 			}
 			$pageToBelogged .= $act;
 			$pageToBelogged = str_replace('"',"",$pageToBelogged); # there are exploits everywhere!
+		
+			
 			
 			# is this a BOT? atm we consider unknown browsers as bots (some obvious crawlers are already set to unknown, see getBrowser.php) to make this faster, if CONS_HONEYPOT is on, will also detect bots using a honeypot
 			$isBot = $core->isbot;
