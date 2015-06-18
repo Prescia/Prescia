@@ -17,10 +17,10 @@
 			if (isset($this->storage['_scripts_bootstrap_added'])) return; # added here
 
 			if (!isset($parameters['setViewport'])) {
-				$parameters['setViewport'] = $this->isbot?'device-width':992;
+				$parameters['setViewport'] = 'device-width';
 			}
 
-			$this->addMeta("\t<meta name=\"viewport\" content=\"width=".$parameters['setViewport'].", initial-scale=1\" />");
+			$this->addMeta("\t<meta name=\"viewport\" content=\"width=".$parameters['setViewport'].",height=device-height, initial-scale=1, target-densityDpi=device-dpi; \" />");
 
 			$this->addLink("bootstrap/css/bootstrap.min.css");
 			if (CONS_BROWSER == "IE" && CONS_BROWSER_VERSION < 9) { // DO NOT WORK ON COMPATIBILITY MODE, IE ALWAYS REPORTS ITSELF AS THE LATEST VERSION ON IE 11

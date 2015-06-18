@@ -3,9 +3,12 @@
  */
 
  	// loads frame
+ 	
  	$core->loadTemplate();
 	$core->addLink('common.js');
+	
 	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]>=$this->admRestrictionLevel) {
+
 		$core->template->assign("LOGGED_USER",$_SESSION[CONS_SESSION_ACCESS_USER]['name']);
 		$core->template->assign("LOGGED_USERID",$_SESSION[CONS_SESSION_ACCESS_USER]['id']);
 		// user image
@@ -16,7 +19,7 @@
 			$core->template->assign("LOGGED_USERIMAGE",$image);
 		}
 		
-		if ($core->layout == 0 && $core->action != 'login') {
+		if ($core->layout != 2 && $core->action != 'login') {
 
 			// version
 			$core->template->assign("AFF_VERSION",AFF_BUILD." ".AFF_VERSION);

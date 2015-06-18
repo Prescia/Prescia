@@ -1,6 +1,25 @@
 TODO list is on site/github
 
-15.05.28 1.01 FINAL
+15.06.18 1.02 FINAL (public release)
+	Default viewport from bootstrap switched back to device-width, added device-height
+	Administrative pane now demands noCache (cacheControl->noCache) rule
+	ipv4 shown on adminstrative pane details if available
+	Added new tag for image/flash tag output: _tr will output a responsive tag (width/height 100%), while _t (the current one) outputs width and height set to the image size.
+	Headers respect cacheControl->noCache 
+	Headers send correct "no-cache, no-store" if not to cache (regardless of reason)
+	Mobile version of administrative pane correctly fills out top frame and statistics
+
+15.06.14 1.02 FINAL (internal)
+	Fixed tiny error on PrepareMail timestamping
+
+15.06.07 1.02 FINAL (internal)
+	Tweaked how statistics are gathered/shown on bi_bb: if you do not add the forum folder container (page.html instead of forum/page.html), it will add the forum automatically
+	Do not let bots index the incorrect folderless page above.
+
+15.06.02 1.02 FINAL (internal)
+	Removed like/dislike detection from Youtube videos. They changed, it is still there, but support for this will be dropped in favor of stability
+
+15.05.28 1.01 FINAL (public)
 	Released to public, no changes since 15.05.19
 
 15.05.19 1.01 (internal)

@@ -1049,9 +1049,11 @@ class CPrescia extends CPresciaVar {
 			else {
 				$this->headerControl->addHeader(CONS_HC_CONTENTTYPE,"Content-Type: text/html; charset=".$this->charset);
 			}
-			$this->headerControl->addHeader(CONS_HC_PRAGMA,'Pragma: '.($this->layout!=2 && CONS_DEFAULT_CACHETIME>2?'public':'no-cache'));
-			if (CONS_CACHE && $this->layout != 2)
+			$this->headerControl->addHeader(CONS_HC_PRAGMA,'Pragma: '.($this->layout!=2 && CONS_DEFAULT_CACHETIME>2 && !$this->cacheControl->noCache ?'public':'no-cache'));
+			if (CONS_CACHE && $this->layout != 2 && !$this->cacheControl->noCache)
 				$this->headerControl->addHeader(CONS_HC_CACHE,'Cache-Control: public,max-age='.CONS_DEFAULT_CACHETIME.',s-maxage='.CONS_DEFAULT_CACHETIME);
+			else
+				$this->headerControl->addHeader(CONS_HC_CACHE,'Cache-Control: no-cache, no-store');
 		}
 
 		# logs 404/403 in separate error code
@@ -1109,6 +1111,7 @@ class CPrescia extends CPresciaVar {
 								$data[$fnamedata."w"] = "";
 								$data[$fnamedata."h"] = "";
 								$data[$fnamedata."t"] = "";
+								$data[$fnamedata."tr"] = "";
 								$data[$fnamedata."s"] = "";
 								if ($hasFile) {
 									$data[$fnamedata] = $FirstfileName;
@@ -1122,11 +1125,13 @@ class CPrescia extends CPresciaVar {
 										$data[$fnamedata."s"] = humanSize(filesize($FirstfileName));
 										if (in_array(strtolower($ext),array("jpg","gif","png","jpeg"))) {
 											$data[$fnamedata."t"] = "<img src=\"".$FirstfileName."\" width='".$h[0]."' height='".$h[1]."' alt='' />";
+											$data[$fnamedata."tr"] = "<img src=\"".$FirstfileName."\" width='100%' height='100%' alt='' />";
 										} else if (strtolower($ext) == "swf") {
 											$data[$fnamedata."t"] =
 											str_replace("{FILE}",$FirstfileName,
 											str_replace("{H}",$h[1],
 											str_replace("{W}",$h[0],SWF_OBJECT)));
+											$data[$fnamedata."tr"] = $data[$fnamedata."t"];
 										}
 									}
 								}
@@ -1141,6 +1146,7 @@ class CPrescia extends CPresciaVar {
 							$fnamedata = $name."_1";
 							$data[$fnamedata] = "";
 							$data[$fnamedata."t"] = "";
+							$data[$fnamedata."tr"] = "";
 							$data[$fnamedata."s"] = "";
 						}
 						$this->template->fill($data);

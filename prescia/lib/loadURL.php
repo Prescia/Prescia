@@ -102,14 +102,13 @@
 
 	# Get number of views on a YOUTUBE video!
 	# Send video code, not url
-	# Returns array: [views, date posted, likes, dislikes] or string with reason of error
+	# Returns array: [views, date posted] or string with reason of error
 	# If $simple is true (or not send), returns only the view count, all other data is left blank
 	function getYoutubeViews($code,$simple=true) {
 		
 		# 2015.1.28: <div class="watch-view-count">16,520,660</div>
 		#			<itemprop="datePublished" content="2012-03-11"/>
 		#			 <strong class="watch-time-text">Published on Nov 30, 2011
-		#			 <button class="yt-uix-button yt-uix-button-size-default yt-uix-button-opacity yt-uix-button-has-icon no-icon-markup yt-uix-button-toggled yt-uix-tooltip" type="button" onclick=";return false;" title="Unlike" id="watch-like" aria-label="like this video along with 238,062 other people" data-like-tooltip="I like this" data-orientation="vertical" data-unlike-tooltip="Unlike" data-position="bottomright" data-force-position="true" data-button-toggle="true"><span class="yt-uix-button-content">238,062 </span></button></span><span ><button class="yt-uix-button yt-uix-button-size-default yt-uix-button-opacity yt-uix-button-has-icon no-icon-markup  yt-uix-tooltip" type="button" onclick=";return false;" title="I dislike this" id="watch-dislike" aria-label="dislike this video along with 11,897 other people" data-orientation="vertical" data-position="bottomright" data-force-position="true" data-button-toggle="true"><span class="yt-uix-button-content">11,897 
 		$html = loadURL('https://www.youtube.com/watch?v='.$code);
 		if ($html !== false) {
 			$html = $html[1];
@@ -117,7 +116,7 @@
 			if ($haswvc > 0) {
 				$initpos = strpos($html,">",$haswvc);
 				$endpos = strpos($html,"<",$initpos);
-				$return = array(str_replace(".","",str_replace(",","",substr($html,$initpos+1,$endpos-$initpos-1))),'',0,0);
+				$return = array(str_replace(".","",str_replace(",","",substr($html,$initpos+1,$endpos-$initpos-1))),'');
 				if (!$simple) {
 					$haswvc = strpos($html,'"datePublished"',100);
 					if ($haswvc > 0) {
@@ -127,20 +126,6 @@
 						if (strlen($return[1])>10) $return[1] = "";
 					} else
 						return "getYoutubeviews: publish date not found";
-					$haswvc = strpos($html,'"watch-like"',5000);
-					if ($haswvc > 0) {
-						$initpos = strpos($html,">",$haswvc);
-						$endpos = strpos($html,"<",$initpos+10);
-						$return[2] = stripHTML(substr($html,$initpos+1,$endpos-$initpos-1));
-					} else
-						return "getYoutubeviews: likes not found found";
-					$haswvc = strpos($html,'"watch-dislike"',5100);
-					if ($haswvc > 0) {
-						$initpos = strpos($html,">",$haswvc);
-						$endpos = strpos($html,"<",$initpos+10);
-						$return[3] = stripHTML(substr($html,$initpos+1,$endpos-$initpos-1));
-					} else
-						return "getYoutubeviews: dislikes not found";
 				}
 				return $return;
 			} else

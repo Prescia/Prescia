@@ -4,8 +4,8 @@
 -*/
 
 set_time_limit (CONS_TIMELIMIT);
-define ("AFF_BUILD","15.5.28 FINAL"); // (Y.m.d) ~ last stable: 1.01 FINAL
-define ("AFF_VERSION",1.01);  
+define ("AFF_BUILD","15.6.18 FINAL"); // (Y.m.d) ~ last stable: 1.01 FINAL
+define ("AFF_VERSION",1.02);  
 // Original numbering before Prescia: 1 = Akari(proprietary), 2 = Sora(proprietary), 3 = Aff(ɔ)/Nekoi(proprietary), 4 = Prescia(ɔ)
 
 # -- XML parameter

@@ -64,5 +64,5 @@
 	$mail->fill($fillArray);
 	$mail->constants['ABSOLUTE_URL'] = "http://".$this->domain.CONS_INSTALL_ROOT;
 	$mail->constants['DOMAIN'] = $this->domain;
-	$mail->constants['TIMESTAMP'] = date($this->intlControl->getDate." H:i");
+	$mail->constants['TIMESTAMP'] = date($this->intlControl->getDate()." H:i");
 	return $mail;

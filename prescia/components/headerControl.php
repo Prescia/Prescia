@@ -19,7 +19,7 @@ class CHeaderControl {
 
 	function noIndex() { // call this to tell bots not to index this page
 		if (isset($this->parent->storage['noindex_set'])) return;
-		$this->parent->template->constants['METATAGS'] .= "<meta name=\"robots\" CONTENT=\"NOINDEX\"/>\n";
+		$this->parent->template->constants['METATAGS'] .= "<meta name=\"robots\" content=\"noindex\"/>\n";
 		$this->addHeader("X-Robots-Tag", "X-Robots-Tag: noindex"); 
 		$this->parent->storage['noindex_set'] = true;
 	}

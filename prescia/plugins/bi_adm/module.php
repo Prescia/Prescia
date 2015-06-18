@@ -137,8 +137,9 @@ class mod_bi_adm extends CscriptedModule  {
 		if (in_array($this->parent->context_str,$this->contextfriendlyfolderlist)) { // are we on the admin?
 			$this->isAdminPage = true; // we are on the admin
 			$this->parent->virtualFolder = false; // or we will 404 or serve root data
-			$this->parent->cachetime = 1;
-			$this->parent->cachetimeObj = 1;
+			$this->parent->cachetime = 0;
+			$this->parent->cachetimeObj = 0;
+			$this->parent->cacheControl->noCache = true;
 			########## SAFETY - IT'S HERE ##############
 			// if we do not have enough level (not logged, logged with low-level user), force to login page
 			if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<$this->admRestrictionLevel) {

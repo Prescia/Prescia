@@ -32,6 +32,7 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 						$data[$fnamedata."w"] = "";
 						$data[$fnamedata."h"] = "";
 						$data[$fnamedata."t"] = "";
+						$data[$fnamedata."tr"] = "";
 						$data[$fnamedata."s"] = "";
 						$file = CONS_FMANAGER.$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
 						$fileout = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
@@ -48,11 +49,13 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 							  if (in_array(strtolower($ext),array("jpg","gif","png","jpeg"))) { // image
 							  	$randomseed = isset($_SESSION[CONS_SESSION_ACCESS_LEVEL]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] > 9 ? "?r=".rand(1000,9999).date("YmdHis"):"";
 								$data[$fnamedata."t"] = "<img src=\"".CONS_INSTALL_ROOT.$fileout.$randomseed."\" width='".$h[0]."' title=\"".$myTitle."\" height='".$h[1]."' alt='' />";
+								$data[$fnamedata."tr"] = "<img src=\"".CONS_INSTALL_ROOT.$fileout.$randomseed."\" width='100%' title=\"".$myTitle."\" height='100%' alt='' />";
 							  } else if (strtolower($ext) == "swf") {
 								$data[$fnamedata."t"] =
 								   str_replace("{FILE}",$fileout,
 								   str_replace("{H}",$h[1],
 								   str_replace("{W}",$h[0],SWF_OBJECT)));
+								$data[$fnamedata."tr"] = $data[$fnamedata."t"];
 							  }
 							}
 						} else if (isset($field[CONS_XML_NOIMG])) {
@@ -64,6 +67,7 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 							$data[$fnamedata."h"] = $h[1];
 							$data[$fnamedata."s"] = humanSize(filesize($data[$fnamedata]));
 							$data[$fnamedata."t"] = "<img src=\"".CONS_INSTALL_ROOT.$data[$fnamedata]."\" width='".$h[0]."' title=\"".$myTitle."\" height='".$h[1]."' alt='' />";
+							$data[$fnamedata."tr"] = "<img src=\"".CONS_INSTALL_ROOT.$data[$fnamedata]."\" width='100%' title=\"".$myTitle."\" height='100%' alt='' />";
 						} else {
 							$data[$fname] = 'n';
 						}

@@ -40,9 +40,6 @@
 		$core->template->constants['METAFIGURE'] = $core->storage['friendlyurldata']['image_2'];
 	}
 	
-	//print_r($core->storage['friendlyurldata']);
-	//die();
-	
 	// add data from this FORUM data
 	$core->template->assign("forumurla",$core->storage['friendlyurldata']['forum_urla'] != ''?$core->storage['friendlyurldata']['forum_urla']."/":"");
 	// add video from FORUMTHREAD (image handled on prepareDataToOutput)
@@ -68,6 +65,14 @@
 	// views (use statistics plugin)
 	$pageToBelogged = substr($core->original_context_str,1);
 	if ($pageToBelogged != "" && $pageToBelogged[strlen($pageToBelogged)-1] != "/") $pageToBelogged .= "/";
+
+	if ($pageToBelogged == "" && $core->storage['friendlyurldata']['forum_urla'] != '') { 
+		$pageToBelogged = $core->storage['friendlyurldata']['forum_urla']."/"; // don't get the root statistics one, get the one inside the forum
+		$core->original_context_str = "/".$pageToBelogged; // tell the system we are inside the forum, so statistics are gathered correctly
+		// also, do not let bots index this page, since this is the wrong one (correct have the folder)
+		$core->headerControl->noIndex();
+	} 
+	
 	$act = $core->original_action;
 	if (strpos($act,".")!==false) {
 		$act = explode(".",$act); // remove extension:
@@ -75,6 +80,7 @@
 		$act = implode(".",$act);
 	}
 	$pageToBelogged .= $act;
+
 	$v = $core->loadedPlugins['bi_stats']->getCounter($pageToBelogged);
 	$core->template->assign("v",$v>0?$v:1);
 
