@@ -211,9 +211,12 @@
 								!isset($words[1]) || $words[1] == "cache" || $words[1] == "all",
 								!isset($words[1]) || $words[1] == "bans" || $words[1] == "all");
 
-			if ($purgeThis[1])
+			if ($purgeThis[1]) {
 				$core->cacheControl->dumpTemplateCaches($purgeThis[0],true);
-			else if ($purgeThis[0]) {
+				$core->dimconfig['_404cache'] = array();
+				$core->saveConfig(true);
+			}
+			if ($purgeThis[0]) {
 				$listFiles = listFiles(CONS_PATH_LOGS,"/^([^a]).*(\.log)$/i",false,false,true);
 				foreach ($listFiles as $file)
 					@unlink(CONS_PATH_LOGS.$file);

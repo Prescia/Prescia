@@ -36,7 +36,9 @@
 	define("CONS_NOROBOTDOMAINS"			,""); // these will enforce crawlers NOT to index the domains in this list
 	define("CONS_DEFAULT_IPP"				,50); // default IPP (Itens per page)
 	define("CONS_CRAWLER_WHITELIST_ENABLE"	,true); // crawlers in the whitelist will not be throttled or slowed down, list below, implementation on botprotect
-	define("CONS_CRAWLER_WHITELIST"			,"/^(Googlebot\/.*)|(crawler@alexa\.com)|(.*yahoo\.co.*)|(Bingbot)|(facebookexternalhit\/.*)|(.*DAUMOA.*)|(.*Baiduspider.*)/i"); // preg match for whitelisted crawlers
+	define("CONS_CRAWLER_WHITELIST"			,"/^(.*Googlebot\/.*)|(.*yahoo\.co.*)|(Bingbot)|(facebookexternalhit\/.*)|(.*Baidu.*)/i"); // preg match for whitelisted crawlers
+	define("CONS_CRAWLER_BLACKLIST_ENABLE"	,true); // crawlers in the blacklist are TOTALLY BANNED from the site and will always result on a 403 error 
+	define("CONS_CRAWLER_BLACKLIST"			,"/^(.*SeznamBot.*)|(.*MJ12bot.*)|(Java\/.*)|(.*MSIE8\.0.*)|(.*DigExt.*)/i"); // preg match for blacklist crawlers
 	define("CONS_HONEYPOT"					,false); // adds a honeypot <a> link just before your </body> to detect bots. if a non-bot gets inside, will from there on consider it a bot until next day, the list is maintained at honeypot.dat inside _temp (system-wide).
 	define("CONS_HONEYPOTURL"				,"juicypage.html"); // honeypot page (will return 404) 
 
@@ -111,6 +113,9 @@
 		unset($_REQUEST['nosession']);
 		unset($_REQUEST['nocache']);
 		unset($_REQUEST['debugmode']);
+		unset($_REQUEST['forcecron']);
+	} else if (CONS_ECONOMICMODE) {
+		unset($_REQUEST['nocache']);
 		unset($_REQUEST['forcecron']);
 	}
 

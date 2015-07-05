@@ -87,20 +87,24 @@ foreach ($m as $moduletxt) {
 			$mytemplate = new CKTemplate($this->template);
 			$mytemplate->tbreak($param['title']);
 			$this->template->constants['PAGE_TITLE'] = $mytemplate->techo($result);
+			$this->storage['LOCKTITLE'] = true;
 			unset($mytemplate);
 		}
 		if (isset($param['metadesc'])) {
 			$mytemplate = new CKTemplate($this->template);
 			$mytemplate->tbreak($param['metadesc']);
 			$this->template->constants['METADESC'] = $mytemplate->techo($result);
+			$this->storage['LOCKDESC'] = true;
 			unset($mytemplate);
 		}
 		if (isset($param['metakeys'])) {
 			$mytemplate = new CKTemplate($this->template);
 			$mytemplate->tbreak($param['metakeys']);
 			$this->template->constants['METAKEYS'] = $mytemplate->techo($result);
+			$this->storage['LOCKKEYS'] = true;
 			unset($mytemplate);
 		}
+		
 		return true;
 	} else {
 		unset($this->storage['friendlyurldata']); // just in case

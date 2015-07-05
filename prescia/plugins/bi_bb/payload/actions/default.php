@@ -13,12 +13,13 @@
 							) // we can have multiple folders, just put in descending order
 					,true); // true, trash all others, we don't care about them (false would cause 404)
 	// if you have more than one UDM structure, just keep calling it with the different structures until you get an $ok
+	#$this->parent->warning[] = "UDM:".($ok?"T":"F");
 	if ($ok) {
-		$this->parent->virtualFolder = false;
-		// if we are at index, internal-foward to forum
+		// if we are at index, internal-foward to forum	
 		if ($this->parent->action == 'index') $this->parent->action = 'forum';
-	} else if ($this->parent->action == 'forum') 
+	} else if ($this->parent->action == 'forum') {
 		$this->parent->action = 'index';
+	}
 
 	// checks if the file is a thread (don't even run on obvious actions)
 	if (!in_array($this->parent->action,array("index","forum","thread","profile","preview")))

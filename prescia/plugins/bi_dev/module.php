@@ -952,7 +952,7 @@ class mod_bi_dev extends CscriptedModule  {
 		if ($this->parent->layout == 2 || $this->parent->servingFile) return; # don't mess with ajax
 		# Happens just after the template has been parsed (note it received the page as a STRING now), after this, is ECHO and DIE
 		###### -> Construct should add this module to the onEcho array
-		if (!$this->devDisable && CONS_BROWSER != "UN") {
+		if (!$this->devDisable) {
 			$thereAreErrors = false;
 			if ($this->devCheckHTML || isset($_REQUEST['dev_test'])) {
 				if (!function_exists('checkHTML')) include CONS_PATH_INCLUDE."checkHTML.php";

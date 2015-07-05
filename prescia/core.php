@@ -298,11 +298,14 @@ class CPrescia extends CPresciaVar {
 	function loadIntlControl() {
 		if (CONS_USE_I18N) {
 			# Language translator?
+			#$this->warning[] = "i18n on";
 			if (count($this->languageTL)>0 && count($this->context)>1) { # have a language translator AND is in a subfolder
+				$this->warning[] = "languageTL valid and with context: ".$this->context[1];
 				# this will allow subfolders with the language, for instance: site.com/en and site.com/pt-br will redirect to root while setting the proper language
 				if (isset($this->languageTL[$this->context[1]])) { # is in a language context
 					$temp = $this->context[1];
 					$_SESSION[CONS_SESSION_LANG] = $this->languageTL[$this->context[1]]; // get the language from the folder
+					$this->warning[] = "Language set by folder: ".$_SESSION[CONS_SESSION_LANG];
 					if (is_object($this->template)) {
 						$this->template->constants['SESSION_LANG'] = $_SESSION[CONS_SESSION_LANG];
 						$this->template->current_language= $_SESSION[CONS_SESSION_LANG];
@@ -370,9 +373,9 @@ class CPrescia extends CPresciaVar {
 		} else return;
 
 		include_once CONS_PATH_SYSTEM."lazyload/cron.php";
-
-		@unlink(CONS_PATH_CACHE.$_SESSION['CODE']."/cronlock.php"); # unlock cron
 		$this->saveConfig(true);
+		@unlink(CONS_PATH_CACHE.$_SESSION['CODE']."/cronlock.php"); # unlock cron
+		
 
 	} # cronCheck
 #-
@@ -495,6 +498,7 @@ class CPrescia extends CPresciaVar {
 			$strContext = implode("/",$tempContext);
 			$this->virtualFolder = true; // if this remains true, we will 404
 		}
+	 	#$this->warning[] = "load VF=".($this->virtualFolder?"T":"F");
 
 		if ($this->maintenanceMode) $this->log[] = cReadFile("maint.txt");
 
@@ -555,10 +559,13 @@ class CPrescia extends CPresciaVar {
 
 		foreach ($this->onActionCheck as $scriptName) {
 			$this->loadedPlugins[$scriptName]->onCheckActions();
+			#$this->warning[] = "VF after $scriptName = ".($this->virtualFolder?"T":"F");
 		}
 
 		if ($this->virtualFolder) { // if we are in a virtualFolder, we run the closest default.php
 
+			#$this->warning[] = "still VF after onCheckActions";
+		
 		 	if ($strContext == "" || $strContext[strlen($strContext)-1] != "/") $strContext .= "/";
 
 			// closest default (which SHOULD disable virtualFolder or disable 404)
@@ -1192,8 +1199,8 @@ class CPrescia extends CPresciaVar {
 			$metadata .= "\t<meta property=\"og:url\" content=\"".$this->template->constants['CANONICAL']."\" />\n";
 			if (isset($this->template->constants['METAFIGURE']) && $this->template->constants['METAFIGURE'] != "") {
 				if ($this->template->constants['METAFIGURE'][0] != '/') $this->template->constants['METAFIGURE'] = "/".$this->template->constants['METAFIGURE'];
-				$metadata .= "\t<meta property=\"og:image\" content=\"".$this->template->constants['METAFIGURE']."\" />\n";
-				$metadata .= "\t<link rel=\"image_src\" href=\"".$this->template->constants['METAFIGURE']."\" />\n";
+				$metadata .= "\t<meta property=\"og:image\" content=\"http://".$_SESSION['CANONICAL'].$this->template->constants['METAFIGURE']."\" />\n";
+				$metadata .= "\t<link rel=\"image_src\" href=\"http://".$_SESSION['CANONICAL'].$this->template->constants['METAFIGURE']."\" />\n";
 			}
 			$favfile = CONS_PATH_PAGES.$_SESSION['CODE']."/files/favicon";
 			if (locateFile($favfile,$ext)) {

@@ -1,0 +1,9 @@
+# http://www.projecthoneypot.org/harvester_useragents.php?dt=30
+# banned bots: name, url, reason
+SeznamBot,http://fulltext.sblog.cz/,10hpm for hours
+MJ12bot,http://www.majestic12.co.uk/bot.php,repeated page hits
+Java/,,not a browser nor a bot
+MSIE8.0,,fake MSIE
+DigExt,,unknown bot
+Firefox/6.0 Google,,fake Firefox
+

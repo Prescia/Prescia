@@ -21,6 +21,7 @@
 
 	$matched = false;
 	if ($this->virtualFolder) {
+		#$this->warning[] = "UDM start";
 		$vFn = 0;
 		$tempContext = $this->context;
 		$strContext = implode("/",$tempContext);
@@ -62,11 +63,14 @@
 					$sql['WHERE'][] = $module->name."_p".$processed.".id = ".($processed==1?$module->name.".id_parent":$module->name."_p".($processed-1).".id_parent")."
 									AND ".$module->name."_p".$processed.".".$param[$vFn]['key']." = \"".$vF[1]."\""; 
 				}
-			} else
+				#$this->warning[] = "UDM keys = ".vardump($vF);
+			} else {
 				// get the proper (non-tree)SQL
 				$sql = $module->get_base_sql($param[$vFn]['module'].".".$param[$vFn]['key']." =\"".$vF."\"".(isset($param[$vFn]['filter'])?" AND (".$param[$vFn]['filter'].")":""),"",1);
+				#$this->warning[] = "UDM key = $vF";
+			}
 			
-			
+			$n=-1;
 			if ($this->dbo->query($sql,$r,$n) && $n>0) { // found!
 				$matched = true;
 				if ($n>1) {
@@ -74,6 +78,7 @@
 					$this->warning[] = "Too many UDM results";
 					return false;
 				} else { // 1 result
+					#$this->warning[] = "UDM ok";
 					$result = $this->dbo->fetch_assoc($r);
 					$keys = array();
 					foreach ($module->keys as $index) {
@@ -86,12 +91,13 @@
 							$_REQUEST[$fqv] = $result[$fqv];
 						}
 					}
-					// rebuild context w/o this
+					// rebuild context w/o this, disable virtual mode
 					$this->context = $tempContext;
 					$this->context_str = $strContext == ''?'/':'';
-					
+					$this->virtualFolder = false;
 				}
 			} else {
+				#$this->warning[] = "No UDM (".($n==-1?"error":"zero")."): ".vardump($sql);
 				return false;
 			}
 			$results = array(); // resets treemode
@@ -101,6 +107,7 @@
 
 		if (count($tempContext)>1 && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$strContext) && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/template".$strContext)) {
 			// we still are in virtual folders, despite running sucessfully all data
+			$this->virtualFolder = !$ignorePreVF;
 			return $ignorePreVF;
 		}
 		return $matched;

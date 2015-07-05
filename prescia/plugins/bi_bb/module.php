@@ -64,6 +64,8 @@ class mod_bi_bb extends CscriptedModule  {
 		$this->bbfolder = ($this->bbfolder!=''?"/":"").$this->bbfolder."/";
 		$this->isBBPage = $this->bbfolder == substr($this->parent->context_str,0,strlen($this->bbfolder));
 
+		#$this->parent->warning[] = "BBpage ? ".($this->isBBPage?"T":"F")." was '".$this->parent->context_str."'";
+
 		if ($this->isBBPage) {
 						
 			$core = &$this->parent;
@@ -79,8 +81,6 @@ class mod_bi_bb extends CscriptedModule  {
 			$this->parent->template->constants['BBROOT_PATH'] = substr($this->bbfolder,1);
 
 			include_once CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/default.php";
-
-			if ($this->bbfolder != '/') $this->parent->virtualFolder = false; // or we will 404 or serve root data (after default because we handle UDM there)
 
 			if (!is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/actions".$this->parent->context_str.$this->parent->action.".php") && is_file(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/".$this->parent->action.".php")) { // file?
 				include_once CONS_PATH_SYSTEM."plugins/".$this->name."/payload/actions/".$this->parent->action.".php";
@@ -227,7 +227,8 @@ class mod_bi_bb extends CscriptedModule  {
 	}
 	
 	function showHeader() {
-		$this->parent->template->constants['PAGE_TITLE'] = $this->homename.($this->areaname != ''?" - ".$this->areaname:''); 
+		if (!isset($this->parent->storage['LOCKKEYS']))
+			$this->parent->template->constants['PAGE_TITLE'] = $this->homename.($this->areaname != ''?" - ".$this->areaname:''); 
 		$this->parent->template->assign("areaname",$this->areaname);
 		$this->parent->template->assign("homename",$this->homename);
 		if ($this->parent->template->get("_topforums") !== false)

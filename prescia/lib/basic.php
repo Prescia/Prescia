@@ -78,7 +78,7 @@
 	function extractUri($install_root="",$uri="") { // returns an array with: array of folders from URI, filename (no extension), actual filename with extension, extension
 		// removes install_root to make some changes to how it is handled (basically, ignores it)
 		# context
-		if ($uri == "") $uri = isset($_SERVER['REQUEST_URI']) && $_SERVER['REQUEST_URI'] != "" ? $_SERVER['REQUEST_URI'] : "";
+		if ($uri == "") $uri = str_replace("%2F","/",isset($_SERVER['REQUEST_URI']) && $_SERVER['REQUEST_URI'] != "" ? $_SERVER['REQUEST_URI'] : "");		
 		if ($uri != "") {
 			# removes query from request
 			if ($uri[0] != "/") $uri = "/".$uri; # ALWAYS START WITH /

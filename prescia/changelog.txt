@@ -1,5 +1,26 @@
 TODO list is on site/github
 
+15.07.05 1.03 FINAL (public release)
+	if logBots is turned on, bots banned (served a raw 403) are also logged.
+
+15.07.04 1.03 (internal)
+	Added agent Blacklist ... bots are getting too annoying
+	Improved botprotect ban/blacklist message, now sends header 403
+	Fixed whitelist (googlebot was incorrect, removed less used bots)
+	updated default settings.php (version on 1.02 was obsolete)
+	Fixed honeypot url
+
+15.07.03 1.03 (internal)
+	added full address to og:image and image_src meta tags
+	bi_dev shows debug to bots, so you can parse/check what bots see
+	slight change on virtualFolder handling
+	Fixed 404 caches never being reset if a page is fixed (alas, should be removed from 404 cache)
+	Also resets 404 cache daily
+	
+15.06.21 1.03 (internal)
+	friendlyurl locks title and metas if they are changed
+	bb respects locked title
+
 15.06.18 1.02 FINAL (public release)
 	Default viewport from bootstrap switched back to device-width, added device-height
 	Administrative pane now demands noCache (cacheControl->noCache) rule

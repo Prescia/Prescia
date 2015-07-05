@@ -28,6 +28,9 @@ if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_c
 		}
 	}
 
+	// reset 404 caches
+	$core->dimconfig['_404cache'] = array();
+
 	// backup main files
 	$this->loadDimconfig(true);
 	if ($this->dimconfig !== false) {
@@ -127,7 +130,6 @@ if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_c
 			return;
 		}
 	}
-
 	if ($forceCron != 'all') return; // Hourly cron will run on another hit
 }
 

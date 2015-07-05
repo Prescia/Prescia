@@ -31,6 +31,14 @@
 		$dev = $this->addPlugin('bi_dev');
 	}
 
+	// the following domains will force "en" if no language set instead of default at this domains, and will prepend the specified folder. The last flag is the main canonical to be used (if none, will use current)
+	$this->parseRewrite = array(
+		// in the example below (which is the true live site of Prescia author), we have 3 domains. The first two enforce "en" as language, the last is forced to portuguese. Also, no matter which is loaded, the canonical will display the first url (second parameter true)	
+		#"aoimirai.net" => array("en",true),
+		#"aoimirai.com" => array("en",false),
+		#"daisuki.com.br" => array("pt-br",false)
+	);
+
 	// which is the front page of this site (usefull when frames change it or an error wants to foward to the front page, or this site is inside a frameset)
 	define ("CONS_SITE_ENTRYPOINT","index");
 
@@ -46,6 +54,7 @@
 
 	#$bb = $this->addPlugin('bi_bb'); // Bulleting Board (can also handle BLOGS and ARTICLE sites)
 		#$bb->bbfolder = "bb";
+		#$bb->forceParentFolder = false;
 		#$bb->registrationGroup = 4;
 		#$bb->areaname = "Blog";
 		#$bb->homename = "My Page";

@@ -123,7 +123,7 @@ if ($core->debugmode) $core->applyMetaData(); // only in debug. Executes onMeta'
 # -- start parsing the request
 if (!$core->servingFile) {
 	// if serving file, we just want to enable the database and run onEcho plugins
-	$core->parseRequest();
+	$core->parseRequest();	
 	
 	# -- which page I want and context are ready on parseRequest, load template, so get the template core (in case we need to dump an error, we can do it with the template)
 	require CONS_PATH_INCLUDE."template/tc.php";
@@ -198,13 +198,17 @@ if (!$core->servingFile) {
 		$PAGE = $core->showTemplate();
 		unset($core->template);
 	}
-	if (!$is404 && $core->action == '404') {
+	if (!$is404 && $core->action == '404') { // add on 404 cache if it was a 404 and not on the cache
 		if (!is_array($core->dimconfig['_404cache']))
 			$core->dimconfig['_404cache'] = array();
 		if (!isset($core->dimconfig['_404cache'][$core->context_str.$core->original_action])) {		
 			$core->dimconfig['_404cache'][$core->context_str.$core->original_action] = true;
 			$core->saveConfig(true);
 		}
+	} else if ($is404 && $core->action != '404') { // remove as 404 if it rendered but was considered 404 in the cache
+		$core->dimconfig['_404cache'][$core->context_str.$core->original_action] = false;
+		unset($core->dimconfig['_404cache'][$core->context_str.$core->original_action]);
+		$core->saveConfig(true);
 	}
 	# ab -n50 total mean: 417ms 	76ms	50ms	47ms
 	
@@ -246,7 +250,7 @@ if ($totalTime > CONS_PM_TIME) {
 
 # -- if honeypot is on, append trap
 if (CONS_HONEYPOT && !CONS_ECONOMICMODE && !$core->isbot && $core->context_str == "/") { // note we don't add the honeypot if we already know this is a bot and on non root folders, no need to catch it again or go overboard
-	$hp = "\n<a href=\"/".CONS_HONEYPOTURL."/\" nofollow='true' style='width:0px;overflow:hidden;position:absolute;bottom:0px'>*</a>";
+	$hp = "\n<a href=\"/".CONS_HONEYPOTURL."\" nofollow='true' style='width:0px;overflow:hidden;position:absolute;bottom:0px'>*</a>";
 	$PAGE = str_replace("</body>",$hp."</body>",$PAGE);
 }		
 

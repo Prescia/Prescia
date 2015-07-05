@@ -5,9 +5,32 @@
   | Called from core::domainLoad
 -*/
 
-$freepass = (isset($_SESSION[CONS_SESSION_ACCESS_LEVEL]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] >= 90); // high-level admins get free pass 
+$freepass = (isset($_SESSION[CONS_SESSION_ACCESS_LEVEL]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] >= 90); // high-level admins get free pass
+$ua = isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:""; 
+if (CONS_CRAWLER_BLACKLIST_ENABLE && !$freepass) { // blacklisted - we don't want you here, ever
+	if ($ua != '' && preg_match(CONS_CRAWLER_BLACKLIST,$ua) === 1) {
+		$throttle = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+		<error>
+			<status>403</status>
+			<timestamp>{TS}</timestamp>
+			<error-code>0000</error-code>
+			<message>This browser agent is blacklisted. If you are human, please use another browser (or check for viruses), otherwise, GTFO</message>
+		</error>";
+		$now = date("Y-m-d H:i:s");
+		if (isset($this->parent->loadedPlugins['bi_stats']) && $this->parent->loadedPlugins['bi_stats']->logBOTS) {
+			// log bans
+			$fd = fopen (CONS_PATH_LOGS.$_SESSION['CODE']."/bots".date("Ymd").".log", "a");
+			if ($fd) {
+				fwrite($fd,date("H:i:s")." ".CONS_IP." [".$ua."] ##BLACKLIST HIT##\n");
+				fclose($fd);
+			}
+		}
+		header($_SERVER["SERVER_PROTOCOL"]." 403 Forbidden");
+		echo str_replace("{TS}",$now,$throttle);
+		die();
+	}
+}
 if (CONS_CRAWLER_WHITELIST_ENABLE) { // whitelisted user agents get freepass (good bots, like google ... kind of)
-	$ua = isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:"";
 	if ($ua != '' && preg_match(CONS_CRAWLER_WHITELIST,$ua) === 1) $freepass = true;
 }
 if (!$freepass) {
@@ -28,6 +51,7 @@ if (!$freepass) {
 		include_once CONS_PATH_INCLUDE."datetime.php";
 		$td = time_diff($now,$_SESSION['BOTPROTECT_BANNED']);
 		if ($td<(CONS_BOTPROTECT_BANTIME*60)) {
+			header($_SERVER["SERVER_PROTOCOL"]." 403 Forbidden");
 			echo str_replace("{MORE}",(CONS_BOTPROTECT_BANTIME*60)-$td,str_replace("{TS}",$_SESSION['BOTPROTECT_BANNED'],$throttle));
 			die();
 		} else
@@ -45,7 +69,8 @@ if (!$freepass) {
 		include_once CONS_PATH_INCLUDE."datetime.php";
 		$td = time_diff($now,$thd['banned']);
 		if ($td<(CONS_BOTPROTECT_BANTIME*60)) {
-			echo str_replace("{MORE}",(CONS_BOTPROTECT_BANTIME*60)-$td,str_replace("{TS}",$td,$throttle));
+			header($_SERVER["SERVER_PROTOCOL"]." 403 Forbidden");
+			echo str_replace("{MORE}",(CONS_BOTPROTECT_BANTIME*60)-$td,str_replace("{TS}",$now,$throttle));
 			die();
 		} else
 			unset($thd['banned']);
@@ -74,6 +99,7 @@ if (!$freepass) {
 	// save throttle
 	cWriteFile($filename,serialize($thd));
 	if ($banned) {
+		header($_SERVER["SERVER_PROTOCOL"]." 403 Forbidden");
 		echo str_replace("{MORE}",CONS_BOTPROTECT_BANTIME*60,str_replace("{TS}",$now,$throttle));
 		die();
 	}
