@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 
 	$admmural = $_POST['admmural'];
 	cWriteFile(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/mural.txt",$admmural);

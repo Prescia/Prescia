@@ -1,4 +1,4 @@
-<?
+<?php
 /*
   $zipfile = new zipfile($arquivo_zip,false);  // nome apenas necessario se for enviar na hora, ai coloque o nome e true, e depois echo no $zipfile->file();
   $zipfile->addFileAndRead ($arquivo,$arquivo_path_in_zip);   // para cada arquivo
@@ -52,12 +52,7 @@ class zipfile {
   
   function addFile($data, $name, $time = 0) {  
     $name     = str_replace('\\', '/', $name);  
-    $dtime    = dechex($this->unix2DosTime($time));  
-    $hexdtime = '\x' . $dtime[6] . $dtime[7]  
-              . '\x' . $dtime[4] . $dtime[5]  
-              . '\x' . $dtime[2] . $dtime[3]  
-              . '\x' . $dtime[0] . $dtime[1];  
-    eval('$hexdtime = "' . $hexdtime . '";');  
+    $hexdtime = pack('V', $this->unix2DosTime($time));
     $fr   = "\x50\x4b\x03\x04";  
     $fr   .= "\x14\x00";  
     $fr   .= "\x00\x00";    
@@ -102,10 +97,9 @@ class zipfile {
   }  
   
   function file() {  
-    $data    = implode(NULL, $this -> datasec);  
-    $ctrldir = implode(NULL, $this -> ctrl_dir);  
+    $data    = implode('', $this -> datasec);
+    $ctrldir = implode('', $this -> ctrl_dir);
     return $data . $ctrldir .$this -> eof_ctrl_dir . pack('v', sizeof($this -> ctrl_dir)) . pack('v', sizeof($this -> ctrl_dir)) .  pack('V', strlen($ctrldir)) .  pack('V', strlen($data)) . "\x00\x00";                           
   }  
   
 }  
-

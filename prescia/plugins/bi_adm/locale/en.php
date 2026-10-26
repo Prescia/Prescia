@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 "delete"=>"Delete",
 "aviso"=>"Warning",
 "delete_file"=>"Delete file",

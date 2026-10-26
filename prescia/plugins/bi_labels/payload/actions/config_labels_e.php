@@ -1,5 +1,6 @@
-<?
+<?php
 
+/** @var CPrescia $core Core context injected by mod_bi_labels::onCheckActions(). */
 	$core->layout = 2;
 	$currentLabels = isset($core->dimconfig['_labels'])?$core->dimconfig['_labels']:array();
 	if (isset($_REQUEST['id']) && isset($currentLabels[$_REQUEST['id']])) {

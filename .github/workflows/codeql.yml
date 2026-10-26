@@ -1,0 +1,46 @@
+name: PHP static analysis
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '30 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  phpstan:
+    name: PHPStan on PHP 8.3
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, pdo_mysql, mbstring
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate Composer configuration
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run PHPStan
+        shell: bash
+        run: |
+          set -o pipefail
+          vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --no-progress --error-format=table | tee phpstan-report.txt
+
+      - name: Upload PHPStan report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpstan-report-${{ github.run_id }}
+          path: phpstan-report.txt

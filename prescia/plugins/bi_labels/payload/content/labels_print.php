@@ -1,9 +1,12 @@
-<?
+<?php
 
-	if (!isset($_REQUEST['module'])) $this->fastClose(404);
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_labels $this Runtime module context injected by the framework. */
+
+		if (!isset($_REQUEST['module'])) $core->fastClose(404);
 	$module = $core->loaded($_REQUEST['module']);
 	
-	if (!$module || !isset($_REQUEST['label_template']) || !isset($_REQUEST['label_skip'])) $this->fastClose(404);
+		if (!$module || !isset($_REQUEST['label_template']) || !isset($_REQUEST['label_skip'])) $core->fastClose(404);
 	
 	$label = $_REQUEST['label_template'];
 	$offset = $_REQUEST['label_skip'];
@@ -12,10 +15,11 @@
 	$currentLabels = isset($core->dimconfig['_labels'])?$core->dimconfig['_labels']:array();
 	if (isset($currentLabels[$label]))
 		$lData = $currentLabels[$label];
-	else {
-		$core->log[] = "Label not found";
-		$this->fastClose(404);
-	}
+		else {
+			$core->log[] = "Label not found";
+			$core->fastClose(404);
+			return;
+		}
 	
 	$keys = array();
 	$ereg_pattern = "^";
@@ -80,9 +84,17 @@
 	foreach($theKeys as $ids) {
 		if ($ids != "" && preg_match('/'.$ereg_pattern.'/',$ids,$regs)) { // valid multiple keys (checkboxes)
 			$sql = $basesql;
-			for($pos=0;$pos<$keyscount;$pos++) // build WHERE based on keys
-				$sql['WHERE'][] = $module->name.".".$keys[$pos]."=\"".$regs[$pos+1]."\"";
-			if ($core->dbo->query($sql,$r,$n) && $n>0) { // get data
+			$preparedTypes = '';
+			$preparedParams = array();
+			for($pos=0;$pos<$keyscount;$pos++) { // build WHERE based on keys
+				$sql['WHERE'][] = $module->name.".".$keys[$pos]."=?";
+				$isInteger = in_array($module->fields[$keys[$pos]][CONS_XML_TIPO],array(CONS_TIPO_INT,CONS_TIPO_LINK),true);
+				$preparedTypes .= $isInteger ? 'i' : 's';
+				$preparedParams[] = $isInteger ? (int)$regs[$pos+1] : $regs[$pos+1];
+			}
+			$r = false;
+			$n = 0;
+			if ($core->dbo->queryPrepared($core->dbo->sqlarray_echo($sql),$preparedTypes,$preparedParams,$r,$n) && $n>0) { // get data
 				$data = $core->dbo->fetch_assoc($r);
 				$data['width'] = $lData['sw'];
 				$data['height'] = $lData['sh'];

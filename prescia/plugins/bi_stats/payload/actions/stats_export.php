@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 
 	$core->layout = 2;
 
@@ -9,14 +11,18 @@
 
 	// hits, unique hits, browsing hits (interested), returning hits (24h)
 	$sql = "SELECT data,sum(hits),sum(uhits),sum(bhits),sum(rhits) FROM ".$statsfullObj->dbname." GROUP BY data ORDER BY data DESC";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	for ($c=0;$c<$n;$c++) {
 		list($data,$hits,$uhits,$bhits,$rhits) = $core->dbo->fetch_row($r);
 		$outputArr[$data] = array($hits,$uhits,$bhits,$rhits,0);
 	}
 
 	$sql = "SELECT data,sum(hits) FROM ".$statsrObj->dbname." WHERE referer=\"\" GROUP BY data ORDER BY data DESC";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	for ($c=0;$c<$n;$c++) {
 		list($data,$khits) = $core->dbo->fetch_row($r);
 		if (isset($outputArr[$data]))
@@ -33,14 +39,24 @@
 		$yesterday = datecalc($yesterday,0,0,-1);
 	}
 
-	$outputstr = "# DATE, HITS, UNIQUE, ACCEPTED UNIQUE, RETURN IN 24h UNIQUE, CAME FROM BOOKMARK UNIQUE\n";
+	$csv = fopen('php://temp', 'w+');
+	fputcsv($csv, array('# DATE', 'HITS', 'UNIQUE', 'ACCEPTED UNIQUE', 'RETURN IN 24h UNIQUE', 'CAME FROM BOOKMARK UNIQUE'));
 	foreach ($output as $o) {
-		$outputstr .= "\"".array_shift($o)."\",".implode(",",$o)."\n";
+		$date = (string)$o[0];
+		if (preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $date) !== 1) {
+			continue;
+		}
+		fputcsv($csv, array($date, (int)$o[1], (int)$o[2], (int)$o[3], (int)$o[4], (int)$o[5]));
 	}
+	rewind($csv);
+	$outputstr = stream_get_contents($csv);
+	fclose($csv);
 	header("Content-Description: File Transfer");
 	header("Content-Length: ".strlen($outputstr));
 	header("Pragma: public");
-	header("Content-type: text/csv");
+	header("Content-Type: text/csv; charset=utf-8");
+	header("X-Content-Type-Options: nosniff");
+	header("Cache-Control: no-store, no-cache, must-revalidate");
 	header("Content-Disposition: attachment; filename=\"statistics".date("Y-m-d").".csv\"");
 
 	echo $outputstr;

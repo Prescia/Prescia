@@ -1,3 +1,3 @@
-<? return array(
+<?php return array(
 # "TERM" => "TRANSLATION",
 );

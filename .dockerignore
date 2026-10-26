@@ -1,0 +1,40 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+.github
+
+# Temporary files
+_temp/*
+!_temp/.gitkeep
+*.log
+vendor/
+
+# Documentation
+*.md
+CHANGELOG.md
+docs/
+tests/
+tools/
+skills/
+phpstan.neon.dist
+phpstan-baseline.neon
+phpunit.xml.dist
+composer.json
+composer.lock
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml

@@ -1,4 +1,5 @@
-<?/* -------------------------------- Prescia Core (non-debug)
+<?php
+/* -------------------------------- Prescia Core (non-debug)
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ for Prescia
   | This code is optimized, and as such, please check core.php.txt for comments and documentation (line by line)
@@ -35,10 +36,10 @@ class CPrescia extends CPresciaVar {
 			$_SESSION['CODE'] = CONS_SINGLEDOMAIN;
 		} else if (!CONS_ONSERVER && CONS_SITESELECTOR) { # multiple domain, if on production and we can select domain manually ...
 			if (isset($_REQUEST['nocache'])) $domainList = $this->builddomains();
-			if (isset($_REQUEST['changelocalsite']) && isset($_REQUEST['nosession']) && is_dir(CONS_PATH_PAGES.$_REQUEST['changelocalsite'])) { # new domain arrived! switch everything to this domain
+				if (isset($_REQUEST['changelocalsite']) && isset($_REQUEST['nosession']) && is_dir(CONS_PATH_PAGES.$_REQUEST['changelocalsite'])) { # new domain arrived! switch everything to this domain
 				$_COOKIE['prescia_cls'] = $_REQUEST['changelocalsite'];
 				setcookie('prescia_cls',$_REQUEST['changelocalsite'],time()+28800);
-			} else if (!isset($_COOKIE['prescia_cls']) || (isset($_REQUEST['prescia_cls']) && isset($_REQUEST['debugmode']) && isset($_REQUEST['nosession']))) { # no domain selected or requested domain change, chose domain selector
+				} else if (!isset($_COOKIE['prescia_cls']) || (isset($_REQUEST['prescia_cls']) && CONS_DEVELOPER && isset($_REQUEST['debugmode']) && isset($_REQUEST['nosession']))) { # no domain selected or requested domain change, chose domain selector
 				include_once CONS_PATH_SYSTEM."lazyload/cls.php";
 				die();
 			}
@@ -51,7 +52,7 @@ class CPrescia extends CPresciaVar {
 		if (!isset($_SESSION['CODE']) || !isset($_SESSION['DOMAIN']) || $_SESSION['DOMAIN'] != $this->domain || (isset($_REQUEST['nocache']) && !isset($_COOKIE['prescia_cls']))) { # no data, different domain or forced reload
 			$errCode = 102;
 			$hasFile = is_file(CONS_PATH_CACHE."domains.dat");
-			if ($hasFile) $domainList = unserialize(cReadFile(CONS_PATH_CACHE."domains.dat"));
+			if ($hasFile) $domainList = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE."domains.dat"));
 			if (isset($_REQUEST['nocache']) || !$hasFile || $domainList===false) { # This is a cached script. Performance is mandatory
 				$errCode = 101;
 				$domainList = $this->builddomains();
@@ -145,11 +146,11 @@ class CPrescia extends CPresciaVar {
 			$this->cacheControl->dumpTemplateCaches();
 		}
 		if (!$this->dbless) {
-			$theModules = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_modules.dat"));
+			$theModules = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_modules.dat"));
 			if ($theModules === false) {
 				# try again, this might be a parallel access issue
 				sleep(1);
-				$theModules = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_modules.dat"));
+				$theModules = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_modules.dat"));
 			}
 			if ($theModules === false) {
 				$this->errorControl->raise(106);
@@ -210,8 +211,9 @@ class CPrescia extends CPresciaVar {
 	 * will check if this is a request for a file inside the site file manager (pages/[code]/files) and serve the file
 	 * if the file is set for statistics, continue returning true (serving file), otherwise end script 
 	*/
-	function checkDirectLink() {
-		# Redirect root files to file manager
+		function checkDirectLink() {
+			$ext = '';
+			# Redirect root files to file manager
 		# files that go direct to the files folder (pages/[code]/files) are served by apache and never get here
 		# files using the internal redirect /files/ are what we aim here. These files can be grabbed for statistics or have permission check
 		$fm = false;
@@ -369,7 +371,8 @@ class CPrescia extends CPresciaVar {
 				$this->errorControl->raise(109,$cronLock);
 			}
 			// lock cron if not locked
-			cWriteFile(CONS_PATH_CACHE.$_SESSION['CODE']."/cronlock.php",'<? $cronLock="'.date("Y-m-d H:i:s").'"; ?>');
+				$cronLockCode = chr(60)."?php ".'$cronLock' . " = ".var_export(date("Y-m-d H:i:s"), true).";";
+				cWriteFile(CONS_PATH_CACHE.$_SESSION['CODE']."/cronlock.php", $cronLockCode);
 		} else return;
 
 		include_once CONS_PATH_SYSTEM."lazyload/cron.php";
@@ -384,8 +387,9 @@ class CPrescia extends CPresciaVar {
 	 * Usefull for situations where you expect delay (processing a file or whatever)
 	 * calling a dbconnect after this should enable you to resume working with the system transparently
 	 */
-	function close($stop = true) {
-		unset($this->template);
+		function close($stop = true) {
+			// Assigning null releases the template without triggering PHP 8.4 property-hook analysis.
+			$this->template = null;
 		if ($this->dbo->errorRaised) $this->errorControl->raise(606,"","core",vardump($this->dbo->log));
 		$this->dbo->close();
 		if ($stop) exit();
@@ -476,10 +480,8 @@ class CPrescia extends CPresciaVar {
 					$this->template->constants['HEADCSSTAGS'] .= "\t<link rel=\"stylesheet\" type=\"text/css\" href=\"".CONS_INSTALL_ROOT.$file."\" />\n";
 			}
 			return true;
-		}
-		$this->errorControl->raise(8,'File not found',$file,"addLink");
-		return false;
-	}# addLink
+			}
+		}# addLink
 #--
 	/* checkActions
 	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage* -> showHeaders -> showTemplate*
@@ -488,9 +490,10 @@ class CPrescia extends CPresciaVar {
 	 * IMPORTANT: For actions to work properly, send haveinfo=true ON POST or whatever (value doesn't matter) in the query.
 	 * 			  DO NOT send it always as it will degrade performance, send ONLY when an action is expected (DB include/edit, upload handling, etc)
 	 */
-	function checkActions() {
+		function checkActions() {
+			$ext = '';
 
-		// look for the first valid context if this is invalid (a.k.a. remove virtual folders)
+			// look for the first valid context if this is invalid (a.k.a. remove virtual folders)
 		$tempContext = $this->context;
 		$strContext = implode("/",$tempContext);
 		while (count($tempContext)>1 && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/template".$strContext) && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/content".$strContext) && !is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/actions".$strContext)){
@@ -535,11 +538,11 @@ class CPrescia extends CPresciaVar {
 
 				if (!$this->authControl->checkPermission($m)) $this->fastClose(403); // read permission
 
-				$ws = ""; $ka = array();
-				$m->getKeys($ws,$ka,$_REQUEST);
+				$ws = ""; $wTypes = ""; $wParams = array(); $ka = array();
+				if (!$m->getPreparedKeys($ws,$wTypes,$wParams,$ka,$_REQUEST)) $this->fastClose(404);
 
 				$sql = "SELECT ".$m->title." FROM ".$m->dbname." as ".$m->name." WHERE ".$ws;
-				$filename = removeSimbols($this->dbo->fetch($sql),true,false);
+				$filename = removeSimbols($this->dbo->fetchPrepared($sql,$wTypes,$wParams),true,false);
 
 				$file = CONS_FMANAGER.$m->name."/".$_REQUEST['f']."_";
 				foreach ($ka as $kn => $ki) // this is multikey =D
@@ -691,19 +694,27 @@ class CPrescia extends CPresciaVar {
 		$dbname = $module->dbname;
 
 		$keyString = array();
+		$keyTypes = "";
+		$keyParams = array();
 		$updateString = array();
 		foreach ($data as $name => $value) {
-			$keyString[] = "$name=\"".$value."\"";
+			$keyString[] = $name."=?";
+			$keyTypes .= "s";
+			$keyParams[] = (string)$value;
 			$updateString[] = $name."=0";
 		}
 		$keyString = implode(" AND ",$keyString);
 		$updateString = implode(", ",$updateString);
 
 		if ($zerothem) { // we are supposed to just ZERO these items
-			$this->dbo->simpleQuery("UPDATE $dbname SET $updateString WHERE $keyString"); // direct DB query to prevent notifies and overhead
+			$updateResult = false;
+			$updateRows = 0;
+			$this->dbo->queryPrepared("UPDATE ".$dbname." SET ".$updateString." WHERE ".$keyString,$keyTypes,$keyParams,$updateResult,$updateRows,$this->debugmode); // direct DB query to prevent notifies and overhead
 		} else { // we are supposed to self-destruct
 			$myKeys = implode(",",$module->keys);
-			$this->dbo->query("SELECT $myKeys FROM ($dbname) WHERE $keyString",$r,$n);
+			$r = false;
+			$n = 0;
+			$this->dbo->queryPrepared("SELECT ".$myKeys." FROM (".$dbname.") WHERE ".$keyString,$keyTypes,$keyParams,$r,$n,$this->debugmode);
 
 			if ($startedAt == '') $startedAt = $module->name;
 			for ($c=0;$c<$n;$c++) {
@@ -729,7 +740,7 @@ class CPrescia extends CPresciaVar {
 	function loadPermissions() {
 		# loads permissionTemplate
 		if (is_null($this->permissionTemplate)) {
-			$this->permissionTemplate = @unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_permissions.dat"));
+			$this->permissionTemplate = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_permissions.dat"));
 			if ($this->permissionTemplate === false) {
 				$this->errorControl->raise(3);
 				$this->close(true);
@@ -752,9 +763,9 @@ class CPrescia extends CPresciaVar {
 	 */
 	function loadDimconfig($force = false) {
 		if (!isset($_SESSION[CONS_SESSION_CONFIG]) || ($force && !isset($this->dimconfig['_forced']))) {
-			$this->dimconfig = unserialize(cReadFile(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/din.dat"));
+			$this->dimconfig = presciaSafeUnserialize(cReadFile(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/din.dat"));
 			if (($this->dimconfig === false || !is_array($this->dimconfig)) && is_file(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/din.bck")) {
-				$this->dimconfig = unserialize(cReadFile(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/din.bck"));
+				$this->dimconfig = presciaSafeUnserialize(cReadFile(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/din.bck"));
 				if ($this->dimconfig !== false) {
 					$this->errorControl->raise(160);
 					$this->saveConfig();
@@ -808,7 +819,7 @@ class CPrescia extends CPresciaVar {
 		foreach($this->modules as $mod) {
 			if (!$mod->loaded) { # this does the same as core::loaded, but optimized for all
 				$moduleName = $mod->name;
-				$loadedData = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/$moduleName.dat"));
+				$loadedData = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/$moduleName.dat"));
 				if ($loadedData) {
 					# IMPORTANT: this is also loaded in loaded()
 					list(
@@ -847,7 +858,7 @@ class CPrescia extends CPresciaVar {
 		if (isset($this->modules[$moduleName])) {
 			if (!$this->modules[$moduleName]->loaded) {
 				# loads module, it was only referenced
-				$loadedData = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/$moduleName.dat"));
+				$loadedData = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/$moduleName.dat"));
 				if ($loadedData) {
 					list(
 						 $this->modules[$moduleName]->keys,
@@ -1071,9 +1082,10 @@ class CPrescia extends CPresciaVar {
 	 * domainLoad -> parseRequest -> loadIntlControl -> checkActions -> renderPage* -> showHeaders -> showTemplate*
 	 * Basically echos the template (view), filling up constants and other framework optimizations into it
 	 */
-	function showTemplate() {
+		function showTemplate() {
+			$ext = '';
 
-		if (count($this->log)>0) {
+			if (count($this->log)>0) {
 			$output = "";
 			foreach ($this->log as $saida) {
 				$output .= $saida."\n<br/>";
@@ -1101,7 +1113,7 @@ class CPrescia extends CPresciaVar {
 		$data = $this->cacheControl->getCachedContent('dimconfig_auto');
 		if ($data === false) {
 			$data = $this->dimconfig;
-			$dimconfigMD = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_dimconfig.dat"));
+			$dimconfigMD = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_dimconfig.dat"));
 			foreach ($data as $name => $content) {
 				if (isset($dimconfigMD[$name])) {
 					if ($dimconfigMD[$name][CONS_XML_TIPO] == CONS_TIPO_UPLOAD) {
@@ -1185,7 +1197,7 @@ class CPrescia extends CPresciaVar {
 					$this->template->constants['CANONICAL'] .= "?id=".$_REQUEST['id'];
 			}
 			$metadata = $this->template->constants['METATAGS'];
-			if (CONS_PATH_PAGES.$_SESSION['CODE']."/template/_meta.xml")
+			if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/_meta.xml"))
 				$metadata .= cReadFile(CONS_PATH_PAGES.$_SESSION['CODE']."/template/_meta.xml");
 			$metadata .= "\t<link rel=\"canonical\" href=\"".$this->template->constants['CANONICAL']."\" />\n";
 			if ($this->template->constants['METAKEYS'] != '')
@@ -1253,7 +1265,13 @@ class CPrescia extends CPresciaVar {
 			$this->template->assign("printver",$this->action.".html?".$printVersion);
 		}
 
-		return $this->template->techo();
+		$output = $this->template->techo();
+		$cspNonce = isset($this->template->constants['CSP_NONCE']) ? $this->template->constants['CSP_NONCE'] : '';
+		if ($cspNonce !== '') {
+			$nonceAttribute = ' nonce="'.htmlspecialchars($cspNonce, ENT_QUOTES, 'UTF-8').'"';
+			$output = preg_replace('/<script\b(?![^>]*\bnonce=)/i', '<script'.$nonceAttribute, $output) ?? $output;
+		}
+		return $output;
 		
 	} # showTemplate
 #-
@@ -1313,7 +1331,7 @@ class CPrescia extends CPresciaVar {
 		return include(CONS_PATH_SYSTEM."lazyload/feedReader.php");
 	}
 #-
-	private function builddomains() {
+		public function builddomains() {
 		// interfaced function (lazy load)
 		return include(CONS_PATH_SYSTEM."lazyload/builddomains.php");
 	}
@@ -1475,4 +1493,3 @@ class CPrescia extends CPresciaVar {
 		return false;
 	} # nearTimeLimit
 } # CORE OBJECT
-

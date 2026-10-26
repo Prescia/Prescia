@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 "bi_sessionnote"=>"When you change the domains file, use ?noSession=true to clean the framework session/cache so it can load up the new domain",
 "minlvltooptions"=>"Minimal level to change options",
 'contactmail' => "Default contact mail",

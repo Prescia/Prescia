@@ -1,4 +1,4 @@
-<?
+<?php
 # if (@ini_get('register_globals')) include CONS_PATH_INCLUDE."_regglobal.inc.php";
 # if REGISTER GLOBALS ON, force unregistering of variables.
 # If you code using REGISTER GLOBALS ON, learn not to, you moron. 

@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | locateFile : Locates a file given only the filename (w/o extension)
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ www.prescia.net
   | Free to use, change and redistribute, but please keep the above disclamer.

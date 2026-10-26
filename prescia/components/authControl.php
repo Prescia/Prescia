@@ -1,4 +1,4 @@
-<?	# -------------------------------- Prescia Auth control interface (this file actually is just a basic interface to be overriden)
+<?php	# -------------------------------- Prescia Auth control interface (this file actually is just a basic interface to be overriden)
 
 
 /* -- THIS CLASS IS A BASIC AUTHENTICATION PLACEHOLDER. For a real authentication system, override this class with yours in a plugin (example: bi_auth)
@@ -28,7 +28,7 @@
 
 class CauthControl { # This class can be overridden by any auth module
 
-	var $parent = null;
+	public ?CPrescia $parent = null;
 
 	function __construct(&$parent) {
 		$this->parent = &$parent;
@@ -94,4 +94,3 @@ class CauthControl { # This class can be overridden by any auth module
 
 
 }
-

@@ -1,5 +1,7 @@
-<?
-	// basic frameset
+<?php
+
+/** @var CPrescia $this Page content context injected by CPrescia::renderPage(). */
+		// basic frameset
 	$this->frame("basefile.html:BASEFILE_CONTENT","frame.html:FRAME_CONTENT");
 
 	// HTML includes for prototype/scriptaculous

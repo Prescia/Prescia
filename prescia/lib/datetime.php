@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | ADODB_DATE
   | #########################################################
   | ADOdb Date Library, part of the ADOdb abstraction library
@@ -84,10 +85,12 @@ if (!defined('ADODB_ALLOW_NEGATIVE_TS')) define('ADODB_NO_NEGATIVE_TS',1);
     $tmp_dat1 = adodb_mktime(0,0,0,substr($dat1,5,2),substr($dat1,8,2),substr($dat1,0,4));
     $tmp_dat2 = adodb_mktime(0,0,0,substr($dat2,5,2),substr($dat2,8,2),substr($dat2,0,4));
     $yeardiff = adodb_date('Y',$tmp_dat1)-adodb_date('Y',$tmp_dat2);
-    if (substr($dat1,5,2)>substr($dat2,5,2)) { // # final month is larger!?
-      return ($yeardiff*12) + (substr($dat1,5,2)-substr($dat2,5,2));
-    } else if (substr($dat1,5,2)<substr($dat2,5,2)) { // # final month is smaller!?
-      return (($yeardiff-1)*12) + (12+(substr($dat1,5,2)-substr($dat2,5,2)));
+    $month1 = (int) substr($dat1,5,2);
+    $month2 = (int) substr($dat2,5,2);
+    if ($month1 > $month2) { // # final month is larger!?
+      return ($yeardiff*12) + ($month1-$month2);
+    } else if ($month1 < $month2) { // # final month is smaller!?
+      return (($yeardiff-1)*12) + (12+($month1-$month2));
     } else # same month
       if (substr($dat1,8,2)>=substr($dat2,8,2)) { # month already passed based on day
         return ($yeardiff*12);
@@ -246,8 +249,8 @@ if (!defined('ADODB_ALLOW_NEGATIVE_TS')) define('ADODB_NO_NEGATIVE_TS',1);
   // Assumes that if 2-digit is more than 30 years in future, then previous century.
   function adodb_year_digit_check($y)  {
     if ($y < 100) {
-      $yr = (integer) date("Y");
-      $century = (integer) ($yr /100);
+	  $yr = (int) date("Y");
+	  $century = (int) ($yr /100);
       if ($yr%100 > 50) {
         $c1 = $century + 1;
         $c0 = $century;
@@ -290,6 +293,9 @@ if (!defined('ADODB_ALLOW_NEGATIVE_TS')) define('ADODB_NO_NEGATIVE_TS',1);
   //  and is much faster as it does not calculate dow, etc.
   function _adodb_getdate($origd=false,$fast=false,$is_gmt=false) {
     $d =  $origd - ($is_gmt ? 0 : adodb_get_gmt_diff());
+    $year = 1970;
+    $month = 1;
+    $ndays = 31;
 
     $_day_power = 86400;
     $_hour_power = 3600;
@@ -439,7 +445,7 @@ if (!defined('ADODB_ALLOW_NEGATIVE_TS')) define('ADODB_NO_NEGATIVE_TS',1);
 
     $arr = _adodb_getdate($d,true,$is_gmt);
     if (!isset($daylight)) $daylight = function_exists('adodb_daylight_sv');
-    if ($daylight) adodb_daylight_sv($arr, $is_gmt);
+    if ($daylight && function_exists('adodb_daylight_sv')) adodb_daylight_sv($arr, $is_gmt);
 
     $year = $arr['year'];
     $month = $arr['mon'];
@@ -603,6 +609,7 @@ if (!defined('ADODB_ALLOW_NEGATIVE_TS')) define('ADODB_NO_NEGATIVE_TS',1);
 
     $_month_table_normal = array("",31,28,31,30,31,30,31,31,30,31,30,31);
     $_month_table_leaf = array("",31,29,31,30,31,30,31,31,30,31,30,31);
+    $loop_table = $_month_table_normal;
 
     $_total_date = 0;
     if ($year >= 1970) {
@@ -654,5 +661,3 @@ if (!defined('ADODB_ALLOW_NEGATIVE_TS')) define('ADODB_NO_NEGATIVE_TS',1);
     //print " dmy=$day/$mon/$year $hr:$min:$sec => " .$ret;
     return $ret;
   }
-
-

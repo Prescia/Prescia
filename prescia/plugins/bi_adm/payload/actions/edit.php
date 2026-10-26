@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 
 	define("CONS_MAX_MUP",100); // maximum files to process WARNING (will still process)
 
@@ -96,28 +98,27 @@
 					$core->setLog(CONS_LOGGING_WARNING);
 					$core->log[] = $core->langOut("me_partial_sucess");
 
-					# TODO: not working with multiple keys!
-					// items that were sucessful:
-					$sql = "SELECT ".$module->title." as title, ".$module->keys[0]." as id FROM ".$module->dbname." WHERE ".$module->keys[0]." IN (".implode(",",$okKeys).")";
-					$core->dbo->query($sql,$r,$n);
-					// show item names/ids being edited
-					$itemlist = array();
-					for ($c=0;$c<$n;$c++) {
-						$item = $core->dbo->fetch_assoc($r);
-						$itemlist[] = $item['title']." (".$item['id'].")";
-					}
-					$core->log[] = $core->langOut("me_sucess_items").": ".implode(", ",$itemList);
+						$fetchItemsByKeys = function (array $keyGroups) use ($core,$module): array {
+							$ids = array();
+							foreach ($keyGroups as $keyValues) {
+								if (isset($keyValues[0]) && $keyValues[0] !== '') $ids[] = (string)$keyValues[0];
+							}
+							if (count($ids) == 0) return array();
+							$placeholders = implode(',',array_fill(0,count($ids),'?'));
+							$sql = "SELECT ".$module->title." as title, ".$module->keys[0]." as id FROM ".$module->dbname." WHERE ".$module->keys[0]." IN (".$placeholders.")";
+							$r = false;
+							$n = 0;
+							if (!$core->dbo->queryPrepared($sql,str_repeat('s',count($ids)),$ids,$r,$n)) return array();
+							$itemlist = array();
+							for ($c=0;$c<$n;$c++) {
+								$item = $core->dbo->fetch_assoc($r);
+								$itemlist[] = $item['title']." (".$item['id'].")";
+							}
+							return $itemlist;
+						};
+						$core->log[] = $core->langOut("me_sucess_items").": ".implode(", ",$fetchItemsByKeys($okKeys));
 
-					// items that were NOT sucessful:
-					$sql = "SELECT ".$module->title." as title, ".$module->keys[0]." as id FROM ".$module->dbname." WHERE ".$module->keys[0]." IN (".implode(",",$errorKeys).")";
-					$core->dbo->query($sql,$r,$n);
-					// show item names/ids being edited
-					$itemlist = array();
-					for ($c=0;$c<$n;$c++) {
-						$item = $core->dbo->fetch_assoc($r);
-						$itemlist[] = $item['title']." (".$item['id'].")";
-					}
-					$core->log[] = $core->langOut("me_error_items").": ".implode(", ",$itemList);
+						$core->log[] = $core->langOut("me_error_items").": ".implode(", ",$fetchItemsByKeys($errorKeys));
 					$core->action = "list";
 				}
 				$ok = true; // so it behaves as if it were ok

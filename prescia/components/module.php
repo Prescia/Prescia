@@ -1,4 +1,4 @@
-<?	# -------------------------------- Prescia Module, all modules loaded from XML inherit this file
+<?php	# -------------------------------- Prescia Module, all modules loaded from XML inherit this file
 
 function prepareDataToOutput(&$template, &$params, $data, $processed = false) { // you can prevent auto-running this with ?noOutputParse=true
 	# This callback might be called multiple times. The $processed should come as TRUE on all second or more times it's called to prevent performance impact
@@ -34,9 +34,10 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 						$data[$fnamedata."t"] = "";
 						$data[$fnamedata."tr"] = "";
 						$data[$fnamedata."s"] = "";
-						$file = CONS_FMANAGER.$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
-						$fileout = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
-						if ($data[$fname] == 'y' && locateAnyFile($file,$ext,CONS_FILESEARCH_EXTENSIONS)) {
+							$file = CONS_FMANAGER.$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
+							$fileout = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$params['module']->name."/".($c==1?"":"t/").$fname.$keystring."_$c";
+							$ext = '';
+							if ($data[$fname] == 'y' && locateAnyFile($file,$ext,CONS_FILESEARCH_EXTENSIONS)) {
 							$fileout .= ".".$ext;
 							$data[$fnamedata] = $fileout;
 							$popped = explode("/",$file);
@@ -74,9 +75,10 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 					 }
 				} else if ($data[$fname]== 'y') { // file w/o image, present
 					$file = CONS_FMANAGER.$params['module']->name."/".$fname.$keystring."_1";
-					$fileout = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$params['module']->name."/".$fname.$keystring."_1";
-					$fnamedata = $fname."_1";
-					if (locateAnyFile($file,$ext)) {
+						$fileout = CONS_PATH_PAGES.$_SESSION['CODE']."/files/".$params['module']->name."/".$fname.$keystring."_1";
+						$fnamedata = $fname."_1";
+						$ext = '';
+						if (locateAnyFile($file,$ext)) {
 						$data[$fnamedata] = CONS_INSTALL_ROOT.$fileout.$ext;
 						$data[$fnamedata."s"] = humanSize(filesize($file));
 						$popped = explode("/",$file);
@@ -107,7 +109,7 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 				}
 			} elseif ($field[CONS_XML_TIPO] == CONS_TIPO_SERIALIZED && ($field[CONS_XML_SERIALIZED] == 1 || $field[CONS_XML_SERIALIZED] == 3) && isset($data[$fname])) {
 				# serialized field with READ or ALL serialization mode
-				$s = @unserialize($data[$fname]);
+				$s = presciaSafeUnserialize($data[$fname]);
 				if ($s !== false) {
 					foreach ($s as $skey => $scontent) {
 						$data[$fname."_".$skey] = $scontent;
@@ -145,21 +147,28 @@ function prepareDataToOutput(&$template, &$params, $data, $processed = false) { 
 
 class CModule {
 
-	var $name = "";
-	var $parent = null; # Framework object
-	var $title = "";
-	var $dbname = "";
-	var $keys = array('id');
-	var $plugins = array(); # script plugins this module has (the actual objects are stored on the core::loadedPlugins
-	var $order = ""; # SQL default order
-	var $permissionOverride = ""; # permission string that overrides default
-	var $unique = array(); # unique keys (The framework will create them, but won't remove any extra keys)
-	var $hash = array(); # non-unique keys (The framework will create them, but won't remove any extra keys)
-	var $linker = false; # this module is a linker module (have only 2 fields, which are links)
-	var $options = array();
-	var $fields = array();
-	var $freeModule = false; # this module does not link to a user or group, thus controled ALWAYS by "World" area of permission string. Also helps with caching
-	var $loaded = false;
+	public string $name = "";
+	/** Framework object. */
+	public ?CPrescia $parent = null;
+	public string $title = "";
+	public string $dbname = "";
+	/** @var list<string> */
+	public array $keys = array('id');
+	/** @var list<string> */
+	public array $plugins = array(); # script plugins this module has (the actual objects are stored on the core::loadedPlugins
+	public string $order = ""; # SQL default order
+	public string $permissionOverride = ""; # permission string that overrides default
+	/** @var array<int|string, mixed> */
+	public array $unique = array(); # unique keys (The framework will create them, but won't remove any extra keys)
+	/** @var array<int|string, mixed> */
+	public array $hash = array(); # non-unique keys (The framework will create them, but won't remove any extra keys)
+	public bool $linker = false; # this module is a linker module (have only 2 fields, which are links)
+	/** @var array<int|string, mixed> */
+	public array $options = array();
+	/** @var array<string, array<int|string, mixed>> */
+	public array $fields = array();
+	public bool $freeModule = false; # this module does not link to a user or group, thus controled ALWAYS by "World" area of permission string. Also helps with caching
+	public bool $loaded = false;
 
 	function __construct(&$parent, $name,$dbname="") {
 		$this->parent = &$parent;
@@ -213,16 +222,27 @@ class CModule {
 				}
 				$order = implode(",",$odb);
 			}
-			if ($originalSQL == "") // built SQL, will use where provided
-				$sql = $this->get_base_sql($where,$this->name.".".$this->options[CONS_MODULE_PARENT]." ASC".($order != ''?','.$order:''));
-			else { // give a full SQL, will just add proper order and treetitle
-				$sql = $originalSQL;
-				if (!is_array($sql)) $sql = $this->parent->dbo->sqlarray_break($sql);
-				$sql['ORDER'] = explode(",",$this->name.".".$this->options[CONS_MODULE_PARENT]." ASC".($order != ''?','.$order:''));
-			}
-			if (!$this->parent->dbo->query($sql,$r,$n)) {
-				$this->parent->errorControl->raise(146,$this->parent->dbo->log[count($this->parent->dbo->log)-1],$this->name,'on getContents');
-			}
+				if ($originalSQL == "") // built SQL, will use where provided
+					$sql = $this->get_base_sql($where,$this->name.".".$this->options[CONS_MODULE_PARENT]." ASC".($order != ''?','.$order:''));
+				else { // give a full SQL, will just add proper order and treetitle
+					$sql = $originalSQL;
+					if (!is_array($sql)) $sql = $this->parent->dbo->sqlarray_break($sql);
+					$sql['ORDER'] = explode(",",$this->name.".".$this->options[CONS_MODULE_PARENT]." ASC".($order != ''?','.$order:''));
+				}
+				$preparedTypes = '';
+				$preparedParams = array();
+				if (is_array($sql) && isset($sql['_preparedTypes'])) {
+					$preparedTypes = (string)$sql['_preparedTypes'];
+					$preparedParams = isset($sql['_preparedParams']) && is_array($sql['_preparedParams'])?$sql['_preparedParams']:array();
+					unset($sql['_preparedTypes'],$sql['_preparedParams']);
+				}
+				$r = false;
+				$n = 0;
+				$sqlText = $this->parent->dbo->sqlarray_echo($sql);
+				$ok = $this->parent->dbo->queryPrepared($sqlText,$preparedTypes,$preparedParams,$r,$n);
+				if (!$ok) {
+					$this->parent->errorControl->raise(146,$this->parent->dbo->log[count($this->parent->dbo->log)-1],$this->name,'on getContents');
+				}
 			$this->parent->templateParams['core'] = &$this->parent;
 			$this->parent->templateParams['module'] = &$this;
 			for ($c=0;$c<$n;$c++) {
@@ -237,7 +257,9 @@ class CModule {
 			return $treeObj;
 		} else {
 			$sql = $this->get_base_sql('',$order);
-			$this->parent->dbo->query($sql,$r,$n);
+			$r = false;
+			$n = 0;
+				$this->parent->dbo->queryPrepared($this->parent->dbo->sqlarray_echo($sql),"",array(),$r,$n);
 			for ($c=0;$c<$n;$c++) {
 				$tmpData = $this->parent->dbo->fetch_assoc($r);
 				$params = array('module'=>$this);
@@ -256,30 +278,68 @@ class CModule {
 	/*
 	 * MODULE (me) is pointing to RMODULE. Convert MY KEYS $data (that point to RMODULE) to RMODULE keys so I can run a select from RMODULE to find itself
 	 */
-	function getRemoteKeys($rmodule,$data) {
-		$where = array();
-		foreach ($rmodule->fields as $key => $field) {
+		function getRemoteKeys($rmodule,$data) {
+			$where = array();
+			$escape = static function ($value) use ($rmodule): string {
+				return addslashes_EX((string)$value, true, $rmodule->parent->dbo);
+			};
+			foreach ($rmodule->fields as $key => $field) {
 			if ($rmodule->fields[$key][CONS_XML_TIPO] == CONS_TIPO_INT) {
 				if ($key == "id") {
 					$mykey = $this->get_key_from($rmodule->name,"id_".$rmodule->name);
 					if ($mykey != '' && isset($data[$mykey]) && $data[$mykey] != 0 && $data[$mykey] != NULL)
-						$where[] = $rmodule->name.".id='".$data[$mykey]."'" ;
+						$where[] = $rmodule->name.".id='".(int)$data[$mykey]."'" ;
 				} else if (isset($this->field[$key]) && isset($data[$key]) && $key != $this->options[CONS_MODULE_PARENT]) {
 					// note we don't return id_parent. MY parent and the OTHER parent are DIFFERENT 
-					$where[] = $rmodule->name.".".$key."='".$data[$key]."'";
-				} // else I can't decide how to link it
-			} else if ($rmodule->fields[$key][CONS_XML_TIPO] == CONS_TIPO_LINK) {
+						$where[] = $rmodule->name.".".$key."='".(int)$data[$key]."'";
+					} // else I can't decide how to link it
+				} else if ($rmodule->fields[$key][CONS_XML_TIPO] == CONS_TIPO_LINK) {
 				$mykey = $this->get_key_from($rmodule->fields[$key][CONS_XML_MODULE],"id_".$rmodule->fields[$key][CONS_XML_MODULE]);
 				if ($mykey!='' && isset($data[$mykey]) && $data[$mykey] != 0 && $data[$mykey] != NULL && $key != $this->options[CONS_MODULE_PARENT])
 					// again note we ignore id_parent
-					$where[] = $rmodule->name.".".$key."='".$data[$mykey]."'";
+					$where[] = $rmodule->name.".".$key."='".$escape($data[$mykey])."'";
 			} else if (isset($this->field[$key]) && isset($data[$key])) {
-				$where[] = $rmodule->name.".".$key."='".$data[$key]."'";
+					$where[] = $rmodule->name.".".$key."='".$escape($data[$key])."'";
 			} // else I can't decide how to link it
 		}
-		return $where;
-	}
-#-
+			return $where;
+		}
+
+		/**
+		 * Build a parameterized WHERE clause for a linked module.
+		 * Identifiers come only from the module metadata; linked values are bound.
+		 */
+		function getRemotePreparedKeys($rmodule,&$whereStruct,&$whereTypes,&$whereParams,$data) {
+			$where = array();
+			$whereTypes = '';
+			$whereParams = array();
+			$add = function ($field,$value) use (&$where,&$whereTypes,&$whereParams,$rmodule): void {
+				$where[] = $rmodule->name.".".$field."=?";
+				$isInteger = isset($rmodule->fields[$field][CONS_XML_TIPO]) && $rmodule->fields[$field][CONS_XML_TIPO] == CONS_TIPO_INT;
+				$whereTypes .= $isInteger ? 'i' : 's';
+				$whereParams[] = $isInteger ? (int)$value : (string)$value;
+			};
+			foreach ($rmodule->fields as $key => $field) {
+				if ($field[CONS_XML_TIPO] == CONS_TIPO_INT) {
+					if ($key == 'id') {
+						$mykey = $this->get_key_from($rmodule->name,'id_'.$rmodule->name);
+						if ($mykey != '' && isset($data[$mykey]) && $data[$mykey] != 0 && $data[$mykey] !== null)
+							$add($key,$data[$mykey]);
+					} else if (isset($this->fields[$key]) && isset($data[$key]) && $key != $this->options[CONS_MODULE_PARENT]) {
+						$add($key,$data[$key]);
+					}
+				} else if ($field[CONS_XML_TIPO] == CONS_TIPO_LINK) {
+					$mykey = $this->get_key_from($field[CONS_XML_MODULE],'id_'.$field[CONS_XML_MODULE]);
+					if ($mykey != '' && isset($data[$mykey]) && $data[$mykey] != 0 && $data[$mykey] !== null && $key != $this->options[CONS_MODULE_PARENT])
+						$add($key,$data[$mykey]);
+				} else if (isset($this->fields[$key]) && isset($data[$key])) {
+					$add($key,$data[$key]);
+				}
+			}
+			$whereStruct = implode(' AND ',$where);
+			return $whereStruct !== '';
+		}
+	#-
 	function get_advanced_sql($taglist,$embedWhere = "", $embedOrder = "", $embedLimit = "",$cacheTAG=false) {
 		# This function searches the $taglist (from template) and only adds the sql required to fetch those data, thus preventing unnecessary joins and selects
 		$sql = false;
@@ -437,7 +497,7 @@ class CModule {
 		// send $noJoin to get only THIS table, with no auto joining linked tables
 	  $sql = false;
 	  if (!$this->parent->debugmode && !$noJoin && is_file(CONS_PATH_CACHE.$_SESSION['CODE']."/".$this->dbname."_list.cache") && !isset($_REQUEST['nocache'])) {
-		$sql = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/".$this->dbname."_list.cache"));
+		$sql = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/".$this->dbname."_list.cache"));
 	  }
 	  if (!$sql) {
 	  	$sql = array("SELECT" => array(), "FROM" => array(), "LEFT" => array(), "WHERE" => array(), "GROUP" => array(), "ORDER" => array(), "LIMIT" => array(), "HAVING" => array());
@@ -632,7 +692,7 @@ class CModule {
 		return $all?$results:"";
 	} # get_key_from
 
-	function getKeys(&$whereStruct, &$keyArray, $data, $fromRemote = "", $addMe = false) {
+		function getKeys(&$whereStruct, &$keyArray, $data, $fromRemote = "", $addMe = false) {
 		# return the keys in all formats functions might need, returns sucess on aquiring keys (data have all keys) then:
 		# $whereStruct is a WHERE string which would result only this item in a SQL select
 		# $keyArray is an array with all keys (name => key)
@@ -665,8 +725,28 @@ class CModule {
 		}
 		if ($whereStruct != "")
 			$whereStruct = substr($whereStruct,0,strlen($whereStruct)-4);
-		return $haveAll;
-	} # getKeys
+			return $haveAll;
+		} # getKeys
+	#-
+		/**
+		 * Build a parameterized WHERE clause for the module keys.
+		 * The legacy getKeys() method remains available for read-only callers.
+		 */
+		function getPreparedKeys(&$whereStruct, &$whereTypes, &$whereParams, &$keyArray, $data, $fromRemote = "") {
+			$whereStruct = "";
+			$whereTypes = "";
+			$whereParams = array();
+			$keyArray = array();
+			$legacyWhere = "";
+			$haveAll = $this->getKeys($legacyWhere, $keyArray, $data, $fromRemote);
+			if (!$haveAll) return false;
+			foreach ($this->keys as $key) {
+				$whereStruct .= ($whereStruct === "" ? "" : " AND ").$key."=?";
+				$whereTypes .= "s";
+				$whereParams[] = (string)$keyArray[$key];
+			}
+			return true;
+		} # getPreparedKeys
 
 	function deleteUploads($kA, $field = "", $ids = "", $basefile = "") {
 		# delete file uploads for the specified item
@@ -707,9 +787,10 @@ class CModule {
 		return $dels;
 	} #deleteUploads
 
-	function prepareUpload($name,$kA,&$data) {
-		# Returns the same errCode from storefile, plus 8 (unable to create thumbails), 9 (near time limit), 10 (quota exceeded)
-		# file format should be [field][ids_]#_thumbid (or 1 for no thumb)
+		function prepareUpload($name,$kA,&$data) {
+			# Returns the same errCode from storefile, plus 8 (unable to create thumbails), 9 (near time limit), 10 (quota exceeded)
+			# file format should be [field][ids_]#_thumbid (or 1 for no thumb)
+			$thumbsettings = array();
 
 		if (!isset($_FILES[$name]))
 			return 4;
@@ -760,10 +841,10 @@ class CModule {
 		$path = CONS_FMANAGER.$this->name."/";
 		if (!is_dir($path)) makeDirs($path);
 
-		if (isset($this->fields[$name][CONS_XML_FILEPATH])) { # custom path
-			$path .= $this->fields[$name][CONS_XML_FILEPATH];
-			if ($path[strlen($path)-1] != "/") $path .= "/";
-			if (!is_dir($path)) safe_mkdir($path);
+			if (isset($this->fields[$name][CONS_XML_FILEPATH])) { # custom path
+				$path .= $this->fields[$name][CONS_XML_FILEPATH];
+				if ($path[strlen($path)-1] != "/") $path .= "/";
+				if (!is_dir($path)) (new \Prescia\Services\FileService())->ensureDirectory($path);
 		}
 
 		# prepares filename with item keys
@@ -777,8 +858,9 @@ class CModule {
 		} else
 			$ftypes = "";
 
-		# prepares watermark and/or crop (for images)
-		$WM_TODO = array();
+			# prepares watermark and/or crop (for images)
+			$WM_TODO = array();
+			$thisFilename = '';
 		if (isset($this->fields[$name][CONS_XML_TWEAKIMAGES])) {
 			foreach ($this->fields[$name][CONS_XML_TWEAKIMAGES] as $c => $WM) {
 				# stamp:over(filename@x,y)[r] # [r] not implemented yet
@@ -827,7 +909,7 @@ class CModule {
 			}
 
 			# perform upload
-			$thisFilename = $path.$filename."1";
+				$thisFilename = $path.$filename."1";
 			$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes); # <----------------- upload happens here
 			//$errCode = storeFile($_FILES[$name],$thisFilename,$ftypes,true); # <----------------- use this (note the true) for full debug
 
@@ -939,21 +1021,29 @@ class CModule {
 			$maxItems = $fieldData[1];
 			$newvalue = str_replace("'","",str_replace('"','',$fieldData[2]));
 			if ($maxItems == 0 || $maxItems == '*') continue; // er, shouldn't even get here
-			$sql = "SELECT ".implode(",",$this->keys)." FROM ".$this->dbname." WHERE $field=\"".$data[$field]."\"$order";
-			if ($this->parent->dbo->query($sql,$r,$n) && $n>$maxItems) {
-				$otherData = $this->parent->dbo->fetch_assoc($r);
-				// set otherData to new enum
-				$sql = "UPDATE ".$this->dbname." SET $field=\"".$newvalue."\" WHERE ";
-				foreach ($this->keys as $kname)
-					$sql .= $kname."=\"".$otherData[$kname]."\" AND ";
-				$sql = substr($sql,0,strlen($sql)-5); // remove lastAND
-				$this->parent->dbo->simpleQuery($sql);
+				$sql = "SELECT ".implode(",",$this->keys)." FROM ".$this->dbname." WHERE ".$field."=?".$order;
+				$r = false;
+				$n = 0;
+				if ($this->parent->dbo->queryPrepared($sql,"s",array((string)$data[$field]),$r,$n,$this->parent->debugmode) && $n>$maxItems) {
+					$otherData = $this->parent->dbo->fetch_assoc($r);
+					// set otherData to new enum
+					$where = array();
+					$whereTypes = "s";
+					$whereParams = array($newvalue);
+					foreach ($this->keys as $kname) {
+						$where[] = $kname."=?";
+						$whereTypes .= "s";
+						$whereParams[] = (string)$otherData[$kname];
+					}
+					$updateResult = false;
+					$updateRows = 0;
+					$this->parent->dbo->queryPrepared("UPDATE ".$this->dbname." SET ".$field."=? WHERE ".implode(" AND ",$where),$whereTypes,$whereParams,$updateResult,$updateRows,$this->parent->debugmode);
 			}
 
 		}
 	}
 #-
-	private function sqlParameter($isADD,&$data,$name,&$field,&$EnumPrunecache,$isSerialized=false,$kA='',$wS='') {
+	private function sqlParameter($isADD,&$data,$name,&$field,&$EnumPrunecache,$isSerialized=false,$kA='',$wS='',$wTypes='',$wParams=array()) {
 		$output = false;
 		$encapsulation = $isSerialized?'':'"';
 		switch( $field[CONS_XML_TIPO] ) {
@@ -989,7 +1079,7 @@ class CModule {
 							$idP = isset($data[$name])?$data[$name]:0;
 							if ($idP == null) $idP = 0;
 							while ($idP !== 0) {
-								$idP = $this->parent->dbo->fetch("SELECT $name FROM ".$this->dbname." WHERE ".$this->keys[0]."=$idP");
+									$idP = $this->parent->dbo->fetchPrepared("SELECT ".$name." FROM ".$this->dbname." WHERE ".$this->keys[0]."=?","s",array((string)$idP),false);
 								if ($idP == NULL) $idP = 0;
 								if (in_array($idP,$antiCicle)) break; // cicle!
 								$antiCicle[] = $idP;
@@ -1225,14 +1315,15 @@ class CModule {
 						$this->parent->errorControl->raise(200+$upOk,$upOk,$this->name,$name);
 					}
 					if ($upOk != 4) $output = $encapsulation.$upvalue.$encapsulation; // we CHANGED the file, set if it is ok
-					else { // no change, but take this oportunity and check if the file exists!
-						$upvalue = 'n';
-						$path = CONS_FMANAGER.$this->name."/";
+						else { // no change, but take this oportunity and check if the file exists!
+							$upvalue = 'n';
+							$ext = '';
+							$path = CONS_FMANAGER.$this->name."/";
 						if (is_dir($path)) {
-							if (isset($this->fields[$name][CONS_XML_FILEPATH])) {
-								$path .= $this->fields[$name][CONS_XML_FILEPATH];
-								if ($path[strlen($path)-1] != "/") $path .= "/";
-								if (!is_dir($path)) safe_mkdir($path);
+				if (isset($this->fields[$name][CONS_XML_FILEPATH])) {
+					$path .= $this->fields[$name][CONS_XML_FILEPATH];
+					if ($path[strlen($path)-1] != "/") $path .= "/";
+					if (!is_dir($path)) (new \Prescia\Services\FileService())->ensureDirectory($path);
 							}
 							# prepares filename with item keys
 							$filename = $path.$name."_";
@@ -1253,7 +1344,7 @@ class CModule {
 						if ($data[$name][0] == '[') # JSON
 							$output = @json_decode($data[$name]);
 						else
-							$output = @unserialize($data[$name]); # we will serialize the whole thing
+							$output = presciaSafeUnserialize($data[$name]); # we will serialize the whole thing
 						if ($output === false) {
 							$this->parent->errorControl->raise(189,$name,$this->name);
 							$output= "";
@@ -1269,22 +1360,33 @@ class CModule {
 				} else if ($this->fields[$name][CONS_XML_SERIALIZED] > 1) { // set to WRITE or ALL
 					// note: we ADD fields, never replace, because we should allow partial edits, thus we need to read the original data first
 					$sql = "SELECT $name FROM ".$this->dbname." WHERE $wS";
-					$serialized = $this->parent->dbo->fetch($sql);
+					$serialized = $this->parent->dbo->fetchPrepared($sql,$wTypes,$wParams);
 					if ($serialized === false) $serialized = array();
-					else $serialized = @unserialize($serialized);
+					else $serialized = presciaSafeUnserialize($serialized);
 					
 					$serializedFields = 0;
 					foreach ($this->fields[$name][CONS_XML_SERIALIZEDMODEL] as $exname => &$exfield) {
 						if (isset($data[$name."_".$exname])) {
 							$outfield = $this->sqlParameter(true,$data,$name."_".$exname,$exfield,$EnumPrunecache,true);
-							if ($outfield !== false && $outfield != 'NULL') $serialized[$exname] = $outfield; # we don't need to store NULL like in sql
+							if ($outfield !== false && $outfield['sql'] != 'NULL') $serialized[$exname] = $outfield['params'][0] ?? null; # we don't store NULL like in SQL
 						}
 					}
 					$output = $encapsulation.addslashes_EX(serialize($serialized),true,$this->parent->dbo).$encapsulation;
 				}
 			break;
 		} # switch
-		return $output;
+		if ($output === false || is_array($output)) return $output;
+		if ($output === 'NULL' || $output === 'NOW()')
+			return array('sql' => $output, 'types' => '', 'params' => array());
+		$value = $output;
+		if (strlen($value) >= 2 && $value[0] === '"' && substr($value, -1) === '"')
+			$value = substr($value, 1, -1);
+		$value = stripslashes($value);
+		if (is_numeric($value) && strpos((string)$value, '.') !== false)
+			return array('sql' => '?', 'types' => 'd', 'params' => array((float)$value));
+		if (is_numeric($value) && (string)(int)$value === (string)$value)
+			return array('sql' => '?', 'types' => 'i', 'params' => array((int)$value));
+		return array('sql' => '?', 'types' => 's', 'params' => array($value));
 	}
 #-
 	function runAction($action,$data,$silent=false,$mfo=false,$startedAt="") {
@@ -1332,14 +1434,16 @@ class CModule {
 
 			case CONS_ACTION_UPDATE: ###################################################### UPDATE ############################################
 
-				$wS = ""; # whereStruct
-				$kA = array(); # keyArray
-				$haveAllKeys = $this->getKeys($wS,$kA,$data); // is it ok not to have all keys?
+					$wS = ""; # whereStruct
+					$wTypes = "";
+					$wParams = array();
+					$kA = array(); # keyArray
+					$haveAllKeys = $this->getPreparedKeys($wS,$wTypes,$wParams,$kA,$data); // is it ok not to have all keys?
 				# security
 				if ($this->parent->safety && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < 100) {
 					$Owner = $this->parent->authControl->checkOwner($this,$kA); // array with isOwner and isSameGroup
 					$this->parent->lockPermissions(); # Load permissions to this, in case something changed
-					if (!$this->parent->authControl->checkPermission($this,CONS_ACTION_UPDATE,$Owner,$data)) {
+					if (!$this->parent->authControl->checkPermission($this,CONS_ACTION_UPDATE,$Owner)) {
 						$this->parent->errorControl->raise(151,'',$this->name);
 						return false;
 					}
@@ -1347,6 +1451,8 @@ class CModule {
 				$this->parent->notifyEvent($this,CONS_ACTION_UPDATE,$data,$startedAt,true); # early notify
 				$sql = "UPDATE ".$this->dbname." SET ";
 				$output = "";
+				$queryTypes = "";
+				$queryParams = array();
 				$outfield = false;
 				foreach ($this->fields as $name => $field) {
 					if ($this->parent->safety && isset($field[CONS_XML_RESTRICT]) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < $field[CONS_XML_RESTRICT] && !isset($field[CONS_XML_UPDATESTAMP])) {
@@ -1355,16 +1461,24 @@ class CModule {
 						continue;
 					}
 					if ($name != $this->keys[0] && strpos($field[CONS_XML_SQL],"AUTO_INCREMENT") === false) { # cannot change main key or auto_increment ones
-						$outfield = $this->sqlParameter(false,$data,$name,$field,$EnumPrunecache,false,$kA,$wS);
-						if ($outfield !== false) $output .= $name."=".$outfield.",";
+						$outfield = $this->sqlParameter(false,$data,$name,$field,$EnumPrunecache,false,$kA,$wS,$wTypes,$wParams);
+						if ($outfield !== false) {
+								$output .= $name."=".$outfield['sql'].",";
+								$queryTypes .= $outfield['types'];
+								$queryParams = array_merge($queryParams,$outfield['params']);
+							}
 					} # if (not key)
 				} #foreach
 				unset($outfield);
 				if ($output != "") {
 					# removes end ,
 					$output = substr($output,0,strlen($output)-1);
-					$sql .= $output." WHERE ".$wS;
-					if (!$this->parent->dbo->simpleQuery($sql,$this->parent->debugmode)) {
+						$sql .= $output." WHERE ".$wS;
+						$queryTypes .= $wTypes;
+						$queryParams = array_merge($queryParams,$wParams);
+					$r = false;
+					$n = 0;
+					if (!$this->parent->dbo->queryPrepared($sql,$queryTypes,$queryParams,$r,$n,$this->parent->debugmode)) {
 						$this->parent->errorState = true;
 						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
 						if (strpos(strtolower($lastError),"duplicate") === false) {
@@ -1399,10 +1513,12 @@ class CModule {
 					}
 					# can create items
 				}
-				# if this module have multiple key fields, there is no auto_increment IF there is an id (id created automatically w/o AI)
-				if (count($this->keys)>1 && $this->keys[0] == "id") {
-					$wheres = array();
-					foreach ($this->keys as $field) {
+					# if this module have multiple key fields, there is no auto_increment IF there is an id (id created automatically w/o AI)
+					if (count($this->keys)>1 && $this->keys[0] == "id") {
+						$wheres = array();
+						$whereTypes = "";
+						$whereParams = array();
+						foreach ($this->keys as $field) {
 						if ($field != "") {
 							if (!isset($data[$field])) {
 								# we need this parent data to create the id, but it's missing!
@@ -1411,24 +1527,28 @@ class CModule {
 									$this->parent->errorControl->raise(139,$field,$this->name);
 								return false;
 							}
-							array_push($wheres,$field."=\"".$data[$field]."\"");
+							array_push($wheres,$field."=?");
+							$whereTypes .= "s";
+							$whereParams[] = (string)$data[$field];
 						}
 					} # foreach
 					$sql = "SELECT MAX(id) FROM ".$this->dbname.(count($wheres)!=0?" WHERE ".implode(" AND ",$wheres):"");
-					$id = $this->parent->dbo->fetch($sql,$this->parent->debugmode);
+						$id = $this->parent->dbo->fetchPrepared($sql,$whereTypes,$whereParams,false);
 					if (!$id) {
 						# suposes it was empty
 						$id = 1;
 					} else
 						$id++;
-					$sql = "INSERT INTO ".$this->dbname." SET id='$id',";
+						$sql = "INSERT INTO ".$this->dbname." SET id=?,";
 					$data['id'] = $id;
 				} else {
 					$id = false;
 					$sql = "INSERT INTO ".$this->dbname." SET ";
 				}
-				$output = "";
-				$hasAuto = "";
+					$output = "";
+					$queryTypes = $id !== false ? "i" : "";
+					$queryParams = $id !== false ? array((int)$id) : array();
+					$hasAuto = "";
 				$outfield = false;
 
 				foreach ($this->fields as $name => $field) {
@@ -1443,7 +1563,11 @@ class CModule {
 					if (strpos(strtolower($field[CONS_XML_SQL]),"auto_increment") === false && !($this->keys[0] == "id" && $name == $this->keys[0] && count($this->keys)>1 )) { # cannot change auto_increment or main key fields
 
 						$outfield = $this->sqlParameter(true,$data,$name,$field,$EnumPrunecache);
-						if ($outfield !== false) $output .= $name."=".$outfield.",";
+							if ($outfield !== false) {
+								$output .= $name."=".$outfield['sql'].",";
+								$queryTypes .= $outfield['types'];
+								$queryParams = array_merge($queryParams,$outfield['params']);
+							}
 
 						if ((!$outfield || !isset($data[$name]) || $data[$name] == '') && isset($field[CONS_XML_AUTOFILL]) && !isset($field[CONS_XML_DEFAULT])) {
 							if (isset($data[$field[CONS_XML_AUTOFILL]])) {
@@ -1454,7 +1578,9 @@ class CModule {
 										$data[$name] = preg_replace("/(<)([^<>]*)(>)/","",$data[$name]);
 									}
 								}
-								$output .= $name."=\"".$data[$name]."\",";
+									$output .= $name."=?,";
+									$queryTypes .= "s";
+									$queryParams[] = (string)$data[$name];
 							}
 						}
 					} else # if (not AutoIncrement)
@@ -1466,7 +1592,9 @@ class CModule {
 					# removes end ,
 					$output = substr($output,0,strlen($output)-1);
 					$sql .= $output;
-					if (!$this->parent->dbo->simpleQuery($sql,$this->parent->debugmode)) {
+						$r = false;
+						$n = 0;
+						if (!$this->parent->dbo->queryPrepared($sql,$queryTypes,$queryParams,$r,$n,$this->parent->debugmode)) {
 						$this->parent->errorState = true;
 						$lastError = $this->parent->dbo->log[count($this->parent->dbo->log)-1];
 						if (strpos(strtolower($lastError),"duplicate") === false) {
@@ -1480,8 +1608,11 @@ class CModule {
 							else $data['id'] = $id;
 						}
 						# check for uploads and urla
-						$wS = ""; $kA = array();
-						$this->getKeys($wS,$kA,$data);
+							$wS = "";
+							$wTypes = "";
+							$wParams = array();
+							$kA = array();
+							$this->getPreparedKeys($wS,$wTypes,$wParams,$kA,$data);
 						foreach ($this->fields as $name => $field) {
 							if ($field[CONS_XML_TIPO] == CONS_TIPO_SERIALIZED) {
 								foreach ($field[CONS_XML_SERIALIZEDMODEL] as $exname => $exfield) { #--- serialized uploads
@@ -1506,7 +1637,9 @@ class CModule {
 									$this->parent->errorState = true;
 									if (!$silent) $this->parent->errorControl->raise(200+$upOk,$upOk,$this->name,$name);
 									# must remove inserted data!
-									$this->parent->dbo->simpleQuery("DELETE FROM ".$this->dbname." WHERE ".$wS,$this->parent->debugmode);
+											$r = false;
+											$n = 0;
+											$this->parent->dbo->queryPrepared("DELETE FROM ".$this->dbname." WHERE ".$wS,$wTypes,$wParams,$r,$n,$this->parent->debugmode);
 									$this->deleteUploads($kA);
 									return false;
 								} else if ($upOk != 4 && $upOk != 0) { // 4 = nothing sent, 0 = sent and ok
@@ -1514,7 +1647,9 @@ class CModule {
 									if (!$silent) $this->parent->errorControl->raise(200+$upOk,$upOk,$this->name,$name);
 									$this->deleteUploads($kA,$name); // delete possible partial thumbnail process
 								} else if ($upOk == 0) {
-									$this->parent->dbo->simpleQuery("UPDATE ".$this->dbname." SET $name='y' WHERE $wS");
+									$r = false;
+									$n = 0;
+									$this->parent->dbo->queryPrepared("UPDATE ".$this->dbname." SET ".$name."=? WHERE ".$wS,"s".$wTypes,array_merge(array("y"),$wParams),$r,$n,$this->parent->debugmode);
 								}
 							} else if ($field[CONS_XML_TIPO] == CONS_TIPO_VC && isset($field[CONS_XML_SPECIAL]) && $field[CONS_XML_SPECIAL] == "urla" && (!isset($data[$name]) || $data[$name] == '')) {
 								# EMPTY special VC urla might require the data to be fully processed to create the proper result, so we do it after the include
@@ -1523,7 +1658,9 @@ class CModule {
 								$tp->tbreak($source);
 								$urla = removeSimbols($tp->techo($data),true,false);
 								if ($urla != '') {
-									$this->parent->dbo->simpleQuery("UPDATE ".$this->dbname." SET $name=\"$urla\" WHERE $wS");
+										$r = false;
+										$n = 0;
+										$this->parent->dbo->queryPrepared("UPDATE ".$this->dbname." SET ".$name."=? WHERE ".$wS,"s".$wTypes,array_merge(array($urla),$wParams),$r,$n,$this->parent->debugmode);
 									$data[$name] = $urla;
 								}
 								unset($tp);
@@ -1546,20 +1683,25 @@ class CModule {
 				break;
 
 			case CONS_ACTION_DELETE: ###################################################### DELETE ############################################
-				$wS = ""; $kA = array();
+					$wS = "";
+					$wTypes = "";
+					$wParams = array();
+					$kA = array();
 
-				$haveallKeys = $this->getKeys($wS,$kA,$data);
+					$haveallKeys = $this->getPreparedKeys($wS,$wTypes,$wParams,$kA,$data);
 				# security
 				$Owner = $this->parent->authControl->checkOwner($this,$kA); // array with isOwner and isSameGroup
 				if ($this->parent->safety && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < 100) {
-					$this->parent->lockPermissions($this,$data,$Owner);
-					if (!$this->parent->authControl->checkPermission($this,CONS_ACTION_DELETE,$Owner,$data)) {
+					$this->parent->lockPermissions();
+					if (!$this->parent->authControl->checkPermission($this,CONS_ACTION_DELETE,$Owner)) {
 						$this->parent->errorControl->raise(149,'',$this->name);
 						return false;
 					}
 				}
 				$this->parent->notifyEvent($this,CONS_ACTION_DELETE,$data,$startedAt,true); # early notify
-				if ($this->parent->dbo->simpleQuery("DELETE FROM ".$this->dbname." WHERE ".$wS,$this->parent->debugmode)) {
+					$r = false;
+					$n = 0;
+					if ($this->parent->dbo->queryPrepared("DELETE FROM ".$this->dbname." WHERE ".$wS,$wTypes,$wParams,$r,$n,$this->parent->debugmode)) {
 					$this->deleteUploads($kA);
 					$this->parent->notifyEvent($this,CONS_ACTION_DELETE,$data,$startedAt,false); # later notify
 					return true;
@@ -1572,6 +1714,36 @@ class CModule {
 				break;
 		} # switch
 	} # run_action
+#-
+	private function normalizeContentSqlArray(&$sql) {
+		if (!is_array($sql) || !isset($sql['ORDER']) || !isset($sql['LIMIT'])) return false;
+		$normalizedOrder = array();
+		foreach ($sql['ORDER'] as $orderGroup) {
+			foreach (explode(',',(string)$orderGroup) as $orderItem) {
+				$orderItem = trim($orderItem);
+				if ($orderItem === '') continue;
+				if ($orderItem === 'RAND()') {
+					$normalizedOrder[] = $orderItem;
+				} else if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)?(?:\s+(?:ASC|DESC))?$/i',$orderItem)) {
+					$normalizedOrder[] = $orderItem;
+				} else {
+					return false;
+				}
+			}
+		}
+		$normalizedLimit = array();
+		foreach ($sql['LIMIT'] as $limitGroup) {
+			$limitParts = explode(',',(string)$limitGroup);
+			if (count($limitParts) > 2) return false;
+			foreach ($limitParts as $limitPart) {
+				if (!preg_match('/^[0-9]+$/',trim($limitPart))) return false;
+			}
+			$normalizedLimit[] = implode(',',array_map('intval',$limitParts));
+		}
+		$sql['ORDER'] = $normalizedOrder;
+		$sql['LIMIT'] = $normalizedLimit;
+		return true;
+	} # normalizeContentSqlArray
 #-
 	function runContent(&$tp,$sql="",$tag="",$usePaging=false, $cacheTAG = false,$callback = false) {
 		# callback function parameters: &template, &params, data AND returns data (if returns FALSE, will skip this item)
@@ -1608,26 +1780,42 @@ class CModule {
 	  	if ($usePaging) { # if enabled (was sent TRUE or with the page size), get start and end right.
 	  		if (!isset($this->parent->templateParams['p_init']) || !is_numeric($this->parent->templateParams['p_init']) || $this->parent->templateParams['p_init']<0) {
 				if (isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init']) && $_REQUEST['p_init']>=0)
-					$this->parent->templateParams['p_init'] = $_REQUEST['p_init'];
+					$this->parent->templateParams['p_init'] = (int)$_REQUEST['p_init'];
 	  	  		else
 	  	  			$this->parent->templateParams['p_init'] = 0;
 	  	  	}
 	  	  	if (!isset($this->parent->templateParams['p_size']) || !is_numeric($this->parent->templateParams['p_size']) || $this->parent->templateParams['p_size']<0) {
 				if (isset($_REQUEST['p_size']) && is_numeric($_REQUEST['p_size']) && $_REQUEST['p_size']>=0) # came numeric value
-					$this->parent->templateParams['p_size'] = $_REQUEST['p_size'];
+					$this->parent->templateParams['p_size'] = (int)$_REQUEST['p_size'];
 				else if (isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])) { # non numeric, try user preferences
-					$up = is_array($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])?$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']:unserialize($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']);
+					$up = is_array($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])?$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']:presciaSafeUnserialize($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']);
 					if (isset($up['pfim']) && is_numeric($up['pfim']) && $up['pfim']>0)
-						$this->parent->templateParams['p_size'] = $up['pfim'];
+						$this->parent->templateParams['p_size'] = (int)$up['pfim'];
 					else
 						$this->parent->templateParams['p_size'] = CONS_DEFAULT_PAGESIZE;
 				} else # user preferences fail fallback
 					$this->parent->templateParams['p_size'] = CONS_DEFAULT_PAGESIZE;
 	  	  	}
 	  	}
-	  	$originalSQL = false;
-		if (is_numeric($sql)) { # a number means just the ID
-			$sql = $this->get_base_sql($this->name.".".$this->keys[0]."='$sql'");
+		$originalSQL = false;
+		$preparedTypes = '';
+		$preparedParams = array();
+		if (is_array($sql) && isset($sql['_preparedTypes'])) {
+			$preparedTypes = (string)$sql['_preparedTypes'];
+			$preparedParams = isset($sql['_preparedParams']) && is_array($sql['_preparedParams'])?$sql['_preparedParams']:array();
+			unset($sql['_preparedTypes'],$sql['_preparedParams']);
+		}
+		if (is_array($sql) && isset($sql['where'],$sql['types'],$sql['params']) && !isset($sql['SELECT'])) {
+			$preparedTypes = (string)$sql['types'];
+			$preparedParams = is_array($sql['params'])?$sql['params']:array();
+			$limit = isset($sql['limit'])?(string)$sql['limit']:'';
+			$order = isset($sql['order'])?(string)$sql['order']:'';
+			$originalSQL = $limit == '';
+			$sql = $this->get_base_sql((string)$sql['where'],$order,$limit);
+		} else if (is_numeric($sql)) { # a number means just the ID
+			$preparedTypes = "i";
+			$preparedParams = array((int)$sql);
+			$sql = $this->get_base_sql($this->name.".".$this->keys[0]."=?");
 			$originalSQL = true; // no change based on original SQL
 		} else if ($sql == "") { # no sql? use the default
 			$sql = $this->get_base_sql();
@@ -1655,6 +1843,11 @@ class CModule {
 			unset($this->parent->templateParams['reverse']);
 			return false;
 		}
+		if (!$this->normalizeContentSqlArray($sql)) {
+			$this->parent->errorControl->raise(144,$this->parent->dbo->sqlarray_echo($sql),$this->name);
+			unset($this->parent->templateParams['reverse']);
+			return false;
+		}
 		$this->parent->templateParams['core'] = &$this->parent;
 		$this->parent->templateParams['module'] = &$this;
 		if ($callback !== false) {
@@ -1676,7 +1869,8 @@ class CModule {
 			$countSQL['SELECT'] = array("COUNT(*)");
 			$countSQL['GROUP'] = array();
 			$countSQL['ORDER'] = array();
-			$total = $this->parent->dbo->fetch($countSQL,$this->parent->debugmode); # Count total items if not limited by paging
+			$countSqlText = $this->parent->dbo->sqlarray_echo($countSQL);
+			$total = $this->parent->dbo->fetchPrepared($countSqlText,$preparedTypes,$preparedParams); # Count total items if not limited by paging
 
 			if ($this->parent->templateParams['p_init'] != 0)
 				$sql['LIMIT'][0] = $this->parent->templateParams['p_init'].",".$this->parent->templateParams['p_size'];
@@ -1685,7 +1879,10 @@ class CModule {
 
 			$this->parent->templateParams['p_init'] = 0;
 
-			$ok = $this->parent->dbo->query($sql,$r,$n,$this->parent->debugmode);
+			$r = false;
+			$n = 0;
+			$sqlText = $this->parent->dbo->sqlarray_echo($sql);
+			$ok = $this->parent->dbo->queryPrepared($sqlText,$preparedTypes,$preparedParams,$r,$n,$this->parent->debugmode);
 			$endTime = getmicrotime();
 			if (!$ok)
 				 $this->parent->errorControl->raise(169,$tag,$this->name);
@@ -1697,9 +1894,12 @@ class CModule {
 				$this->parent->lastFirstset = $tp->firstReturnedSet;
 			$n = $total; #<-- will be used for paging display
 
-  		} else { # can't use fast paging ... normal (slower) then
+		} else { # can't use fast paging ... normal (slower) then
 
-			if (!$this->parent->dbo->query($sql,$r,$n,$this->parent->debugmode) && $this->parent->debugmode)
+			$r = false;
+			$n = 0;
+			$sqlText = $this->parent->dbo->sqlarray_echo($sql);
+			if (!$this->parent->dbo->queryPrepared($sqlText,$preparedTypes,$preparedParams,$r,$n,$this->parent->debugmode) && $this->parent->debugmode)
 				$this->parent->errorControl->raise(146,$this->parent->dbo->log[count($this->parent->dbo->log)-1],$this->name);
 			$endTime = getmicrotime();
 			if (!$usePaging) $this->parent->templateParams['no_paging'] = true;
@@ -1728,8 +1928,7 @@ class CModule {
 			$gt = $tp->get($tag);
 			$this->parent->cacheControl->addCachedContent($cacheTAG,array('payload'=>$gt,'count'=>$n,'lfs' => $this->parent->lastFirstset, 'lrc' => $this->parent->lastReturnCode),$this->freeModule); # note how freeModule defines shared or not cache
 		}
-		unset ($this->templateParans['grouping']);
-		return $n;
+			return $n;
 	} # runContent
 
  	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNotify = false) {
@@ -1746,8 +1945,10 @@ class CModule {
 	 		if ($action == CONS_ACTION_DELETE) {
 
 	 			$wS = ""; # whereStruct
+				$wTypes = "";
+				$wParams = array();
 	 			$kA = array(); # keyArray
-	 			$module->getKeys($wS,$kA,$data);
+				$module->getPreparedKeys($wS,$wTypes,$wParams,$kA,$data);
 	 			$data = $kA; // we want only the keys of the module which called the notification
 
 	 			if (isset($data[$module->keys[0]])) {
@@ -1797,8 +1998,10 @@ class CModule {
 		if (is_file($bck)) @unlink($bck);
 		$fd = fopen ($bck, "wb");
 		if ($fd) {
-			$sql = "SELECT * FROM ".$this->dbname;
-			$this->parent->dbo->query($sql,$r,$n);
+			$sql = array("SELECT" => array("*"), "FROM" => array($this->dbname), "WHERE" => array(), "GROUP" => array(), "ORDER" => array(), "LIMIT" => array(), "HAVING" => array(), "LEFT" => array());
+			$r = false;
+			$n = 0;
+			$this->parent->dbo->queryPrepared($this->parent->dbo->sqlarray_echo($sql),"",array(),$r,$n);
 			$baseLine = "INSERT INTO ".$this->dbname." (";
 			foreach ($this->fields as $fn=>&$f)
 				$baseLine .= $fn.",";
@@ -1840,4 +2043,3 @@ class CModule {
 	}
 
 }
-

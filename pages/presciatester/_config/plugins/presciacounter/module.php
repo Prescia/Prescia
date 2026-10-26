@@ -1,4 +1,4 @@
-<?	# -------------------------------- Presciatester counter test
+<?php	# -------------------------------- Presciatester counter test
 
 class mod_presciacounter extends CscriptedModule  {
 

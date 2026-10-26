@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 	"seo" => "SEO",
 	"alias" => "Apelido",
 	"metakey" => "Meta-keys",

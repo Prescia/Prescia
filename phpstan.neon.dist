@@ -1,0 +1,49 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    dynamicConstantNames:
+        - CONS_AFF_ERRORHANDLER
+        - CONS_AFF_ERRORHANDLER_NOWARNING
+        - CONS_CACHE
+        - CONS_DEVELOPER
+        - CONS_ECONOMICMODE
+        - CONS_HONEYPOT
+    # Level 3 is enabled after exploratory level-3 analysis reached zero diagnostics.
+    level: 3
+    bootstrapFiles:
+        - tools/phpstan-bootstrap.php
+    stubFiles:
+        - tools/phpstan-framework-stubs.php
+    paths:
+        - index.php
+        - prescia
+        - pages
+        - tests
+    excludePaths:
+        - */vendor/*
+        - */pages/_js/ckfinder/*
+    scanFiles:
+        - prescia/lib/basic.php
+        - prescia/lib/arrayToString.php
+        - prescia/lib/listFiles.php
+        - prescia/lib/inputSanatizing.php
+        - prescia/lib/datetime.php
+        - prescia/lib/removeSimbols.php
+        - prescia/lib/dirBundle.php
+        - prescia/lib/locateFile.php
+        - prescia/lib/locateAnyFile.php
+        - prescia/lib/dbo/cdbo.php
+        - prescia/lib/dbo/mysqli.php
+        - prescia/lib/sendMail.php
+        - prescia/lib/storeFile.php
+        - prescia/lib/quota.php
+        - prescia/lib/imgHandler.php
+        - prescia/lib/xmlHandler.php
+        - prescia/lib/ttree.php
+        - prescia/core.php
+        - prescia/coreFull.php
+        - prescia/tcexternal.php
+        - prescia/console.php
+        - tools/phpstan-dynamic-classes.php
+    reportUnmatchedIgnoredErrors: true

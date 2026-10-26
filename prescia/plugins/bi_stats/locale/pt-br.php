@@ -1,4 +1,4 @@
-<?  return array(
+<?php  return array(
 "stats"=>"Estatísticas",
 "hid" => "ID",
 "hits" => "hits",

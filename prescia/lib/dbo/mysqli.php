@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | mysqli - Mysqli database connector
   | NOTE: the connection on this module reffer to mysqli object. However, this class was optimized for ONE MYSQLI OBJECT RUNNING AT A TIME
   | These optimizations are noted where a #(*) exists (use of procedural mode for performance)
@@ -72,8 +73,10 @@ class CDBO_mysqli extends CDBO  {
     	$this->connection = false;
 	} // close
 
-	function query($sql, &$result, &$numrows, $debugmode= null) {
-		if ($this->delayedconn == 1) $this->connect();
+		function query($sql, &$result, &$numrows, $debugmode= null) {
+			$result = false;
+			$numrows = 0;
+			if ($this->delayedconn == 1) $this->connect();
 		if (!$this->connection) return false;
     	$this->dbc++;
     	if (is_array($sql)) $sql = $this->sqlarray_echo($sql);
@@ -95,9 +98,55 @@ class CDBO_mysqli extends CDBO  {
       			echo $sql."\n (echo from dbo)<br/>\n".$err;
       		return false;
     	}
-    } // query
+	    } // query
 
-	function simpleQuery($sql,$debugmode  = null) {
+    /**
+     * @param-out mixed $result Driver-specific result object or false.
+     * @param-out int $numrows Number of rows returned by the driver.
+     */
+    function queryPrepared($sql, $types, $params, &$result, &$numrows, $debugmode = null) {
+			$result = false;
+			$numrows = 0;
+				if ($this->delayedconn == 1) $this->connect();
+			if (!$this->connection || strlen($types) !== count($params)) return false;
+			$this->dbc++;
+			$numrows = 0;
+				try {
+					$stmt = $this->connection->prepare($sql);
+				} catch (Throwable $exception) {
+					$this->errorRaised = true;
+					$this->log[] = $exception->getMessage();
+					return false;
+				}
+			if ($stmt === false) {
+				$this->errorRaised = true;
+				$this->log[] = $this->connection->error;
+				return false;
+			}
+			$bind = array($types);
+			foreach ($params as $index => $value) $bind[] =& $params[$index];
+			if (!call_user_func_array(array($stmt, 'bind_param'), $bind) || !$stmt->execute()) {
+				$this->errorRaised = true;
+				$this->log[] = $stmt->error;
+				$stmt->close();
+				return false;
+			}
+				$result = $stmt->get_result();
+                    if ($result instanceof mysqli_result) $numrows = max(0, (int)$result->num_rows);
+				$stmt->close();
+			return true;
+		}
+
+		function fetchPrepared($sql, $types, $params, $abortOnError = false) {
+			$result = null; $numrows = 0;
+			if (!$this->queryPrepared($sql, $types, $params, $result, $numrows)) return false;
+			if (!($result instanceof mysqli_result) || $numrows < 1) return false;
+			$row = $result->fetch_row();
+			$result->free();
+			return $row[0] ?? false;
+		}
+
+		function simpleQuery($sql,$debugmode  = null) {
 		if ($this->delayedconn == 1) $this->connect();
 		if (!$this->connection) return false;
 		if (is_array($sql)) $sql = $this->sqlarray_echo($sql);

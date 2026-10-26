@@ -1,62 +1,109 @@
 
-	<div class="jumbotron">
-		<div class="container">
-			<h1>{_t}welcome_to_prescia{/t}</h1>
-			{CONTENTMAN}
-			<p><a class="btn btn-primary btn-lg" href="{vdir}{seo|about}" role="button">{_t}learn_more{/t} &raquo;</a></p>
-
+<section class="psc-hero">
+	<div class="container">
+		<div class="psc-hero-content">
+			<div class="psc-hero-badge">PHP Framework</div>
+			<h1 class="psc-hero-title">{_t}welcome_to_prescia{/t}</h1>
+			<div class="psc-hero-text">{CONTENTMAN}</div>
+			<div class="psc-hero-actions">
+				<a class="psc-btn-primary" href="{vdir}{seo|about}" role="button">
+					{_t}learn_more{/t} &rarr;
+				</a>
+				<a class="psc-btn-ghost" href="{vdir|/}{seo|download}" role="button">
+					{_t}download{/t}
+				</a>
+			</div>
 		</div>
 	</div>
+</section>
 
+<section class="psc-features">
 	<div class="container">
 		<div class="row">
 			<div class="col-md-4">
-				<h2>{_t}mvc{/t}</h2>
-				{CONTENTMAN2}
-				<p><a class="btn btn-default" href="{vdir|resources/}{seo|mvc}" title="{_t}mvc{/t}" role="button">{_t}learn_more{/t} &raquo;</a></p>
+				<div class="psc-card">
+					<div class="psc-card-icon">
+						<span class="glyphicon glyphicon-th-large"></span>
+					</div>
+					<h3>{_t}mvc{/t}</h3>
+					<div class="psc-card-text">{CONTENTMAN2}</div>
+					<a class="psc-card-link" href="{vdir|resources/}{seo|mvc}" title="{_t}mvc{/t}">
+						{_t}learn_more{/t} &rarr;
+					</a>
+				</div>
 			</div>
 			<div class="col-md-4">
-				<h2>{_t}simplicity{/t}</h2>
-				{CONTENTMAN3}
-				<p><a class="btn btn-default" href="{vdir|resources/}{seo|simplicity}" title="{_t}simplicity{/t}" role="button">{_t}learn_more{/t} &raquo;</a></p>
-			 </div>
+				<div class="psc-card">
+					<div class="psc-card-icon">
+						<span class="glyphicon glyphicon-flash"></span>
+					</div>
+					<h3>{_t}simplicity{/t}</h3>
+					<div class="psc-card-text">{CONTENTMAN3}</div>
+					<a class="psc-card-link" href="{vdir|resources/}{seo|simplicity}" title="{_t}simplicity{/t}">
+						{_t}learn_more{/t} &rarr;
+					</a>
+				</div>
+			</div>
 			<div class="col-md-4">
-				<h2>{_t}automatic_admin{/t}</h2>
-				{CONTENTMAN4}
-				<p><a class="btn btn-default" href="{vdir|resources/}{seo|plugins-admin}" title="{_t}automatic_admin{/t}" role="button">{_t}learn_more{/t} &raquo;</a></p>
+				<div class="psc-card">
+					<div class="psc-card-icon">
+						<span class="glyphicon glyphicon-cog"></span>
+					</div>
+					<h3>{_t}automatic_admin{/t}</h3>
+					<div class="psc-card-text">{CONTENTMAN4}</div>
+					<a class="psc-card-link" href="{vdir|resources/}{seo|plugins-admin}" title="{_t}automatic_admin{/t}">
+						{_t}learn_more{/t} &rarr;
+					</a>
+				</div>
 			</div>
 		</div>
+	</div>
+</section>
 
-	</div>
-	
-	<div class="container" style="margin-top:40px">
+<section class="psc-cta-section">
+	<div class="container">
 		<div class="row">
-			<div class="col-md-4">
-				<strong>Prescia PHP</strong><br/>
-				The highests level PHP Framework you will find<br/>
-				Try now!<br/>
-				New BSD license
+			<div class="col-sm-4">
+				<div class="psc-cta-block">
+					<span class="glyphicon glyphicon-certificate psc-cta-icon"></span>
+					<h4>Prescia PHP</h4>
+					<p>The highest-level PHP framework you will find. New BSD License. Try it now!</p>
+				</div>
 			</div>
-			<div class="col-md-4 text-center">
-				Keep the boat floating: Buy us a cup of coffee<br/><br/>
-				<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
-				<input type="hidden" name="cmd" value="_s-xclick"/>
-				<input type="hidden" name="hosted_button_id" value="6QXCS77NUF77Q"/>
-				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" style="border:0px" name="submit" alt="PayPal - The safer, easier way to pay online!"/>
-				<img alt="" style="border:0px" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1"/>
-				</form>
-				
+			<div class="col-sm-4">
+				<div class="psc-cta-block">
+					<span class="glyphicon glyphicon-heart psc-cta-icon"></span>
+					<h4>Support Prescia</h4>
+					<p>Keep the boat floating &mdash; buy us a cup of coffee!</p>
+					<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" style="margin-top:14px">
+						<input type="hidden" name="cmd" value="_s-xclick"/>
+						<input type="hidden" name="hosted_button_id" value="6QXCS77NUF77Q"/>
+						<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif"
+						       style="border:0" name="submit"
+						       alt="PayPal - The safer, easier way to pay online!"/>
+						<img alt="" style="border:0;display:none"
+						     src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1"/>
+					</form>
+				</div>
 			</div>
-			<div class="col-md-4 text-right">
-				<a href="https://www.facebook.com/PresciaFramework"><img src="{IMG_PATH}mm/fb.png" width="100" height="100" alt="Facebook" /></a>
-				<a href="https://github.com/Prescia"><img src="{IMG_PATH}mm/github.png" width="97" height="98" alt="Github" /></a>
-				<a href="https://twitter.com/PresciaPHP"><img src="{IMG_PATH}mm/twitter.png" width="100" height="100" alt="Twitter" /></a>
+			<div class="col-sm-4">
+				<div class="psc-cta-block">
+					<span class="glyphicon glyphicon-share psc-cta-icon"></span>
+					<h4>Follow Us</h4>
+					<p>Stay updated on releases, news and community discussions.</p>
+					<div class="psc-social-links">
+						<a href="https://www.facebook.com/PresciaFramework" class="psc-social-link" title="Facebook">
+							<span class="glyphicon glyphicon-thumbs-up"></span>
+						</a>
+						<a href="https://github.com/Prescia" class="psc-social-link" title="GitHub">
+							<span class="glyphicon glyphicon-console"></span>
+						</a>
+						<a href="https://twitter.com/PresciaPHP" class="psc-social-link" title="Twitter">
+							<span class="glyphicon glyphicon-send"></span>
+						</a>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
-	
-	{_removemob}
-	<script type="text/javascript"><!--
-		$(".jumbotron").css('opacity', 0.8);
-	//--></script>
-	{/removemob}
+</section>

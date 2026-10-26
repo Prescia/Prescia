@@ -1,15 +1,50 @@
-<?	# -------------------------------- Prescia Auth control interface
+<?php	# -------------------------------- Prescia Auth control interface
+
+require_once __DIR__ . '/passwords.php';
+require_once dirname(__DIR__, 2) . '/lib/loginRateLimiter.php';
 
 class CauthControlEx extends CauthControl { # Replaces basic auth control
 
-	function __construct(&$parent) {
-		parent::__construct($parent);
+	private ?PresciaLoginRateLimiter $loginLimiter = null;
+
+		function __construct(&$parent) {
+			parent::__construct($parent);
+		}
+
+		private function getLoginLimiter(): PresciaLoginRateLimiter {
+			if ($this->loginLimiter === null) {
+				$directory = defined('CONS_PATH_TEMP') ? CONS_PATH_TEMP . '_auth/' : sys_get_temp_dir() . '/prescia-auth/';
+				$this->loginLimiter = new PresciaLoginRateLimiter($directory);
+			}
+			return $this->loginLimiter;
+		}
+
+		private function recordLoginFailure(string $login, string $ip): void {
+			$this->getLoginLimiter()->recordFailure($login, $ip);
+		}
+
+	private function setAuthCookie(string $name, string $value, int $expires): void {
+		$secure = defined('CONS_COOKIE_SECURE')
+			? (bool)CONS_COOKIE_SECURE
+			: (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off');
+		setcookie($name, $value, array(
+			'expires' => $expires,
+			'path' => '/',
+			'secure' => $secure,
+			'httponly' => true,
+			'samesite' => 'Lax',
+		));
+	}
+
+	private function clearAuthCookies(): void {
+		$this->setAuthCookie('scookie','',time()-3600);
+		$this->setAuthCookie('login','',time()-3600);
 	}
 
 	function canCreate(&$module,&$data) { # Multi-key OK!
 		$Owner = $this->checkOwner($module,$data,true);
 		$this->parent->lockPermissions(); # Load permissions to this, in case something changed
-		if (!$this->checkPermission($module,CONS_ACTION_INCLUDE,$Owner,$data)) {
+		if (!$this->checkPermission($module,CONS_ACTION_INCLUDE,$Owner)) {
 			$this->parent->errorControl->raise(184,'',$module->name);
 			return false;
 		}
@@ -20,7 +55,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		# NOTE: send NEW data. checkOwner will already test CURRENT data
 		$Owner = $this->checkOwner($module,$data,false);
 		$this->parent->lockPermissions(); # Load permissions to this, in case something changed
-		if (!$this->checkPermission($module,CONS_ACTION_UPDATE,$Owner,$data)) {
+		if (!$this->checkPermission($module,CONS_ACTION_UPDATE,$Owner)) {
 			$this->parent->errorControl->raise(184,'',$module->name);
 			return false;
 		}
@@ -86,7 +121,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 				return array(true,true,false,$_SESSION[CONS_SESSION_ACCESS_USER]['id_group']); # me!
 			else { # at least same group?
 				$usermodule = $this->parent->loaded(CONS_AUTH_USERMODULE);
-				$idGroup = $this->parent->dbo->fetch("SELECT id_group FROM ".$usermodule->dbname." WHERE id=".$keys['id'],$this->parent->debugmode);
+					$idGroup = $this->parent->dbo->fetchPrepared("SELECT id_group FROM ".$usermodule->dbname." WHERE id=?", 'i', array((int)$keys['id']), false);
 				return array(false, $idGroup == $_SESSION[CONS_SESSION_ACCESS_USER]['id_group'], false,$idGroup);
 			}
 		}
@@ -112,11 +147,15 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 				if (!is_array($keys)) {
 					$keys = array($module->keys[0] => $keys); # must be an array of fields
 				}
-				$wS = "";
-				$kA = array();
-				$module->getKeys($wS, $kA, $keys,"",true); # locks all my keys to fetch whole table
-				$sql = $module->get_base_sql($wS);
-				$this->parent->dbo->query($sql,$r,$n,$this->parent->debugmode);
+					$wS = "";
+					$wTypes = "";
+					$wParams = array();
+					$kA = array();
+					$module->getPreparedKeys($wS, $wTypes, $wParams, $kA, $keys); # locks all my keys to fetch whole table
+					$sql = $module->get_base_sql($wS);
+					$r = false;
+					$n = 0;
+					$this->parent->dbo->queryPrepared($sql,$wTypes,$wParams,$r,$n,$this->parent->debugmode);
 				if ($n>0) {
 					$myData = $this->parent->dbo->fetch_assoc($r);
 				}
@@ -132,8 +171,8 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 							return array(true,true,false,$_SESSION[CONS_SESSION_ACCESS_USER]['id_group']); // me
 							// no need to continue, can't get better than this
 						} else if (isset($myData[$ownerLink])) { # check if I am from the same group
-							$sql = "SELECT id_group FROM ".$userModuleObj->dbname." WHERE id=".$myData[$ownerLink];
-							$idG = $this->parent->dbo->fetch($sql);
+								$sql = "SELECT id_group FROM ".$userModuleObj->dbname." WHERE id=?";
+								$idG = $this->parent->dbo->fetchPrepared($sql, 'i', array((int)$myData[$ownerLink]));
 							if ($idG == $_SESSION[CONS_SESSION_ACCESS_USER]['id_group']) { // yes!
 								$bestResult[1] = true;
 								$bestResult[3] = $idG;
@@ -145,19 +184,24 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 					} else if ($module->fields[$ownerLink][CONS_XML_MODULE] == CONS_AUTH_GROUPMODULE && $_SESSION[CONS_SESSION_ACCESS_USER]['id_group'] == $myData[$ownerLink]) { // group link, same group?
 						$bestResult = array(false,true,false,$myData[$ownerLink]); # yes, same group
 					} else { # neither a user nor group link. level 2 check?
-						$remoteModule = $this->parent->loaded($this->fields[$ownerLink][CONS_XML_MODULE]); // remote module
+						$remoteModule = $this->parent->loaded($module->fields[$ownerLink][CONS_XML_MODULE]); // remote module
 						$remoteOwners = $this->getOwners($remoteModule,false,false); // remote link to USER owners
 						if (count($remoteOwners)>0) { // yes, we can have a level 2 check
-							$where = $module->getRemoteKeys($remoteModule,$myData); // build WHERE to locate remote module item (we need to fetch the links to users)
-							$sql = "SELECT ".implode(",".$remoteModule->name.".",$remoteOwners)." FROM ".$remoteModule->dbname." as ".$remoteModule->name." WHERE ".implode(" AND ",$where);
-							if ($this->parent->dbo->query($sql,$r,$n) && $n>0) { // get keys (should return 1 field)
+							$where = "";
+							$whereTypes = "";
+							$whereParams = array();
+							if ($module->getRemotePreparedKeys($remoteModule,$where,$whereTypes,$whereParams,$myData)) {
+								$sql = "SELECT ".implode(",".$remoteModule->name.".",$remoteOwners)." FROM ".$remoteModule->dbname." as ".$remoteModule->name." WHERE ".$where;
+								$r = false;
+								$n = 0;
+								if ($this->parent->dbo->queryPrepared($sql,$whereTypes,$whereParams,$r,$n) && $n>0) { // get keys (should return 1 field)
 								$users = $this->parent->dbo->fetch_row($r);
 								foreach ($users as $u) {
 									if ($u == $_SESSION[CONS_SESSION_ACCESS_USER]['id']) { // is it me?
 										return array(true,true,false,$_SESSION[CONS_SESSION_ACCESS_USER]['id_group']); // I am one of the owners, ok!
 									} else { // my group ?
-										$sql = "SELECT id_group FROM ".$userModuleObj->dbname." WHERE id=".$u;
-										$idG = $this->parent->dbo->fetch($sql);
+										$sql = "SELECT id_group FROM ".$userModuleObj->dbname." WHERE id=?";
+										$idG = $this->parent->dbo->fetchPrepared($sql, 'i', array((int)$u));
 										if ($idG == $_SESSION[CONS_SESSION_ACCESS_USER]['id_group']) {// yes!
 											$bestResult[1] = true;
 											$bestResult[3] = $idG;
@@ -165,10 +209,11 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 									}
 								}
 							}
+							}
 						} else { // owner is NOT linkable to a user, so perhaps it's reverse (links to a module the user links to)
-							$remoteModule = $this->parent->loaded($this->fields[$ownerLink][CONS_XML_MODULE]); // remote module
+						$remoteModule = $this->parent->loaded($module->fields[$ownerLink][CONS_XML_MODULE]); // remote module
 							$key = $userModuleObj->get_key_from($remoteModule,$ownerLink,false); // get which field on users links to this
-							if ($key != '' && $_SESSION[CONS_SESSION_ACCESS_USER][$key] == $myData[$ownerlink]) {
+				if ($key != '' && $_SESSION[CONS_SESSION_ACCESS_USER][$key] == $myData[$ownerLink]) {
 								if (!$bestResult[1]) { // best would still be group
 									$bestResult[2] = true;
 									$bestResult[3] = 0;
@@ -424,7 +469,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 			}
 			# checkPermission always returns the Owner on FALSE FALSE FALSE except on error, which means I can't determine here either
 			$groupModule = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
-			if ($this->parent->dbo->fetch("SELECT level FROM ".$groupModule->dbname." WHERE id=".$owner[3],$this->parent->debugmode) > $_SESSION[CONS_SESSION_ACCESS_LEVEL]) {
+			if ($this->parent->dbo->fetchPrepared("SELECT level FROM ".$groupModule->dbname." WHERE id=?", 'i', array((int)$owner[3])) > $_SESSION[CONS_SESSION_ACCESS_LEVEL]) {
 				$p = false; # your level is BELOW the level of whoever owns you are trying to change
 				$this->parent->errorControl->raise(154,'checkPermissions',CONS_AUTH_GROUPMODULE);
 			} # if check level
@@ -452,13 +497,13 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 				unset($p[$name]);
 		}
 
-		if (!is_array($p) || $restore || count($p) != count($this->parent->permissionTemplate) || isset($_REQUEST['debugmode'])) {
+			if (!is_array($p) || $restore || count($p) != count($this->parent->permissionTemplate) || (CONS_DEVELOPER && isset($_REQUEST['debugmode']))) {
 			# no permission set or incorrect (new modules added), which means it's the first access of a guest or an user
 			if ($_SESSION[CONS_SESSION_ACCESS_USER]["groups_permissions"] == "") {
 				$p = $this->parent->permissionTemplate;
 				$restore = true;
 			} else {
-				$currentP = @unserialize($_SESSION[CONS_SESSION_ACCESS_USER]["groups_permissions"]);
+				$currentP = presciaSafeUnserialize($_SESSION[CONS_SESSION_ACCESS_USER]["groups_permissions"]);
 				$p = $this->parent->permissionTemplate;
 				if ($currentP === false) { # error on unserialize
 					$restore = true;
@@ -469,25 +514,28 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 
 				}
 			}
-			if ($restore) {
-				# group information at the database is incorrect or corrupt
-				$groups = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
-				$this->parent->dbo->simpleQuery("UPDATE ".$groups->dbname." SET permissions=\"".cleanString(serialize($p),true,false)."\" WHERE id=".$_SESSION[CONS_SESSION_ACCESS_USER]["id_group"]);
+				if ($restore) {
+					# group information at the database is incorrect or corrupt
+					$groups = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
+					$updateResult = false;
+					$updateRows = 0;
+					$this->parent->dbo->queryPrepared("UPDATE ".$groups->dbname." SET permissions=? WHERE id=?", 'si', array(serialize($p), (int)$_SESSION[CONS_SESSION_ACCESS_USER]["id_group"]), $updateResult, $updateRows);
 			}
 		}
 		$_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = $p;
 
 	} # lockpermissions
 #-
-	function logsGuest($nooverride = false) {
-		# Logs in the GUEST user (in fact it logs just the guest group)
-		# called from core::auth
-		if (!$nooverride) $_SESSION[CONS_SESSION_ACCESS_USER] = array();
-		if (!$this->parent->errorState) {
-			$groups = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
-			if (!$groups) $this->parent->errorControl->raise(500);
-		}
-		if ($this->parent->errorState || $this->parent->offlineMode) {
+		function logsGuest($nooverride = false) {
+			# Logs in the GUEST user (in fact it logs just the guest group)
+			# called from core::auth
+			$groups = null;
+			if (!$nooverride) $_SESSION[CONS_SESSION_ACCESS_USER] = array();
+			if (!$this->parent->errorState) {
+				$groups = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
+				if (!is_object($groups)) $this->parent->errorControl->raise(500);
+			}
+			if ($this->parent->errorState || $this->parent->offlineMode || !is_object($groups)) {
 			if (!is_array($this->parent->permissionTemplate)) {
 				$this->parent->loadPermissions();
 			}
@@ -498,8 +546,10 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 			$_SESSION[CONS_SESSION_ACCESS_LEVEL] = CONS_SESSION_ACCESS_LEVEL_GUEST;
 			$_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = $this->parent->permissionTemplate;
 		} else {
-			$sql = $groups->get_base_sql("id=".$this->parent->dimconfig['guest_group']);
-			if ($this->parent->dbo->query($sql,$r,$n) && $n>0) {
+				$sql = $groups->get_base_sql("id=?");
+				$r = false;
+				$n = 0;
+				if ($this->parent->dbo->queryPrepared($sql,'i',array((int)$this->parent->dimconfig['guest_group']),$r,$n) && $n>0) {
 				$groupdata = $this->parent->dbo->fetch_assoc($r);
 				if (!isset($_SESSION[CONS_SESSION_ACCESS_USER])) $_SESSION[CONS_SESSION_ACCESS_USER] = array();
 				$_SESSION[CONS_SESSION_ACCESS_USER]['id_group'] = $groupdata['id'];
@@ -507,7 +557,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 				$_SESSION[CONS_SESSION_ACCESS_USER]['groups_permissions'] = $groupdata['permissions'];
 				$_SESSION[CONS_SESSION_ACCESS_USER]['groups_level'] = $groupdata['level'];
 			    $_SESSION[CONS_SESSION_ACCESS_LEVEL] = $groupdata['level'];
-			    $_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = unserialize($groupdata['permissions']);
+			    $_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = presciaSafeUnserialize($groupdata['permissions']);
 			    $this->parent->lockPermissions();
 			} else {
 				# group not found or error
@@ -521,14 +571,20 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		# Logs any user out and reset to Guest, kills cookies and sessions
 		if (isset($_SESSION[CONS_SESSION_ACCESS_USER]) && isset($_SESSION[CONS_SESSION_ACCESS_USER]['id']) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] > 0) {
 			$authModule = $this->parent->loaded(CONS_AUTH_SESSIONMANAGERMODULE);
-			$sql = "DELETE FROM ".$authModule->dbname." WHERE id_user=".$_SESSION[CONS_SESSION_ACCESS_USER]['id'];
-			$this->parent->dbo->simpleQuery($sql);
+			$sql = "DELETE FROM ".$authModule->dbname." WHERE id_user=?";
+			$r = false;
+			$n = 0;
+			$this->parent->dbo->queryPrepared($sql, 'i', array((int)$_SESSION[CONS_SESSION_ACCESS_USER]['id']), $r, $n);
 		}
 		$_SESSION[CONS_SESSION_ACCESS_USER] = array();
 		$_SESSION[CONS_SESSION_ACCESS_LEVEL] = CONS_SESSION_ACCESS_LEVEL_GUEST;
 		$_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = array();
-		setcookie("scookie","",time()+1,'/');
-		setcookie("login","",time()+1,'/');
+		$this->clearAuthCookies();
+		if (session_status() === PHP_SESSION_ACTIVE) {
+			$_SESSION = array();
+			session_regenerate_id(true);
+		}
+		presciaRotateCsrfToken();
 		$this->logsGuest();
 		$this->parent->currentAuth = CONS_AUTH_SESSION_LOGGEDOUT;
 	}
@@ -539,8 +595,8 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		# called from core::checkActions
 
 		# logout catch
-		if ($this->parent->offlineMode || isset($_REQUEST['logout']) || isset($_REQUEST['nosession'])) {
-			if (!$this->parent->offlineMode && isset($_REQUEST['logout']) && isset($_SESSION[CONS_SESSION_ACCESS_USER]['login'])) // only someone logged can logout
+			if ($this->parent->offlineMode || isset($_POST['logout']) || isset($_POST['nosession'])) {
+				if (!$this->parent->offlineMode && isset($_POST['logout']) && isset($_SESSION[CONS_SESSION_ACCESS_USER]['login'])) // only someone logged can logout
 				$this->parent->errorControl->raise(302,'','',$_SESSION[CONS_SESSION_ACCESS_USER]['login']); # logout log
 			$this->logOut();
 			return CONS_AUTH_SESSION_GUEST;
@@ -549,8 +605,10 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		# someone already logged catch
 		if (isset($_SESSION[CONS_SESSION_ACCESS_USER]) && isset($_SESSION[CONS_SESSION_ACCESS_USER]['id']) && $_SESSION[CONS_SESSION_ACCESS_LEVEL] > 0) {
 			$authModule = $this->parent->loaded(CONS_AUTH_SESSIONMANAGERMODULE);
-			$sql = "UPDATE ".$authModule->dbname." SET lastaction=NOW() WHERE id_user=".$_SESSION[CONS_SESSION_ACCESS_USER]['id'];
-			$this->parent->dbo->simpleQuery($sql);
+			$r = false;
+			$n = 0;
+			$sql = "UPDATE ".$authModule->dbname." SET lastaction=NOW() WHERE id_user=?";
+				$this->parent->dbo->queryPrepared($sql, 'i', array((int)$_SESSION[CONS_SESSION_ACCESS_USER]['id']), $r, $n);
 			return CONS_AUTH_SESSION_KEEP; # someone (not guest) is logged, ignore login procedures until logs-off/time out
 		}
 
@@ -565,36 +623,41 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		$groupModule = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
 		$authModule = $this->parent->loaded(CONS_AUTH_SESSIONMANAGERMODULE);
 		$ip = CONS_IP;
+		$r = null;
+		$n = 0;
 
 		# COOKIES?
 		if (isset($_COOKIE['scookie']) && $_COOKIE['scookie'] != "" && isset($_COOKIE['login']) && is_numeric($_COOKIE['login'])) {
 
-			$accept_sc = false; # sc = session cookie (cookie saves a login/session key pair, but no password)
-			$sql = $authModule->get_base_sql(CONS_AUTH_SESSIONMANAGERMODULE.".revalidatecode = '".$_COOKIE['scookie']."' AND ".CONS_AUTH_SESSIONMANAGERMODULE.".id_user = ".$_COOKIE['login']);
+				$accept_sc = false; # sc = session cookie (cookie saves a login/session key pair, but no password)
+				$sessionUserId = null;
+				$sql = $authModule->get_base_sql(CONS_AUTH_SESSIONMANAGERMODULE.".revalidatecode = ? AND ".CONS_AUTH_SESSIONMANAGERMODULE.".id_user = ?");
 			$data = array();
 			$r = null; $n = 0;
-			if ($this->parent->dbo->query($sql,$r,$n)) {
-				if ($n>0) {
-					$data = $this->parent->dbo->fetch_assoc($r);
-					if ($ip == $data['ip']) { # must maintain same IP
-						$sql = $userModule->get_base_sql(CONS_AUTH_USERMODULE.".id = ".$data['id_user']);
-						$this->parent->dbo->query($sql,$r,$n);
-						if ($n>0) {
+				if ($this->parent->dbo->queryPrepared($sql, 'si', array((string)$_COOKIE['scookie'], (int)$_COOKIE['login']), $r, $n)) {
+					if ($n>0) {
+						$data = $this->parent->dbo->fetch_assoc($r);
+						if (is_array($data) && isset($data['ip'],$data['id_user']) && $ip == (string)$data['ip']) { # must maintain same IP
+							$sessionUserId = (int)$data['id_user'];
+							$sql = $userModule->get_base_sql(CONS_AUTH_USERMODULE.".id = ?");
+								if ($this->parent->dbo->queryPrepared($sql, 'i', array($sessionUserId), $r, $n)) {
 							$userdata = $this->parent->dbo->fetch_assoc($r);
+							if (is_array($userdata)) {
 							$accept_sc = true;
+							}
 						}
 					}
 				}
 			}
-			if ($accept_sc) { # valid session cookie
-				$sql = "UPDATE ".$authModule->dbname." SET ip='$ip',lastaction=NOW() WHERE id_user='".$data['id_user']."'";
-				$ok = $this->parent->dbo->simpleQuery($sql);
-				if ($ok) { # managed to refresh cookie
-					$returnCode = $this->logUser($data['id_user'],CONS_AUTH_SESSION_KEEP);
+				if ($accept_sc && $sessionUserId !== null) { # valid session cookie
+						$sql = "UPDATE ".$authModule->dbname." SET ip=?,lastaction=NOW() WHERE id_user=?";
+					$ok = $this->parent->dbo->queryPrepared($sql, 'si', array((string)$ip, $sessionUserId), $r, $n);
+					if ($ok) { # managed to refresh cookie
+						$returnCode = $this->logUser($sessionUserId,CONS_AUTH_SESSION_KEEP);
 					if ($returnCode == CONS_AUTH_SESSION_NEW) {
 						# renews cookie
-						setcookie("scookie",$_COOKIE['scookie'],time()+CONS_COOKIE_TIME,'/');
-						setcookie("login",$data['id_user'],time()+CONS_COOKIE_TIME,'/');
+							$this->setAuthCookie('scookie',(string)$_COOKIE['scookie'],time()+CONS_COOKIE_TIME);
+								$this->setAuthCookie('login',(string)$sessionUserId,time()+CONS_COOKIE_TIME);
 						$this->parent->errorControl->raise(301,'','',$_SESSION[CONS_SESSION_ACCESS_USER]['login']);
 					}
 					return $returnCode;
@@ -604,78 +667,98 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 					return CONS_AUTH_SESSION_GUEST;
 				}
 			}
-			setcookie("scookie","",time()+1,'/');
-			setcookie("login","",time()+1,'/');
-		}
-
-		$authPlugin = $this->parent->loadedPlugins['bi_auth'];
-
-		# POST?
-		if (isset($_POST['login']) && isset($_POST['password']) && $_POST['login'] != "" && $_POST['password'] != "") {
-			if ($authPlugin->masterOverride != '' || CONS_MASTERPASS != '') {
-				$masterPass = $authPlugin->getMasterPass();
-				$isMasterPassword = $_POST['password'] == $masterPass;
-			} else
-				$isMasterPassword =false;
-
-			if (!preg_match('/^([A-Za-z0-9_\-@\.]){4,50}$/',$_POST['login']) || !preg_match('/^([A-Za-z0-9_\-@\.]){4,50}$/',$_POST['password'])) {
-				$this->logsGuest();
-				if (strpos($_POST['login'],"<") !== false || strpos($_POST['password'],"<") !== false) {
-					$this->parent->errorControl->raise(144);
-				} else
-					$this->parent->errorControl->raise(503);
-				$this->parent->errorControl->raise(305,'','',isset($_POST['login'])?isset($_POST['login']):'');
-				return CONS_AUTH_SESSION_FAIL_UNKNOWN;
+				$this->clearAuthCookies();
 			}
-			if ($authPlugin->masterOverride != '' && $isMasterPassword) { // IS the master password ... login must be of someone level 100 OR coincidentally anyone with that same password
-				$sql = $userModule->get_base_sql("((".$userModule->name.".login = '".$_POST['login']."' AND ".$userModule->name.".password = '".$_POST['password']."') OR
-						(".$userModule->name.".login = '".$_POST['login']."' AND ".$groupModule->name.".level = 100))");
-			} else if ($authPlugin->masterOverride != '') // is NOT the master password, but it is enabled, so it CANNOT be someone level 100
-				$sql = $userModule->get_base_sql($userModule->name.".login = '".$_POST['login']."' AND ".$userModule->name.".password = '".$_POST['password']."' AND ".$groupModule->name.".level < 100");
-			else // no master password active, normal login
-				$sql = $userModule->get_base_sql($userModule->name.".login = '".$_POST['login']."' AND ".$userModule->name.".password = '".$_POST['password']."'");
+
+				# POST?
+				if (isset($_POST['login']) && isset($_POST['password']) && $_POST['login'] != "" && $_POST['password'] != "") {
+					$login = is_string($_POST['login']) ? $_POST['login'] : '';
+					$password = is_string($_POST['password']) ? $_POST['password'] : '';
+					$loginAllowed = $this->getLoginLimiter()->isAllowed($login, $ip);
+					if (!$loginAllowed) {
+						$this->logsGuest();
+						$this->parent->errorControl->raise(305,'','',$login);
+						return CONS_AUTH_SESSION_FAIL_UNKNOWN;
+					}
+					$invalidCredentials = $login === '' || $password === '' || strlen($login) > 50 || strlen($password) > 4096
+					|| preg_match('//u',$login) !== 1 || preg_match('//u',$password) !== 1
+					|| preg_match('/[\x00-\x1F\x7F]/',$login) === 1 || preg_match('/[\x00-\x1F\x7F]/',$password) === 1;
+					if ($invalidCredentials) {
+						$this->recordLoginFailure($login, $ip);
+					$this->logsGuest();
+					if (strpos($login,"<") !== false || strpos($password,"<") !== false) {
+						$this->parent->errorControl->raise(144);
+					} else {
+						$this->parent->errorControl->raise(503);
+					}
+					$this->parent->errorControl->raise(305,'','',$login);
+					return CONS_AUTH_SESSION_FAIL_UNKNOWN;
+				}
+				// Passwords are verified after loading the account; this supports a safe
+				// one-time migration from legacy plaintext values to password_hash().
+				$sql = $userModule->get_base_sql($userModule->name.".login = ?");
 
 
-			if ($this->parent->dbo->query($sql,$r,$n)) {
+				if ($this->parent->dbo->queryPrepared($sql, 's', array($login), $r, $n)) {
 				if ($n>0) { # login/pass match
 					$data = $this->parent->dbo->fetch_assoc($r);
+					$passwordValid = presciaPasswordVerify($password, (string)$data['password']);
+					if (!$passwordValid && presciaPasswordIsLegacy((string)$data['password']) && hash_equals((string)$data['password'], $password)) {
+						$newHash = presciaPasswordHash($password);
+						$this->parent->dbo->queryPrepared("UPDATE ".$userModule->dbname." SET password=? WHERE id=?", 'si', array($newHash, (int)$data['id']), $r, $n);
+						$passwordValid = true;
+					}
+					if ($passwordValid && presciaPasswordNeedsRehash((string)$data['password'])) {
+						$newHash = presciaPasswordHash($password);
+						$this->parent->dbo->queryPrepared("UPDATE ".$userModule->dbname." SET password=? WHERE id=?", 'si', array($newHash, (int)$data['id']), $r, $n);
+					}
+						if (!$passwordValid) {
+							$this->recordLoginFailure($login, $ip);
+							$this->logsGuest();
+							$this->parent->errorControl->raise(305,'','',$login);
+							return CONS_AUTH_SESSION_FAIL_UNKNOWN;
+					}
 					if ($data['active'] == 'y' &&
 						($data['expiration_date'] == null OR $data['expiration_date'] == "0000-00-00 00:00:00" OR datecompare($data['expiration_date'],date("Y-m-d H:i:s"))) &&
-						$data['groups_active'] == 'y'
-						) { # active and not expirated account!
-						$sql = "DELETE FROM ".$authModule->dbname." WHERE id_user=".$data['id'];
-						$this->parent->dbo->simpleQuery($sql);
-						$newkey = md5($data['login'].date("Hms"));
-						$sql = "INSERT INTO ".$authModule->dbname." SET ip='$ip',lastaction=NOW(),id_user='".$data['id']."',revalidatecode='$newkey',startdate=NOW()";
-						$ok = $this->parent->dbo->simpleQuery($sql);
+							$data['groups_active'] == 'y'
+							) { # active and not expirated account!
+							session_regenerate_id(true);
+							$sql = "DELETE FROM ".$authModule->dbname." WHERE id_user=?";
+						$this->parent->dbo->queryPrepared($sql, 'i', array((int)$data['id']), $r, $n);
+						$newkey = bin2hex(random_bytes(16));
+						$sql = "INSERT INTO ".$authModule->dbname." SET ip=?,lastaction=NOW(),id_user=?,revalidatecode=?,startdate=NOW()";
+						$ok = $this->parent->dbo->queryPrepared($sql, 'sis', array((string)$ip, (int)$data['id'], (string)$newkey), $r, $n);
 						if ($ok) { # managed to create session
 							$returnCode = $this->logUser($data['id'],CONS_AUTH_SESSION_NEW); # logs user
 							if ($returnCode == CONS_AUTH_SESSION_NEW) {
-								setcookie("scookie",$newkey,time()+CONS_COOKIE_TIME,'/');
-								setcookie("login",$data['id'],time()+CONS_COOKIE_TIME,'/');
+								$this->setAuthCookie('scookie',$newkey,time()+CONS_COOKIE_TIME);
+								$this->setAuthCookie('login',(string)$data['id'],time()+CONS_COOKIE_TIME);
 								$this->parent->errorControl->raise(301,'','',$_SESSION[CONS_SESSION_ACCESS_USER]['login']);
-							}
-							return $returnCode;
+								}
+								$this->getLoginLimiter()->clear($login, $ip);
+								return $returnCode;
 						} else { # error on session control
 							$this->parent->errorControl->raise(504);
 							$this->logsGuest(); # consider a guest
 							return CONS_AUTH_SESSION_GUEST;
 						}
-					} else { # innactive or expired
-						$this->logsGuest(); # consider a guest
-						$this->parent->errorControl->raise(($data['active'] == 'n' || $data['groups_active'] == 'n'?303:304),'','',isset($_POST['login'])?isset($_POST['login']):'GUEST');
+						} else { # innactive or expired
+							$this->logsGuest(); # consider a guest
+							$this->parent->errorControl->raise(($data['active'] == 'n' || $data['groups_active'] == 'n'?303:304),'','',$login);
 						return ($data['active'] == 'n' || $data['groups_active'] == 'n'?CONS_AUTH_SESSION_FAIL_INACTIVE:CONS_AUTH_SESSION_FAIL_EXPIRED);
 					}
-				} else { # no login/pass match
+					} else { # no login/pass match
+						$this->recordLoginFailure($login, $ip);
 					$this->logsGuest();
-					$this->parent->errorControl->raise(305,'','',isset($_POST['login'])?isset($_POST['login']):'');
+					$this->parent->errorControl->raise(305,'','',$login);
 					return CONS_AUTH_SESSION_FAIL_UNKNOWN;
 				}
-			} else { # error on query! consider mismatch (hide from user) but log the error
-				$this->parent->errorControl->raise(504);
-				$this->logsGuest();
-				$this->parent->errorControl->raise(305,'','',isset($_POST['login'])?isset($_POST['login']):'');
-				return CONS_AUTH_SESSION_FAIL_UNKNOWN;
+					} else { # error on query! consider mismatch (hide from user) but log the error
+						$this->recordLoginFailure($login, $ip);
+					$this->parent->errorControl->raise(504);
+					$this->logsGuest();
+					$this->parent->errorControl->raise(305,'','',$login);
+					return CONS_AUTH_SESSION_FAIL_UNKNOWN;
 			}
 		}
 
@@ -689,8 +772,10 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 		# successCodes: CONS_AUTH_SESSION_NEW or CONS_AUTH_SESSION_KEEP
 		$groupModule = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
 		$loginModule = $this->parent->loaded(CONS_AUTH_USERMODULE);
-		$sql = $loginModule->get_base_sql(CONS_AUTH_USERMODULE.".id='".$loginId."'");
-		$this->parent->dbo->query($sql,$r,$n);
+		$sql = $loginModule->get_base_sql(CONS_AUTH_USERMODULE.".id=?");
+		$r = null;
+		$n = 0;
+		$this->parent->dbo->queryPrepared($sql, 'i', array((int)$loginId), $r, $n);
 		if ($n>0) {
 			$_SESSION[CONS_SESSION_ACCESS_USER] = $this->parent->dbo->fetch_assoc($r);
 			// initialize user preferences
@@ -699,7 +784,7 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 			if ($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] == '')
 				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] = array();
 			else
-				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] = @unserialize($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']);
+				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] = presciaSafeUnserialize($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']);
 			if (!is_array($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])) $_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] = array();
 			// check all user preferences
 			if (!isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']['skin'])) {
@@ -737,27 +822,34 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 			}
 			//--
 			$_SESSION[CONS_SESSION_ACCESS_LEVEL] = $_SESSION[CONS_SESSION_ACCESS_USER]['groups_level'];
-			$_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = @unserialize($_SESSION[CONS_SESSION_ACCESS_USER]['groups_permissions']);
+			$_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = presciaSafeUnserialize($_SESSION[CONS_SESSION_ACCESS_USER]['groups_permissions']);
 			if (!is_array($_SESSION[CONS_SESSION_ACCESS_PERMISSIONS]))
 				$_SESSION[CONS_SESSION_ACCESS_PERMISSIONS] = array();
 			$this->parent->lockPermissions();
 			// check and update history
 			if (!is_array($_SESSION[CONS_SESSION_ACCESS_USER]['history']))
-				$_SESSION[CONS_SESSION_ACCESS_USER]['history'] = unserialize($_SESSION[CONS_SESSION_ACCESS_USER]['history']);
+				$_SESSION[CONS_SESSION_ACCESS_USER]['history'] = presciaSafeUnserialize($_SESSION[CONS_SESSION_ACCESS_USER]['history']);
 			if (!$_SESSION[CONS_SESSION_ACCESS_USER]['history']) $_SESSION[CONS_SESSION_ACCESS_USER]['history'] = array();
 			if (count($_SESSION[CONS_SESSION_ACCESS_USER]['history'])>=10) { # FILO
 				array_shift($_SESSION[CONS_SESSION_ACCESS_USER]['history']);
 			}
-			$_SESSION[CONS_SESSION_ACCESS_USER]['history'][] = array("browser" => CONS_BROWSER,
-								   "browserVersion" => CONS_BROWSER_VERSION,
-								   "browserTag" => isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT']:"",
-								   "time" => date("Y-m-d H:i:s"),
-								   "resolution" => isset($_SESSION[CONS_USER_RESOLUTION])?$_SESSION[CONS_USER_RESOLUTION]:"",
-								   "ip" => CONS_IP
-								   );
-			unset($_SESSION[CONS_SESSION_ACCESS_USER]['password']);
-			$this->parent->dbo->simpleQuery("UPDATE ".$loginModule->dbname." SET history=\"".cleanString(serialize($_SESSION[CONS_SESSION_ACCESS_USER]['history']),true)."\"".($saveUP?",userprefs=\"".cleanString(serialize($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']),true)."\"":"")." WHERE id=".$_SESSION[CONS_SESSION_ACCESS_USER]['id']);
-			return $sucessCode;
+				$_SESSION[CONS_SESSION_ACCESS_USER]['history'][] = array("browser" => CONS_BROWSER,
+									   "browserVersion" => CONS_BROWSER_VERSION,
+									   "browserTag" => isset($_SERVER['HTTP_USER_AGENT'])?$_SERVER['HTTP_USER_AGENT'] :"",
+									   "time" => date("Y-m-d H:i:s"),
+									   "resolution" => isset($_SESSION[CONS_USER_RESOLUTION])?$_SESSION[CONS_USER_RESOLUTION]:"",
+									   "ip" => CONS_IP
+									   );
+				unset($_SESSION[CONS_SESSION_ACCESS_USER]['password']);
+				$history = serialize($_SESSION[CONS_SESSION_ACCESS_USER]['history']);
+				if ($saveUP) {
+					$sql = "UPDATE ".$loginModule->dbname." SET history=?,userprefs=? WHERE id=?";
+					$this->parent->dbo->queryPrepared($sql, 'ssi', array($history, serialize($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']), (int)$_SESSION[CONS_SESSION_ACCESS_USER]['id']), $r, $n);
+				} else {
+					$sql = "UPDATE ".$loginModule->dbname." SET history=? WHERE id=?";
+					$this->parent->dbo->queryPrepared($sql, 'si', array($history, (int)$_SESSION[CONS_SESSION_ACCESS_USER]['id']), $r, $n);
+				}
+				return $sucessCode;
 		} else {
 			$this->parent->errorControl->raise(505,$loginId);
 			$this->parent->errorState = true;
@@ -767,5 +859,3 @@ class CauthControlEx extends CauthControl { # Replaces basic auth control
 	} # logUser
 
 }
-
-

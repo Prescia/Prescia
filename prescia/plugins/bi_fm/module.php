@@ -1,4 +1,4 @@
-<?	# -------------------------------- Safe FileManager
+<?php	# -------------------------------- Safe FileManager
 
 
 class mod_bi_fm extends CscriptedModule  {
@@ -34,7 +34,9 @@ class mod_bi_fm extends CscriptedModule  {
 	function onMeta() {
 		# Run this function during meta-load (debugmode >>ONLY<<)
 		###### -> Construct should add this module to the onMeta array
-		if (!is_dir(CONS_FMANAGER.CONS_FMANAGER_SAFE)) safe_mkdir(CONS_FMANAGER.CONS_FMANAGER_SAFE);
+			if (!is_dir(CONS_FMANAGER.CONS_FMANAGER_SAFE)) {
+				(new \Prescia\Services\FileService())->ensureDirectory(CONS_FMANAGER.CONS_FMANAGER_SAFE);
+			}
 		if (!isset($this->parent->dimconfig['default_fm_time']))
 			$this->parent->dimconfig['default_fm_time'] = 30; // default expiration date, set 0 to none
 
@@ -60,14 +62,10 @@ class mod_bi_fm extends CscriptedModule  {
 		}
 
 		if ($this->isInsideSafe($this->parent->original_context_str) && $this->parent->action != '404') {
-			$arquivo = $this->parent->original_action;
-			$arquivo_path = $this->parent->original_context_str.$arquivo;
-			$arquivo_path = substr($arquivo_path,1);
-			if ($ext == "") {
-				$ext = explode(".",$file);
-				$ext = array_pop($ext);
-			}
-			$ext = strtolower($ext);
+				$arquivo = $this->parent->original_action;
+				$arquivo_path = $this->parent->original_context_str.$arquivo;
+				$arquivo_path = substr($arquivo_path,1);
+				$ext = strtolower((string) pathinfo($arquivo_path, PATHINFO_EXTENSION));
 			$compareFile = substr($arquivo_path,strlen(CONS_FMANAGER.CONS_FMANAGER_SAFE."/"));
 			//--
 			$canDownload = $this->canSee($compareFile);
@@ -87,9 +85,11 @@ class mod_bi_fm extends CscriptedModule  {
 	function onCron($isDay=false) { # cron Triggered, isDay or isHour
 		###### -> Construct should add this module to the onCron array
 		if ($isDay) {
-			$mod = $this->parent->loaded($this->moduleRelation);
-			$sql = "SELECT filenm FROM ".$mod->dbname." WHERE has_expiration='y' AND expiration_date <> '0000-00-00' AND expiration_date < NOW()";
-			if ($this->parent->dbo->query($sql,$r,$n) && $n>0) {
+				$mod = $this->parent->loaded($this->moduleRelation);
+				$sql = "SELECT filenm FROM ".$mod->dbname." WHERE has_expiration='y' AND expiration_date <> '0000-00-00' AND expiration_date < NOW()";
+				$r = false;
+					$n = 0;
+					if ($this->parent->dbo->queryPrepared($sql, "", array(), $r, $n) && (int) $n > 0) {
 				// clean up files which reached expiration
 				for ($c=0;$c<$n;$c++) {
 					list($filenm) = $this->parent->dbo->fetch_row($r);
@@ -99,7 +99,7 @@ class mod_bi_fm extends CscriptedModule  {
 				$this->parent->errorControl->raise(526,$n,'bi_fm');
 			}
 			$sql = "DELETE FROM ".$mod->dbname." WHERE has_expiration='y' AND expiration_date <> '0000-00-00' AND expiration_date < NOW()";
-			$this->parent->dbo->simpleQuery($sql);
+			$r = false; $n = 0; $this->parent->dbo->queryPrepared($sql, "", array(), $r, $n);
 		}
 	}
 
@@ -108,9 +108,11 @@ class mod_bi_fm extends CscriptedModule  {
 	}
 
 	function isInsideSafe($dir) { // should be full path
-		if ($dir[0] != '/') $dir = "/".$dir;
-		if ($dir[strlen($dir)-1] != '/') $dir .= "/";
-		return substr($dir,0,strlen("/".CONS_FMANAGER.CONS_FMANAGER_SAFE.'/')) == "/".CONS_FMANAGER.CONS_FMANAGER_SAFE."/";
+		$base = realpath(CONS_FMANAGER.CONS_FMANAGER_SAFE);
+		$candidate = realpath($dir);
+		if ($base === false || $candidate === false)
+			return false;
+		return $candidate === $base || str_starts_with($candidate, $base.DIRECTORY_SEPARATOR);
 	}
 
 	function notifyEvent(&$module,$action,$data,$startedAt="",$earlyNotify = false) {
@@ -138,8 +140,8 @@ class mod_bi_fm extends CscriptedModule  {
 				$buffer = $core->safety;
 				$core->safety = false;
 
-				$sql = "SELECT filenm FROM ".$mod->dbname." WHERE filenm LIKE \"".$arquivo."\"";
-				$hasData = $core->dbo->fetch($sql) !== false;
+				$sql = "SELECT filenm FROM ".$mod->dbname." WHERE filenm LIKE ?";
+				$hasData = $core->dbo->fetchPrepared($sql, 's', array($arquivo)) !== false;
 				if ($hasData)
 					$core->runAction($mod,CONS_ACTION_UPDATE,$data);
 				else
@@ -154,10 +156,11 @@ class mod_bi_fm extends CscriptedModule  {
 			if ($arquivo[0]!='/') $arquivo = "/".$arquivo;
 			if (substr($arquivo,0,strlen("/".CONS_FMANAGER.CONS_FMANAGER_SAFE."/")) == "/".CONS_FMANAGER.CONS_FMANAGER_SAFE."/") {
 				$arquivo = substr($arquivo,strlen(CONS_FMANAGER.CONS_FMANAGER_SAFE)+2); // +2 for the /.../
-				$sql = "DELETE FROM ".$mod->dbname." WHERE filenm LIKE \"".$arquivo."\"";
+				$sql = "DELETE FROM ".$mod->dbname." WHERE filenm LIKE ?";
 				$buffer = $core->safety;
 				$core->safety = false;
-				$core->dbo->simpleQuery($sql);
+				$r = false; $n = 0;
+				$core->dbo->queryPrepared($sql, 's', array($arquivo), $r, $n);
 				$core->safety = $buffer;
 			}
 		}
@@ -170,8 +173,10 @@ class mod_bi_fm extends CscriptedModule  {
 		if (!isset($this->cache[$file]) || $this->currentDir === false) {
 			// test manually in the database, if no cache available
 			$mod = $this->parent->loaded('bi_fm');
-			$sql = "SELECT id_allowed_group,allowed_users,has_expiration,expiration_date FROM ".$mod->dbname." WHERE filenm LIKE \"".$file."\"";
-			if ($this->parent->dbo->query($sql,$r,$n) && $n == 1) {
+			$sql = "SELECT id_allowed_group,allowed_users,has_expiration,expiration_date FROM ".$mod->dbname." WHERE filenm LIKE ?";
+			$r = false;
+			$n = 0;
+			if ($this->parent->dbo->queryPrepared($sql, 's', array($file), $r, $n) && $n == 1) {
 				list($idG,$idU,$heD,$eD) = $this->parent->dbo->fetch_row($r);
 				$idU = explode(",",$idU);
 				$idUclean = array();
@@ -208,8 +213,10 @@ class mod_bi_fm extends CscriptedModule  {
 		$dir = substr($dir,strlen(CONS_FMANAGER_SAFE)+1); // removes SAFE+ /
 
 		$mod = $this->parent->loaded('bi_fm');
-		$sql = "SELECT id_allowed_group,allowed_users,has_expiration,expiration_date,filenm FROM ".$mod->dbname." WHERE filenm LIKE \"".$dir."%\"";
-		if ($this->parent->dbo->query($sql,$r,$n)) {
+		$sql = "SELECT id_allowed_group,allowed_users,has_expiration,expiration_date,filenm FROM ".$mod->dbname." WHERE filenm LIKE ?";
+		$r = false;
+		$n = 0;
+		if ($this->parent->dbo->queryPrepared($sql, 's', array($dir.'%'), $r, $n)) {
 			for ($c=0;$c<$n;$c++) {
 				list($idG,$idU,$heD,$eD,$fln) = $this->parent->dbo->fetch_row($r);
 				$idU = explode(",",$idU);
@@ -221,4 +228,3 @@ class mod_bi_fm extends CscriptedModule  {
 		}
 	}
 }
-

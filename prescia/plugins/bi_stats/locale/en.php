@@ -1,4 +1,4 @@
-<?  return array(
+<?php  return array(
 "stats"=>"Statistics",
 "statsdaily"=>"Daily Statistics",
 "statsbot"=>"ROBOT Statistics",

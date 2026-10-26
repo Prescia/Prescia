@@ -2,6 +2,7 @@
 .metadata
 .buildpath
 bin/
+vendor/
 tmp/
 _temp/
 _docs/
@@ -21,4 +22,3 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
-

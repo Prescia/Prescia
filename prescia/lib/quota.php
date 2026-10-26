@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | quota: returns space used insite a path (recursive optional) in KB
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ www.prescia.net
   | Free to use, change and redistribute, but please keep the above disclamer.

@@ -1,4 +1,4 @@
-<?  # -------------------------------- Prescia Simple Header Control
+<?php  # -------------------------------- Prescia Simple Header Control
 
 define("CONS_HC_HEADER",0);
 define("CONS_HC_PRAGMA",1);
@@ -8,10 +8,11 @@ define("CONS_X_UA_Compatible",4); // system will automaticaly set IE on edge eng
 
 class CHeaderControl {
 
-	var $parent = null;
-	var $headers = array();
-	var $baseHeader = 200;
-	var $softHeaderSent = false; // set to true if you KNOW headers were sent and wants to avoid error 192
+	public ?CPrescia $parent = null;
+	/** @var array<int, array{0: int, 1: string}> */
+	public array $headers = array();
+	public int $baseHeader = 200;
+	public bool $softHeaderSent = false; // set to true if you KNOW headers were sent and wants to avoid error 192
 
 	function __construct(&$parent) {
 		$this->parent = &$parent;
@@ -115,4 +116,3 @@ class CHeaderControl {
 	}
 
 }
-

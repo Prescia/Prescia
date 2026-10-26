@@ -1,12 +1,18 @@
-<?
+<?php
 
-	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<99 || strpos(CONS_MASTERDOMAINS,$_SESSION['DOMAIN'])===false) $core->fastClose(403);
-	
-	$code = $_REQUEST['code'];
-	
-	$logs = "";
-	$template = $core->template->get("_error");
-	if (is_file(CONS_PATH_LOGS.$code."/err".date('Ymd').".log")) {
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+
+		if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<99 || strpos(CONS_MASTERDOMAINS,$_SESSION['DOMAIN'])===false) $core->fastClose(403);
+		
+		$code = isset($_REQUEST['code']) && is_string($_REQUEST['code']) ? $_REQUEST['code'] : '';
+		$logRoot = realpath(CONS_PATH_LOGS);
+		$logDirectory = $code !== '' && preg_match('/^[A-Za-z0-9_-]+$/', $code) === 1 && $logRoot !== false
+			? realpath($logRoot.DIRECTORY_SEPARATOR.$code) : false;
+		if ($logDirectory === false || dirname($logDirectory) !== rtrim($logRoot, DIRECTORY_SEPARATOR)) $core->fastClose(404);
+		
+		$logs = "";
+		$template = $core->template->get("_error");
+		if (is_file($logDirectory.DIRECTORY_SEPARATOR."err".date('Ymd').".log")) {
 		
 		function appendErrors(&$core,&$output,&$template,$data) {
 			foreach ($data as $line) {
@@ -29,7 +35,7 @@
 				}
 			}
 		}
-		appendErrors($core,$logs,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$code."/err".date('Ymd').".log")));
+			appendErrors($core,$logs,$template,explode("\n",cReadFile($logDirectory.DIRECTORY_SEPARATOR."err".date('Ymd').".log")));
 		
 		
 	} else

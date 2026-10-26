@@ -1,0 +1,10 @@
+# PHPStan baseline for the legacy Prescia framework.
+#
+# Keep this file generated and minimal. New errors must not be added here
+# without a corresponding issue and review. Populate it with:
+#   vendor/bin/phpstan analyse --configuration=phpstan.neon.dist --generate-baseline=phpstan-baseline.neon
+#
+# The initial baseline is intentionally empty until the analysis bootstrap is
+# validated in CI; broad ignore patterns would hide real regressions.
+parameters:
+    ignoreErrors: []

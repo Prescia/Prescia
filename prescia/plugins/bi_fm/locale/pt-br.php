@@ -1,4 +1,4 @@
-<?
+<?php
 return array(
 'bi_fm' => 'Arquivos seguros',
 'default_fm_time' => 'Dias padrão para expirar os arquivos em pasta segura',

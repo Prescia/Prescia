@@ -23,7 +23,9 @@
  * @endcode
  */
 
-if ( !function_exists('version_compare') || version_compare( phpversion(), '5', '<' ) )
-	include_once( 'ckeditor_php4.php' ) ;
-else
-	include_once( 'ckeditor_php5.php' ) ;
+$ckeditorImplementation = (!function_exists('version_compare') || version_compare(phpversion(), '5', '<'))
+	? __DIR__.'/ckeditor_php4.php'
+	: __DIR__.'/ckeditor_php5.php';
+if (!is_file($ckeditorImplementation))
+	throw new RuntimeException('CKEditor PHP integration not found: '.$ckeditorImplementation);
+include_once $ckeditorImplementation;

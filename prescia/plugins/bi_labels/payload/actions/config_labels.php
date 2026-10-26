@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Core context injected by mod_bi_labels::onCheckActions(). */
 
 	if (!$core->authControl->checkPermission('bi_labels','can_editlabels')) {
 		$core->action = 403;

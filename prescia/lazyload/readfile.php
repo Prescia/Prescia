@@ -1,4 +1,14 @@
-<? // ------------------------ Prescia readfile
+<?php
+
+/** @var CPrescia $this Core context that includes this lazy-load. */
+/** @var string $file Existing file path provided to CPrescia::readfile(). */
+/** @var string $ext Optional file extension used for MIME detection. */
+/** @var bool $exit Whether the response should close after streaming. */
+/** @var string $filename Optional download filename. */
+/** @var bool $forceAttach Whether to force attachment disposition. */
+/** @var int|float $cachetime Requested cache lifetime in seconds. */
+
+// ------------------------ Prescia readfile
 
 	# readfile($file,$ext="",$exit=true,$filename="",$forceAttach=false,$cachetime=6000) {
 
@@ -38,4 +48,4 @@
 	@ob_start();
 	$this->dbconnect(); # reconnect
 		
-	
+

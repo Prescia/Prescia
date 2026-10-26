@@ -1,4 +1,4 @@
-<?
+<?php
 
 	function echoCalendar(&$containerTP,$width=0,$month=0,$year=0,$highlights=array(),$dayborder=0,$prevquery="",$nextquery="",$divname="inlinecalendar") {
 		/*

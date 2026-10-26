@@ -1,156 +1,158 @@
-<?/*--------------------------------\
-  | storeFile : Simple upload handing, with type control
+<?php
+/*--------------------------------\
+  | storeFile : Simple upload handling, with type control
   | Made for Prescia free framework (cc) Caio Vianna de Lima Netto
-  | Free to use, change and redistribute, but please keep the above disclamer.
-  | Uses: safe_chmod
+  | Free to use, change and redistribute, but please keep the above disclaimer.
 -*/
 
+/**
+ * Store an uploaded file while preserving the legacy numeric result contract.
+ *
+ * Error codes: 0=success, 1/2=upload size limits, 3=incomplete/failed upload,
+ * 4=no file sent, 5=invalid extension, 7=content does not match extension.
+ * Virtual uploads are used by tests/importers and must explicitly set virtual=true.
+ */
+function storeFile($file, &$destination, $type = "", $completeDebug = false) {
+    $noScripts = true;
+    $isVirtual = false;
 
-function storeFile($file,&$destination,$type="",$completeDebug=false) {
-	/*  Stores an uploaded file (sent the $_FILES item not the array in $file) at the $destination file
-	|   You can simulate an uploaded file by sending the $file array in the same format, plus 'virtual' = true so it copies instead of upload_move
-	|    On virtual, fill these: error=0, tmp_name = [file], virtual=true, name= [filename]
-	|   destination = the file to be saved, with OPTIONAL extension (the script will fill the appropriate
-	|	 extension if it can detect the file type from $type or internal checkup - yet better send w/o extension)
-	|    uppon sucess, $destination will RETURN the final path/file of the uploaded file
-	|   type = defines the expected file type:
-		'auto' = any file
-		'image' = jpg,gif,png,jpeg
-		'html' = htm, html
-		'docs' = doc,rtf,pps,ppt,pdf,htm etc
-		'udef:...' = allow you to specify the extensions, separated by comma
-	|
-	|  ERROR CODES:
-	|  0 - Upload ok
-	|  1 - File was larger than allowed on the server - upload fail
-	|  2 - File was larger than allowed by the page (MAX_FILE_SIZE) - upload fail
-	|  3 - Upload incomplete (might also be triggered if there is no permission to save at destination folder, of you forgot the multipart encode). Can also be triggered at dot files
-	|  4 - Nothing sent (no file sent)
-	|  5 - Upload of invalid extension
-		|  7 - File extension differs from file content (image,zip,rar), thus causing GD/zip issues
-   */
-	################################
-	$NO_SCRIPTS = true; // <-- will rename .php, .asp, .jsp to .html
-	################################
+    if (is_string($file)) {
+        if (!isset($_FILES[$file]) || !is_array($_FILES[$file])) {
+            return 4;
+        }
+        $file = $_FILES[$file];
+    }
+    if (!is_array($file)) {
+        return 4;
+    }
 
-	if (!is_array($file)) $file = $_FILES[$file];
+    $isVirtual = isset($file['virtual']) && $file['virtual'] === true;
+    $error = $file['error'] ?? 4;
+    $tmpName = isset($file['tmp_name']) && is_string($file['tmp_name']) ? $file['tmp_name'] : '';
+    $originalName = isset($file['name']) && is_string($file['name']) ? basename($file['name']) : '';
+    $desiredFilename = is_string($destination) ? $destination : '';
 
-	$isauto = false;
-	$desiredExtension = ""; // JUST extension (with dot)
-	$desiredFilename = $destination; // WITHOUT extension (with path)
+    if (!is_int($error) || $error < 0) {
+        return 3;
+    }
+    if ($error !== 0) {
+        if (!$isVirtual && $error === 3 && $tmpName !== '' && is_file($tmpName)) {
+            @unlink($tmpName);
+        }
+        return $error;
+    }
+    if ($tmpName === '' || !is_file($tmpName) || $originalName === '' || strpos($originalName, "\0") !== false) {
+        return 3;
+    }
 
-	if ($file['error'] == 0) { // upload complete
-	  if ($type != "") { // Type control
-		$desiredExtension = "";
-		switch($type) {
-		  case "auto": // Anything
-			$type ="udef:([^\.]+)";
-			$isauto = true;
-		  break;
-		  case "image": // Simple image files
-			$type="udef:jpg,gif,png,jpeg";
-		  break;
-		  case "html": // HTML files
-			$type="udef:htm,html,xhtml";
-		  break;
-		  case "docs": // documents
-			$type="udef:doc,rtf,pps,ppt,pdf,htm,html,docx,xls,xlsx,txt,zip,rar,7z,odt,gz";
-		  break;
-		}
-		if (substr($type,0,5) == "udef:") { // looks for the extension sent
-		  $type = substr($type,5);
-		  $type = explode(",",$type);
-		  foreach($type as $x => $text) {
-			if (preg_match("/^(.*)(\.".$text.")$/i",$file['name'],$regs)==1) $desiredExtension = ($isauto?".".$regs[3]:".$text");
-		  }
-		}
-		if ($desiredExtension == "") { // invalid extension
-		  if (!isset($file['virtual'])) @unlink ($file['tmp_name']);
-		  if ($completeDebug) echo "Invalid Extension while checking type $type";
-		  return 5; # invalid extension
-		}
-		if (is_file($file['tmp_name'])) {
-			if (($desiredExtension == ".jpg" || $desiredExtension == ".gif" || $desiredExtension == ".png" || $desiredExtension == ".jpeg")) {
-				// is an image file, checks if it REALLY is an image file
-				$i = @getimagesize($file['tmp_name']);
-				if ($i===false || !isset($i[2]) || ($i[2] != IMAGETYPE_JPEG && $i[2] != IMAGETYPE_PNG && $i[2] != IMAGETYPE_GIF && $i[2] != IMAGETYPE_BMP)) {
-				  if (!isset($file['virtual'])) @unlink ($file['tmp_name']);
-				  if ($completeDebug) echo "File should be an image (.jpg, .gif, .png, .jpeg) but it wasn't";
-				  return 7; # not an image!
-				}
-				if ($i[2] == IMAGETYPE_JPEG || $i[2] == IMAGETYPE_BMP) $desiredExtension = ".jpg"; # we will convert bmp to jpg
-				if ($i[2] == IMAGETYPE_PNG) $desiredExtension = ".png";
-				if ($i[2] == IMAGETYPE_GIF) $desiredExtension = ".gif";
-			}
-			if ($desiredExtension == ".zip" || $desiredExtension == ".rar") {
-				$fh = @fopen($file['tmp_name'], "r");
-				if (!$fh) {
-  					if ($completeDebug) echo "Unable to open file to check compressed type content";
-					return 7;
-				}
-				$blob = fgets($fh, 5);
-				fclose($fh);
-				if ($desiredExtension == ".zip" && strpos($blob, 'PK') === false) {
-					if ($completeDebug) echo "File should be an .zip file, but contents are not";
-					return 7;
-				}
-				if ($desiredExtension == ".rar" && strpos($blob, 'Rar') === false) {
-					if ($completeDebug) echo "File should be an .rar file, but contents are not";
-					return 7;
-				}
-			}
-		} else {
-		  	if ($completeDebug) echo $file['tmp_name']." not found to test it's type";
-		  	return 3; # upload incomplete (tmp_name missing)
-		}
-	  } else { # no type control, use extension from the submited file
+    $isAuto = false;
+    $desiredExtension = '';
+    $submittedExtension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+    if ($submittedExtension === '' || !preg_match('/^[a-z0-9]{1,16}$/', $submittedExtension)) {
+        if (!$isVirtual) {
+            @unlink($tmpName);
+        }
+        return 5;
+    }
 
-	  	$desiredExtension = explode(".",$file['name']);
-		$desiredExtension = ".".array_pop($desiredExtension);
+    if ($type !== '') {
+        if ($type === 'auto') {
+            $isAuto = true;
+            $desiredExtension = '.' . $submittedExtension;
+        } else {
+            switch ($type) {
+                case 'image':
+                    $type = 'udef:jpg,gif,png,jpeg';
+                    break;
+                case 'html':
+                    $type = 'udef:htm,html,xhtml';
+                    break;
+                case 'docs':
+                    $type = 'udef:doc,rtf,pps,ppt,pdf,htm,html,docx,xls,xlsx,txt,zip,rar,7z,odt,gz';
+                    break;
+            }
+            if (str_starts_with($type, 'udef:')) {
+                $allowedExtensions = array_filter(array_map(
+                    static fn(string $extension): string => strtolower(trim($extension)),
+                    explode(',', substr($type, 5))
+                ));
+                if (in_array($submittedExtension, $allowedExtensions, true)) {
+                    $desiredExtension = '.' . $submittedExtension;
+                }
+            }
+        }
+    } else {
+        $desiredExtension = '.' . $submittedExtension;
+    }
 
-	  }
+    if ($desiredExtension === '') {
+        if (!$isVirtual) {
+            @unlink($tmpName);
+        }
+        if ($completeDebug) {
+            echo "Invalid extension while checking upload type";
+        }
+        return 5;
+    }
 
-	  if (strpos($desiredFilename,".")!==false) { // $desiredFilename should have only the filename, not extension
-	  	// remove extension (if came)
-	  	$desiredFilename = explode(".",$desiredFilename);
-	  	array_pop($desiredFilename);
-	  	$desiredFilename = implode(".",$desiredFilename);
-	  }
+    if ($desiredExtension === '.jpg' || $desiredExtension === '.gif' || $desiredExtension === '.png' || $desiredExtension === '.jpeg') {
+        $imageInfo = @getimagesize($tmpName);
+        if ($imageInfo === false || !isset($imageInfo[2]) || !in_array($imageInfo[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_GIF, IMAGETYPE_BMP], true)) {
+            if (!$isVirtual) {
+                @unlink($tmpName);
+            }
+            return 7;
+        }
+        if ($imageInfo[2] === IMAGETYPE_JPEG || $imageInfo[2] === IMAGETYPE_BMP) {
+            $desiredExtension = '.jpg';
+        } elseif ($imageInfo[2] === IMAGETYPE_PNG) {
+            $desiredExtension = '.png';
+        } elseif ($imageInfo[2] === IMAGETYPE_GIF) {
+            $desiredExtension = '.gif';
+        }
+    }
 
-	  ## we have $desiredExtension, $isimage and $desiredFilename ##
+    if ($desiredExtension === '.zip' || $desiredExtension === '.rar') {
+        $handle = @fopen($tmpName, 'rb');
+        if ($handle === false) {
+            return 7;
+        }
+        $signature = (string)fread($handle, 5);
+        fclose($handle);
+        if (($desiredExtension === '.zip' && strpos($signature, 'PK') === false) || ($desiredExtension === '.rar' && strpos($signature, 'Rar') === false)) {
+            return 7;
+        }
+    }
 
-	  if ($desiredFilename == '') {
-	  	if ($completeDebug) echo "File without name after removing extension! hack attempt?";
-	  	return 3; # trying to send a dot file? no thanks hack-attempt
-	  }
+    if ($desiredFilename === '' || strpos($desiredFilename, "\0") !== false) {
+        return 3;
+    }
+    if (strpos($desiredFilename, '.') !== false) {
+        $desiredFilename = pathinfo($desiredFilename, PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . pathinfo($desiredFilename, PATHINFO_FILENAME);
+    }
+    if ($desiredFilename === '' || basename($desiredFilename) === '') {
+        return 3;
+    }
 
-	  if ($NO_SCRIPTS && ($desiredExtension == ".php" || $desiredExtension == ".asp" || $desiredExtension == ".jsp")) {
-	  	$desiredExtension .= ".html"; // change output extension
-	  }
+    if ($noScripts && in_array($desiredExtension, ['.php', '.phtml', '.phar', '.asp', '.aspx', '.jsp', '.cgi', '.pl', '.py', '.sh'], true)) {
+        $desiredExtension .= '.html';
+    }
 
-	  if (is_file($desiredFilename.$desiredExtension)) @unlink ($desiredFilename.$desiredExtension); # we will replace if file exists
+    $target = $desiredFilename . $desiredExtension;
+    if (is_file($target)) {
+        @unlink($target);
+    }
 
-	  // virtual call can simulate an upload just to use storefile, thus ...
-	  if (isset($file['virtual']))
-		 $ok = copy($file['tmp_name'],$desiredFilename.$desiredExtension);
-	  else
-	  	 $ok = move_uploaded_file($file['tmp_name'],$desiredFilename.$desiredExtension);
+    $ok = $isVirtual ? @copy($tmpName, $target) : @move_uploaded_file($tmpName, $target);
+    if (!$ok) {
+        return 3;
+    }
 
-	  // ####################### UPLOAD COMPLETE ###################
-
-	  if ($ok) {
-		safe_chmod($desiredFilename.$desiredExtension,"0775"); // guarantee we can handle it in the future
-		$destination = $desiredFilename.$desiredExtension;
-		return 0; // ok
-	  } else {
-	  	if ($completeDebug) echo "copy or move_uploaded_file to ".$desiredFilename.$desiredExtension." failed";
-		return 3; // failed upload
-	  }
-
-	} else { // $_FILE error
-	  if (!isset($file['virtual']) && ($file['error'] == 3) && (is_file($file['tmp_name']))) // partial/failed upload
-		@unlink ($file['tmp_name']);
-	  if ($completeDebug) echo "Returning raw PHP upload code";
-	  return $file['error'];
-	}
+    if (function_exists('safe_chmod')) {
+        safe_chmod($target, '0640');
+    } else {
+        @chmod($target, 0640);
+    }
+    $destination = $target;
+    return 0;
 }

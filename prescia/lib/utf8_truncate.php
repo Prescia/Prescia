@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | utf8_truncate : Truncates a utf-8 string w/o breaking utf-8 words
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ www.prescia.net
   | Free to use, change and redistribute, but please keep the above disclamer.

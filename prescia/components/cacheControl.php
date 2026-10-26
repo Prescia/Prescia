@@ -1,13 +1,13 @@
-<?	# -------------------------------- Prescia cache control
+<?php	# -------------------------------- Prescia cache control
 	# NOTE: all caches automatically add LANGUAGE and USER ID (if not common)
 
 class CCacheControl {
 
-	var $parent = null;
-	var $cachepath = '';
-	var $cacheseed = '';
-	var $contentFromCache = false;
-	var $noCache = false; // some script requested that this page not to be cached
+	public ?CPrescia $parent = null;
+	public string $cachepath = '';
+	public string $cacheseed = '';
+	public bool $contentFromCache = false;
+	public bool $noCache = false; // some script requested that this page not to be cached
 
 	function __construct(&$parent) {
 		$this->parent = &$parent;
@@ -37,7 +37,7 @@ class CCacheControl {
 	} # setCache
 #-
 	function canUseCache($emergency=false) {
-		if ($this->parent->layout == 2 || (isset($_POST) && count($_POST)>0) || $this->noCache) return false; # these are exceptions where cache can never be applied
+			if ($this->parent->layout == 2 || count($_POST)>0 || $this->noCache) return false; # these are exceptions where cache can never be applied
 		$file = $this->cacheFile();
 		if (is_file($file)) {
 			if ($emergency) return true; // we have the file and we MUST serve the cache
@@ -81,7 +81,7 @@ class CCacheControl {
 				return $_SESSION[CONS_SESSION_CACHE][$tag_ns]['payload'];
 			}
 		} else if (is_file(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache")) { // in file is shared cache
-			$fileContent = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache"));
+			$fileContent = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache"));
 			if ($expiration != 0) {
 				$passedSeconds = time_diff(date("Y-m-d H:i:s"),$fileContent['time']);
 				if ($expiration>$passedSeconds) {
@@ -117,7 +117,7 @@ class CCacheControl {
 			$passedSeconds = time_diff(date("Y-m-d H:i:s"),$_SESSION[CONS_SESSION_CACHE][$tag_ns]['time']);
 			return $passedSeconds*1000;
 		} else if (is_file(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache")) { // shared
-			$fileContent = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache"));
+			$fileContent = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION["CODE"]."/caches/$tag.cache"));
 			$passedSeconds = time_diff(date("Y-m-d H:i:s"),$fileContent['time']);
 			return $passedSeconds*1000;
 		} else
@@ -153,11 +153,12 @@ class CCacheControl {
 		
 		// loads cachecontrol
 		if (is_file(CONS_PATH_CACHE."cachecontrol.dat")) {
-			$cc = unserialize(cReadFile(CONS_PATH_CACHE."cachecontrol.dat")); // see updateCacheControl
+			$cc = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE."cachecontrol.dat")); // see updateCacheControl
 			if (is_array($cc)) {
 				$this->parent->storage['CORE_CACHECONTROL'] = $cc;
-				$average = $cc[0];
-				$_SESSION[CONS_CACHECONTROL_MOD] = ($average-CONS_PM_MINTIME)/(CONS_PM_TIME-CONS_PM_MINTIME);
+					$average = (float) $cc[0];
+					$cacheRange = CONS_PM_TIME-CONS_PM_MINTIME;
+					$_SESSION[CONS_CACHECONTROL_MOD] = $cacheRange == 0 ? 0 : ($average-CONS_PM_MINTIME)/$cacheRange;
 				if ($_SESSION[CONS_CACHECONTROL_MOD]<0)$_SESSION[CONS_CACHECONTROL_MOD]=0;
 				if ($_SESSION[CONS_CACHECONTROL_MOD]>1)$_SESSION[CONS_CACHECONTROL_MOD]=1;
 				$this->parent->cachetime = floor(1000*(CONS_DEFAULT_MIN_BROWSERCACHETIME + (CONS_DEFAULT_MAX_BROWSERCACHETIME - CONS_DEFAULT_MIN_BROWSERCACHETIME) * $_SESSION[CONS_CACHECONTROL_MOD])) * ($this->parent->isbot?2:1);
@@ -221,7 +222,7 @@ class CCacheControl {
 		$cmod =  $this->parent->storage['CORE_CACHECONTROL'][1];
 		$cc = array();
 		if (is_file(CONS_PATH_LOGS."cachecontrol.dat")) {
-			$cc = unserialize(cReadFile(CONS_PATH_LOGS."cachecontrol.dat"));
+			$cc = presciaSafeUnserialize(cReadFile(CONS_PATH_LOGS."cachecontrol.dat"));
 			if (!is_array($cc)) $cc = array();
 		}
 		$thisEntry = array(date("Y-m-d H:i:s"),$average,$cmod);

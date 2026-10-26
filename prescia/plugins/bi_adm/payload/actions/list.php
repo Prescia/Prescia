@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 	if (!isset($_REQUEST['module']) || $core->loaded($_REQUEST['module']) === false) {
 		$core->errorControl->raise(512,"list",(isset($_REQUEST['module'])?$_REQUEST['module']:''));
@@ -89,23 +92,42 @@
 					// started = which module is requesting the link
 					// ids = comma delimited ids from started to relate with
 					// toid = id to relate with
-					$lmod = $core->loaded($_REQUEST['module']);
-					$sql = "INSERT INTO ".$lmod->dbname." SET ";
-					$usedid = false;
-					foreach ($lmod->keys as $key) {
-						$sql .= $key."=\"".($lmod->fields[$key][CONS_XML_MODULE] == $_REQUEST['started'] && !$usedid?"{id}":$_REQUEST['toid'])."\",";
-						if ($lmod->fields[$key][CONS_XML_MODULE] == $_REQUEST['started']) $usedid = true; // already used the id. This guarantees toid is used when the relation is with the SAME module (A<->A)
+			$lmod = $core->loaded($_REQUEST['module']);
+			$started = isset($_REQUEST['started']) && is_string($_REQUEST['started']) ? $_REQUEST['started'] : '';
+			$toid = filter_var($_REQUEST['toid'] ?? null, FILTER_VALIDATE_INT);
+			$insertFields = array();
+			$insertTypes = '';
+			$insertValues = array();
+			$sourceIndex = null;
+			$usedid = false;
+			foreach ($lmod !== false ? $lmod->keys : array() as $key) {
+				$insertFields[] = $key;
+				$sourceId = $lmod->fields[$key][CONS_XML_MODULE] == $started && !$usedid;
+				$value = $sourceId ? null : $toid;
+				if ($value === false || $value === null) {
+					$insertFields = array();
+					break;
+				}
+				$insertTypes .= 'i';
+				$insertValues[] = $sourceId ? 0 : (int)$value;
+				if ($sourceId) {
+					$sourceIndex = count($insertValues) - 1;
+					$usedid = true;
+				}
+			}
+			$ok = false;
+			if ($lmod !== false) {
+				$ids = explode(",",str_replace(",,",",",$_REQUEST['ids']));
+				foreach ($ids as $id) {
+					$id = filter_var($id, FILTER_VALIDATE_INT);
+					if ($id !== false && count($insertFields) === count($lmod->keys)) {
+						$ok = true;
+						$values = $insertValues;
+						if ($sourceIndex !== null) $values[$sourceIndex] = (int)$id;
+						$insertResult = false;
+						$insertRows = 0;
+						$core->dbo->queryPrepared("INSERT INTO ".$lmod->dbname." (".implode(',', $insertFields).") VALUES (".implode(',', array_fill(0, count($insertFields), '?')).")", $insertTypes, $values, $insertResult, $insertRows);
 					}
-					$ok = false;
-					$sql = substr($sql,0,strlen($sql)-1); // removes last ,
-					if ($lmod !== false) {
-						$ids = explode(",",str_replace(",,",",",$_REQUEST['ids']));
-						foreach ($ids as $id) {
-							if ($id != '') {
-								$ok = true;
-								$m= str_replace("{id}",$id,$sql);
-								$core->dbo->simpleQuery($m);
-							}
 						}
 					}
 					echo $ok?"o":"e";

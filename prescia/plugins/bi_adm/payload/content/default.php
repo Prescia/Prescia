@@ -1,6 +1,9 @@
-<? /* ----------------------------------------- Default script for admin pages
+<?php /* ----------------------------------------- Default script for admin pages
  *
  */
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
  	// loads frame
  	
@@ -11,9 +14,10 @@
 
 		$core->template->assign("LOGGED_USER",$_SESSION[CONS_SESSION_ACCESS_USER]['name']);
 		$core->template->assign("LOGGED_USERID",$_SESSION[CONS_SESSION_ACCESS_USER]['id']);
-		// user image
-		$image = CONS_PATH_PAGES.$_SESSION['CODE'].'/files/users/t/image_'.$_SESSION[CONS_SESSION_ACCESS_USER]['id']."_2";
-		if ($_SESSION[CONS_SESSION_ACCESS_USER]['image']=='n' || !locateFile($image,$ext)) {
+			// user image
+			$image = CONS_PATH_PAGES.$_SESSION['CODE'].'/files/users/t/image_'.$_SESSION[CONS_SESSION_ACCESS_USER]['id']."_2";
+			$ext = '';
+			if ($_SESSION[CONS_SESSION_ACCESS_USER]['image']=='n' || !locateFile($image,$ext)) {
 			$core->template->assign("_imageyes");
 		} else {
 			$core->template->assign("LOGGED_USERIMAGE",$image);
@@ -37,7 +41,7 @@
 				$_SESSION['admstatisticsminute'] = date("i");
 
 				// main statistics - if we have stats plugin use it, otherwise some random mambo-jambo
-				if ($this->hasStats) { // stats installed, show today's hits
+				if ($this->hasStatsModule()) { // stats installed, show today's hits
 					$stp = $core->loadedPlugins['bi_stats']->getHits(1);
 					if (count($stp)>0) {
 						$stp = $stp[0][1];
@@ -58,15 +62,19 @@
 					$mObj = $core->template->get("_monitor");
 					$monitorTxt = "";
 					$c=0;
-					$totalItems = 0;
-					foreach ($monitorXml as $monitoredItem) {
+						$totalItems = 0;
+						$r = false;
+						$n = 0;
+						foreach ($monitorXml as $monitoredItem) {
 						$monitoredModule = $core->loaded($monitoredItem['module'],true);
 						$monitoredItem['sql'] = str_replace("\$id_user",$_SESSION[CONS_SESSION_ACCESS_USER]['id'],$monitoredItem['sql']);
 						$sql = $monitoredModule->get_base_sql("(".$monitoredItem['sql'].")","","");
 						$sql['ORDER'] = array();
 						$sql['SELECT'] = array("count(*) as myresult");
 						if (!isset($monitoredItem['monitor_level'])) $monitoredItem['monitor_level'] = 'low';
-						$ok = $core->dbo->query($sql,$r,$n);
+						$r = false;
+						$n = 0;
+						$ok = $core->dbo->queryPrepared($core->dbo->sqlarray_echo($sql), "", array(), $r, $n);
 						if ($ok) {
 							if ($n>0) list($n) = $core->dbo->fetch_row($r);
 							$monitorData = array(
@@ -101,7 +109,7 @@
 
 			// permissions and systems
 			$hasSomething = false;
-			if (!$this->hasStats)
+				if (!$this->hasStatsModule())
 				$core->template->assign("_has_stats");
 			else
 				$hasSomething = true;
@@ -111,7 +119,7 @@
 				$core->template->assign("_can_monitor");
 			else
 				$hasSomething = true;
-			if (!$this->hasUndo)
+				if (!$this->hasUndoModule())
 				$core->template->assign("_hasUndo");
 			else if (!$core->authControl->checkPermission('bi_adm','can_undo'))
 				$core->template->assign("_can_undo");
@@ -143,5 +151,3 @@
 				$core->template->assign("CLIENT_LOGO","<img src=\"/pages/".$_SESSION['CODE']."/files/adm/logo.gif\" alt=\"\"/>");
 		}
 	}
-
-

@@ -1,9 +1,9 @@
-<?	# -------------------------------- Prescia International (i18n/l10n) control
+<?php	# -------------------------------- Prescia International (i18n/l10n) control
 	# Requires datetime.php
 
 class CintlControl {
 
-	var $parent = null;
+	public ?CPrescia $parent = null;
 	var $i18n = array(  #		dec  th  date	 date preg (opt 4 digit year)							   preg Y M D positions (0 all)
 						#						  12           3        45           6        7							 currency
 				'pt-br' => array(",",".","d/m/Y","(([0-9]{1,2})([^0-9]))(([0-9]{1,2})([^0-9]))([0-9]{2,4})",array(7,5,2),'BRL','R$'),
@@ -11,7 +11,7 @@ class CintlControl {
 				'es'    => array(",",".","m/d/Y","(([0-9]{1,2})([^0-9]))(([0-9]{1,2})([^0-9]))([0-9]{2,4})",array(7,2,5),'EUR','€'),
 				'jp'    => array(".",",","Y/m/d","(([0-9]{2,4})([^0-9]))(([0-9]{1,2})([^0-9]))([0-9]{1,2})",array(2,5,7),'JPY','¥'),
 				);
-	var $selectedCode = "";
+	public string $selectedCode = "";
 
 	function __construct(&$parent) {
 		$this->parent = &$parent;
@@ -38,6 +38,7 @@ class CintlControl {
 	}
 #-
 	function getCurrency($getCode) {
+		$code = $this->selectedCode;
 		return isset($this->i18n[$code])?($getCode?$this->i18n[$code][6]:$this->i18n[$code][5]):'$';
 	}
 #-
@@ -71,8 +72,8 @@ class CintlControl {
 			if ($regs[7] == '') $regs[7] = '00';
 			else if (strlen($regs[7])==1) $regs[7] = '0'.$regs[7];
 			if ($regs[8+$pregPositions[0]] == '') $regs[8+$pregPositions[0]] = '0000';
-			else if ($regs[8+$pregPositions[0]]<ADODB_TWODIGITYEAR_OFFSET) {
-				$regs[8+$pregPositions[0]] += 2000;
+				else if ((int) $regs[8+$pregPositions[0]] < ADODB_TWODIGITYEAR_OFFSET) {
+					$regs[8+$pregPositions[0]] = (string) ((int) $regs[8+$pregPositions[0]] + 2000);
 			} else { # $pregPositions 0 is the year, 4 digits
 				while (strlen($regs[8+$pregPositions[0]])<4)
 					$regs[8+$pregPositions[0]] = '0'.$regs[8+$pregPositions[0]];
@@ -90,7 +91,7 @@ class CintlControl {
 #-
 	function formatValue($value,$code="") {
 		if ($code=="") $code = $this->selectedCode;
-		$valor = str_replace(",",".",$valor);
+		$valor = str_replace(",",".",$value);
 		if (strpos($valor,".")>0) {
 			$valor = explode(".",$valor);
 			$last = array_pop($valor);
@@ -133,16 +134,22 @@ class CintlControl {
 				$file = CONS_PATH_SYSTEM."plugins/$plugin/locale/$file";
 		} else {
 			$file = CONS_PATH_PAGES.$_SESSION['CODE']."/_config/locale/$file";
-		}
-		if (!is_file($file)) return false;
-		if (!isset($_REQUEST['nocache'])) { # if nocache is specified, ignore caches ... not the case
+			}
+			if (!is_file($file)) return false;
+			$cacheFile = '';
+			$cacheMTFile = '';
+			if (!isset($_REQUEST['nocache'])) { # if nocache is specified, ignore caches ... not the case
 			if ($standard) {
 				if ($plugin!='') $plugin .= '/';
-				if (!is_dir(CONS_PATH_CACHE."locale/$plugin")) safe_mkdir(CONS_PATH_CACHE."locale/$plugin");
+					if (!is_dir(CONS_PATH_CACHE."locale/$plugin")) {
+						(new \Prescia\Services\FileService())->ensureDirectory(CONS_PATH_CACHE."locale/$plugin");
+					}
 				$cacheFile = CONS_PATH_CACHE."locale/$plugin".$strippedFile.".cache";
 				$cacheMTFile = CONS_PATH_CACHE."locale/$plugin".$strippedFile.".cachemd";
 			} else {
-				if (!is_dir(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/locale/")) safe_mkdir(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/locale/");
+					if (!is_dir(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/locale/")) {
+						(new \Prescia\Services\FileService())->ensureDirectory(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/locale/");
+					}
 				$cacheFile = CONS_PATH_CACHE.$_SESSION['CODE']."/meta/locale/".$strippedFile.".cache";
 				$cacheMTFile = CONS_PATH_CACHE.$_SESSION['CODE']."/meta/locale/".$strippedFile.".cachemd";
 			}
@@ -150,7 +157,7 @@ class CintlControl {
 				$ofMD = filemtime($file); # modify date of ORIGINAL file
 				$cMD = cReadFile($cacheMTFile); # modify date of ORIGINAL file when CACHE file was created
 				if ($cMD == $ofMD) { # valid cache file (it was created from the current original file)
-					$newData = @unserialize(cReadFile($cacheFile));
+					$newData = presciaSafeUnserialize(cReadFile($cacheFile));
 					if (is_array($newData)) {
 						$this->parent->template->lang_replacer = array_merge($this->parent->template->lang_replacer,$newData);
 						return true;
@@ -200,4 +207,3 @@ class CintlControl {
 	} # langOut
 #-
 }
-

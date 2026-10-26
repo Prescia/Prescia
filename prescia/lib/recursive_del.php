@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | recursive_del Recursivelly (as per parameter) deletes all files and folders at path
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ prescia.net
   | Free to use, change and redistribute, but please keep the above disclamer.

@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | Directory bundle
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto
   | Free to use, change and redistribute, but please keep the above disclamer.
@@ -27,19 +28,26 @@
 
 	# Creates a folder tree
 	# Returns true/false for sucess
-	function makeDirs($path,$base = "") {
-	  	if ($base != "" && substr($base,strlen($base)-1) != "/") $base .= '/';
-	  	$paths = explode("/",$path);
-	  	if ($base != "" && !is_dir($base))
-	  		if (!safe_mkdir($base))
-	  			return false;
-	  	while (count($paths)>0) {
+		function makeDirs($path,$base = "") {
+			$files = new \Prescia\Services\FileService();
+			if ($base != "" && substr($base,strlen($base)-1) != "/") $base .= '/';
+			$paths = explode("/",$path);
+			if ($base != "" && !is_dir($base))
+				try {
+					$files->ensureDirectory($base);
+				} catch (\RuntimeException $exception) {
+					return false;
+				}
+			while (count($paths)>0) {
 	  		$starter = array_shift($paths);
 	  		if ($starter != "") {
-	  			$base .= $starter."/";
-	  			if (!is_dir($base))
-	  				if (!safe_mkdir($base))
-	  					return false;
+					$base .= $starter."/";
+					if (!is_dir($base))
+						try {
+							$files->ensureDirectory($base);
+						} catch (\RuntimeException $exception) {
+							return false;
+						}
 	  		}
 	  	}
 	  	return true;
@@ -57,5 +65,3 @@
 	  	return number_format($size,1).$trail[$pos];
 	}
 	
-
-

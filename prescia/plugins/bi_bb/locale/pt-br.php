@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 	"forums" => "Forums",
 	"messages" => "Mensagens",
 	"profile" => "Perfil",

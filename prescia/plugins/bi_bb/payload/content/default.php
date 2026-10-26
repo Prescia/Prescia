@@ -1,4 +1,9 @@
-<? /* ----------------------------------------- Default script for bb pages
+<?php
+
+/** @var CPrescia $core Core context assigned by mod_bi_bb::onRender(). */
+/** @var mod_bi_bb $this Module context assigned by mod_bi_bb::onRender(). */
+
+/* ----------------------------------------- Default script for bb pages
  *
  */
 

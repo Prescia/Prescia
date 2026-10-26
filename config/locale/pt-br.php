@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 "bi_sessionnote"=>"Quando você alterar de site mudando o domains, use ?noSession=true para limpar a sessão/cache para o framework carregar o novo domínio",
 "minlvltooptions"=>"Nível mínimo para alterar opções gerais",
 'contactmail' => "Mail padrão de contato",

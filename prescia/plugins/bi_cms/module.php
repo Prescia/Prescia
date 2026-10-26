@@ -1,5 +1,7 @@
-<?	# -------------------------------- CMS plugin
-	# Contentman tags start as {CONTENTMAN} for code 1, then {CONTENTMAN#} where # > 1
+<?php	# -------------------------------- CMS plugin
+
+/** @var CPrescia $this Core context injected by CPrescia::addPlugin(). */
+		# Contentman tags start as {CONTENTMAN} for code 1, then {CONTENTMAN#} where # > 1
 
 if (CONS_DB_HOST=='') $this->errorControl->raise(4,'bi_cms','CMS module requires database');
 
@@ -30,7 +32,9 @@ class mod_bi_cms extends CscriptedModule  {
 			$this->rebuildCM();
 			$cm = $this->parent->loaded($this->moduleRelation);
 			$sql = "SELECT DISTINCT(page) FROM ".$cm->dbname;
-			$this->parent->dbo->query($sql,$r,$n);
+			$r = false;
+			$n = 0;
+			$this->parent->dbo->queryPrepared($sql, "", array(), $r, $n);
 			$this->parent->loadDimconfig(true);
 			$newC = array();
 			for($c=0;$c<$n;$c++) {
@@ -94,8 +98,10 @@ class mod_bi_cms extends CscriptedModule  {
 			// checks if there is some non-unique item with keys code,page,lang (old version used these as keys, but changed to simplify parenting)
 			if (isset($data['code']) && isset($data['lang']) && isset($data['page'])) {
 				$cm = $this->parent->loaded($this->moduleRelation);
-				$sql = "SELECT count(*) FROM ".$cm->dbname." WHERE code='".$data['code']."' AND page='".$data['page']."' AND lang='".$data['lang']."'".($action==CONS_ACTION_INCLUDE?"":" AND id<>'".$data['id']."'");
-				if ($this->parent->dbo->fetch($sql)>0) {
+				$sql = "SELECT count(*) FROM ".$cm->dbname." WHERE code=? AND page=? AND lang=?".($action==CONS_ACTION_INCLUDE?"":" AND id<>?");
+				$types = $action == CONS_ACTION_INCLUDE ? 'sss' : 'sssi';
+				$params = $action == CONS_ACTION_INCLUDE ? array($data['code'], $data['page'], $data['lang']) : array($data['code'], $data['page'], $data['lang'], (int)$data['id']);
+				if ($this->parent->dbo->fetchPrepared($sql, $types, $params)>0) {
 					$this->parent->errorControl->raise(520,$data['page'],$this->moduleRelation,$this->parent->langOut('cms_repeated_keys')." ".$data['code'].",".$data['lang']);
 					return false;
 				}
@@ -103,8 +109,8 @@ class mod_bi_cms extends CscriptedModule  {
 
 		} else if ($_SESSION[CONS_SESSION_ACCESS_LEVEL] < 100) { // cannot DELETE an item marked as LOCKED
 			$cm = $this->parent->loaded($this->moduleRelation);
-			$sql = "SELECT locked FROM ".$cm->dbname." WHERE id=".$data['id'];
-			$l = $this->parent->dbo->fetch($sql);
+				$sql = "SELECT locked FROM ".$cm->dbname." WHERE id=?";
+				$l = $this->parent->dbo->fetchPrepared($sql, 'i', array((int)$data['id']));
 			if ($l=='y') {
 				$this->parent->errorControl->raise(521,$data['id'],$this->moduleRelation);
 				return false;
@@ -134,7 +140,9 @@ class mod_bi_cms extends CscriptedModule  {
 		if ($module->name == $this->moduleRelation && !$earlyNofity) {
 			$cm = $this->parent->loaded($this->moduleRelation);
 			$sql = "SELECT DISTINCT(page) FROM ".$cm->dbname." WHERE publish='y'";
-			$this->parent->dbo->query($sql,$r,$n);
+			$r = false;
+			$n = 0;
+			$this->parent->dbo->queryPrepared($sql, "", array(), $r, $n);
 			$this->parent->loadDimconfig(true);
 			$newC = array();
 			for($c=0;$c<$n;$c++) {
@@ -170,24 +178,28 @@ class mod_bi_cms extends CscriptedModule  {
 				array_pop($filewoext);
 				$filewoext = implode(".",$filewoext);
 				if (strpos($content,"{CONTENTMAN}") !== false) {
-					$sql = "SELECT page FROM ".$cm->dbname." WHERE code=1 AND page=\"/$filewoext\"";
-					$id = $this->parent->dbo->fetch($sql);
-					if ($id === false) {
-						foreach ($possibleLangs as $lang)
-							if ($lang != '')
-								$this->parent->dbo->simpleQuery("INSERT INTO ".$cm->dbname." SET code=1,page=\"/$filewoext\",title=\"$filewoext\",content=\"Content Manager\", lang='".$lang."'");
+					$sql = "SELECT page FROM ".$cm->dbname." WHERE code=? AND page=?";
+					$id = $this->parent->dbo->fetchPrepared($sql, 'is', array(1, "/$filewoext"));
+						if ($id === false) {
+							foreach ($possibleLangs as $lang) {
+								if ($lang == '') continue;
+								$r = false; $n = 0;
+								$this->parent->dbo->queryPrepared("INSERT INTO ".$cm->dbname." SET code=?,page=?,title=?,content=?,lang=?", 'issss', array(1, "/$filewoext", $filewoext, "Content Manager", $lang), $r, $n);
+							}
 					}
 				}
 				$c=2;
 				while (true) { // we are insane =p
 					if (strpos($content,"{CONTENTMAN".$c."}") !== false) {
-						$sql = "SELECT page FROM ".$cm->dbname." WHERE code=$c AND page=\"/$filewoext\"";
-						$id = $this->parent->dbo->fetch($sql);
-						if ($id === false) {
-							foreach ($possibleLangs as $lang)
-								if ($lang != '')
-									$this->parent->dbo->simpleQuery("INSERT INTO ".$cm->dbname." SET code=$c,page=\"/$filewoext\",title=\"$filewoext $c\",content=\"Content Manager ($filewoext $c)\", lang='".$lang."'");
-						}
+							$sql = "SELECT page FROM ".$cm->dbname." WHERE code=? AND page=?";
+							$id = $this->parent->dbo->fetchPrepared($sql, 'is', array($c, "/$filewoext"));
+							if ($id === false) {
+								foreach ($possibleLangs as $lang) {
+									if ($lang == '') continue;
+									$r = false; $n = 0;
+									$this->parent->dbo->queryPrepared("INSERT INTO ".$cm->dbname." SET code=?,page=?,title=?,content=?,lang=?", 'issss', array($c, "/$filewoext", "$filewoext $c", "Content Manager ($filewoext $c)", $lang), $r, $n);
+								}
+							}
 					} else
 						break; // nah, not insane
 					$c++;
@@ -218,14 +230,14 @@ class mod_bi_cms extends CscriptedModule  {
 			// no, make it
 			$cm = $this->parent->loaded($this->moduleRelation);
 			$this->cmstree = $cm->getContents();
-			function removeNull($tree) {
+			$removeNull = function ($tree) use (&$removeNull): void {
 				if (isset($tree->data['page']) && ($tree->data['page'] == '/'))
 					$tree->data['page'] = "#";
 				$t = $tree->total();
 				for ($c=0;$c<$t;$c++)
-					removeNull($tree->branchs[$c]);
-			}
-			removeNull($this->cmstree);
+					$removeNull($tree->branchs[$c]);
+			};
+			$removeNull($this->cmstree);
 		}
 		$cmt = clone $this->cmstree;
 		if ($selected !=0) $cmt->selectWholeBranch($selected);
@@ -256,14 +268,14 @@ class mod_bi_cms extends CscriptedModule  {
 			// no, make it
 			$cm = $this->parent->loaded($this->moduleRelation);
 			$this->cmstree = $cm->getContents();
-			function removeNull($tree) {
+			$removeNull = function ($tree) use (&$removeNull): void {
 				if (isset($tree->data['page']) && ($tree->data['page'] == '/'))
 				$tree->data['page'] = "#";
 				$t = $tree->total();
 				for ($c=0;$c<$t;$c++)
-				removeNull($tree->branchs[$c]);
-			}
-			removeNull($this->cmstree);
+				$removeNull($tree->branchs[$c]);
+			};
+			$removeNull($this->cmstree);
 		}
 		$cmt = clone $this->cmstree;
 		// build/echo output
@@ -287,12 +299,14 @@ class mod_bi_cms extends CscriptedModule  {
 			if ($this->cmscache !== false) return $this->cmscache[0];
 			$cm = $this->parent->loaded($this->moduleRelation);
 			$this->serveThisPage = $this->serveThisPage != '' ? $this->serveThisPage : $this->parent->context_str.$this->parent->action;
-			$sql = "SELECT id,content,header,code,title,meta,metakeys,page FROM ".$cm->dbname." WHERE page='".$this->serveThisPage."' AND lang='".$_SESSION[CONS_SESSION_LANG]."' ORDER BY code ASC";
-			if ($this->parent->dbo->query($sql,$r,$n) && $n>0) {
+			$sql = "SELECT id,content,header,code,title,meta,metakeys,page FROM ".$cm->dbname." WHERE page=? AND lang=? ORDER BY code ASC";
+			$r = false;
+			$n = 0;
+				if ($this->parent->dbo->queryPrepared($sql, 'ss', array($this->serveThisPage, $_SESSION[CONS_SESSION_LANG]), $r, $n)) {
 				$this->cmscache = array();
-				for ($c=0;$c<$n;$c++)
-					$this->cmscache[] = $this->parent->dbo->fetch_row($r);
-				return $this->cmscache[0];
+				while (is_array($cmsRow = $this->parent->dbo->fetch_row($r)))
+					$this->cmscache[] = $cmsRow;
+				return $this->cmscache[0] ?? false;
 			} else
 				return false;
 		} else
@@ -301,14 +315,16 @@ class mod_bi_cms extends CscriptedModule  {
 
 	function getparent($id) { // return the parent data (other than 0) from this entry
 		$cm = $this->parent->loaded($this->moduleRelation);
-		$sql = "SELECT id,id_parent,content,header,code,title,meta,metakeys,page FROM ".$cm->dbname." WHERE id=$id";
-		while ($this->parent->dbo->query($sql,$r,$n) && $n>0) {
+			$sql = "SELECT id,id_parent,content,header,code,title,meta,metakeys,page FROM ".$cm->dbname." WHERE id=?";
+		$r = false;
+		$n = 0;
+			while ($this->parent->dbo->queryPrepared($sql, 'i', array((int)$id), $r, $n) && $n>0) {
 			$data = $this->parent->dbo->fetch_assoc($r);
 			if ($data['id_parent'] == '0') return $data;
-			$sql = "SELECT id,id_parent,content,header,code,title,meta,metakeys,page FROM ".$cm->dbname." WHERE id=".$data['id_parent']." AND code=1";
+			$id = (int)$data['id_parent'];
+				$sql = "SELECT id,id_parent,content,header,code,title,meta,metakeys,page FROM ".$cm->dbname." WHERE id=? AND code=1";
 		}
 		return false;
 	}
 
 }
-

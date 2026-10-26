@@ -1,4 +1,10 @@
-<? // ------------------------ Prescia prepareMail. Will look for $name if cannot find $name_$lang
+<?php
+
+/** @var CPrescia $this Core context that includes this lazy-load. */
+/** @var string $name Mail template name requested by CPrescia::prepareMail(). */
+/** @var array<int|string, mixed> $fillArray Values used to fill the mail template. */
+
+// ------------------------ Prescia prepareMail. Will look for $name if cannot find $name_$lang
 
 	# prepareMail($name="",$fillArray=array()) {
 
@@ -9,6 +15,7 @@
 	else if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/mail/template.html"))
 		$file = CONS_PATH_PAGES.$_SESSION['CODE']."/mail/template.html";
 	$mail = new CKTemplate($this->template);
+	$template = "";
 	if ($file != "")
 		$mail->fetch($file);
 	if ($name != "") {

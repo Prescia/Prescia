@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | getBrowser : Returns an array
   |		(Browser name,
   |		 true|false for legacy support,

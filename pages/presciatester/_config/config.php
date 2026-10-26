@@ -1,4 +1,6 @@
-<?  # -------------------------------- Custom config
+<?php  # -------------------------------- Custom config
+
+/** @var CPrescia $this Core context of the site configuration loader. */
 
 	date_default_timezone_set("America/Sao_Paulo");
 	ini_set("allow_url_fopen", 0); // for safety, leave 0 unless you need it
@@ -21,11 +23,11 @@
 		//$dev = $this->addPlugin('bi_dev');
 
 	} else { // <------------- settings for your local production machine
-		define("CONS_INSTALL_ROOT","/"); // if AFF is installed in other than the ROOT folder, fill this (must end and start with /)
-		define("CONS_DB_HOST","localhost"); // leave empty if not using a database. The framework will enter dbless mode
-		define("CONS_DB_BASE","presciatester");
-		define("CONS_DB_USER","root"); // Overridden by master, if set
-		define("CONS_DB_PASS","root"); // Overridden by master, if set
+			define("CONS_INSTALL_ROOT","/"); // if AFF is installed in other than the ROOT folder, fill this (must end and start with /)
+			define("CONS_DB_HOST","localhost"); // leave empty if not using a database. The framework will enter dbless mode
+			define("CONS_DB_BASE","presciatester");
+			define("CONS_DB_USER",(string)(getenv("PRESCIA_DB_USER") ?: ""));
+			define("CONS_DB_PASS",(string)(getenv("PRESCIA_DB_PASSWORD") ?: ""));
 
 		// you should have this enabled to help you while creating the site, then disable it for performance, or keep only on production (a.k.a. right here =p)
 		$dev = $this->addPlugin('bi_dev');

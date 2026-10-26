@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 
 	if (!$core->authControl->checkPermission('bi_adm','can_logs'))
 		$core->fastClose(403);
@@ -74,7 +76,7 @@
 
 	$core->template->assign("_error",$temp);
 
-	function appendActs(&$core,&$output,&$template,$data) {
+	function appendLogActs(&$core,&$output,&$template,$data) {
 		foreach ($data as $line) {
 			$line = explode("|",$line);
 			$time = substr($line[0],0,14);
@@ -99,24 +101,24 @@
 	$previousDay = datecalc(date("Y-m-d"),0,0,-3);
 	$previousDay = str_replace("-","",$previousDay);
 	if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log"))
-		appendActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")));
+		appendLogActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")));
 
 	// 2 day ago
 	$previousDay = datecalc(date("Y-m-d"),0,0,-2);
 	$previousDay = str_replace("-","",$previousDay);
 	if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log"))
-		appendActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")));
+		appendLogActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")));
 
 	// 1 day ago
 	$previousDay = datecalc(date("Y-m-d"),0,0,-1);
 	$previousDay = str_replace("-","",$previousDay);
 	if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log"))
-		appendActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")));
+		appendLogActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")));
 
 	# Today
 	$previousDay = date("Ymd");
 	if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log"))
-		appendActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")));
+		appendLogActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")));
 
 	$core->template->assign("_actions",$temp);
 

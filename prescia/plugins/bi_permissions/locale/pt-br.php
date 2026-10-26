@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 "module" => "Módulo",
 "owner" => "Proprietário",
 "group" => "Grupo",

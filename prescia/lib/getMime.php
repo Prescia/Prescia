@@ -1,4 +1,4 @@
-<?
+<?php
 	function getMime($ext) { # returns Mime Type (string), check the getMimeMode() for download options
 		$knownExts = array(
 		'gif' => 'image/gif',

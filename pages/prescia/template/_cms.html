@@ -1,24 +1,27 @@
 {_}
-{_breadcrubs}<a href="{page}.html">{title}</a> {_hasnext}&raquo;{/hasnext}{/breadcrubs}
+{_breadcrubs}
+<nav class="psc-breadcrumb-nav" aria-label="breadcrumb">
+	<ol class="breadcrumb psc-breadcrumb">
+		<li><a href="{vdir}index.html"><span class="glyphicon glyphicon-home"></span></a></li>
+		<li {_hasnext}class="active"{/hasnext}><a href="{page}.html">{title}</a></li>
+	</ol>
+</nav>
+{/breadcrubs}
 {/}
 
-<div class="container">
-	<article>
-		<header>
-			<h1>{CONTENTMAN_TITLE}</h1>
+<div class="container psc-cms-container">
+	<article class="psc-cms-article">
+		<header class="psc-cms-header">
+			<h1 class="psc-cms-title">{CONTENTMAN_TITLE}</h1>
 		</header>
-	
-	<div>{CONTENTMAN}</div>
-	
+		<div class="psc-cms-body">{CONTENTMAN}</div>
 	</article>
-	<div class="text-right">
-		<a href="#" style="margin-right:30px">
-		  <span class="glyphicon glyphicon-arrow-up"></span> Top
+	<div class="psc-cms-nav">
+		<a href="#" class="psc-back-top">
+			<span class="glyphicon glyphicon-arrow-up"></span> Top
 		</a>
-		
-		<a href="{vdir}index.html">
-		  <span class="glyphicon glyphicon-home"></span> Home
+		<a href="{vdir}index.html" class="psc-back-home">
+			<span class="glyphicon glyphicon-home"></span> Home
 		</a>
 	</div>
-
 </div>

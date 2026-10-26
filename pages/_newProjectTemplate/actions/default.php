@@ -1,4 +1,4 @@
-<? /* -------------------------------------------------
+<?php /* -------------------------------------------------
  * action/default.php
  * This file runs ALWAYS (if on the proper folder, ofc), and is the VERY FIRST to run. Only codes that run before are onMeta and onCheckActions from plugins
  * Right after this, the page/action file (if any) will run.

@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 	$core->loadAllModules();
 	$core->loadDimconfig(true);
@@ -8,17 +11,17 @@
 			$core->setLog(CONS_LOGGING_WARNING);
 		} else {
 
-			$dimconfigMD = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_dimconfig.dat"));
+			$dimconfigMD = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_dimconfig.dat"));
 
 			foreach ($core->dimconfig as $name => $v) {
-				if (!isset($dimconfigMD[$name])) {
-					if (isset($_POST[$name]))
-						$core->dimconfig[$name] = trim($_POST[$name]);
-				} else {
-					if (isset($dimconfigMD[$name][CONS_XML_RESTRICT]) && $dimconfigMD[$name][CONS_XML_RESTRICT]>$_SESSION[CONS_SESSION_ACCESS_LEVEL]) continue;
-					if ($name == 'guest_group' && is_numeric($v)) {
-						$groupModule = $core->loaded(CONS_AUTH_GROUPMODULE);
-						$lvl = $core->dbo->fetch("SELECT level FROM ".$groupModule->dbname." WHERE id=".$_POST[$name]);
+					if (!isset($dimconfigMD[$name])) {
+						if (isset($_POST[$name]) && is_scalar($_POST[$name]))
+							$core->dimconfig[$name] = trim((string)$_POST[$name]);
+					} else {
+						if (isset($dimconfigMD[$name][CONS_XML_RESTRICT]) && $dimconfigMD[$name][CONS_XML_RESTRICT]>$_SESSION[CONS_SESSION_ACCESS_LEVEL]) continue;
+						if ($name == 'guest_group' && is_numeric($v) && isset($_POST[$name]) && is_scalar($_POST[$name]) && is_numeric($_POST[$name])) {
+							$groupModule = $core->loaded(CONS_AUTH_GROUPMODULE);
+							$lvl = $core->dbo->fetchPrepared("SELECT level FROM ".$groupModule->dbname." WHERE id=?", 'i', array((int)$_POST[$name]));
 						if ($lvl > 0) {
 							$core->log[] = $core->langOut("guest_mustbe_level0_group");
 							$core->setLog(CONS_LOGGING_WARNING);
@@ -35,9 +38,10 @@
 
 							// perform delete test
 
-							if (isset($_REQUEST[$name."_delete"]) || (isset($_FILES[$name]) && $_FILES[$name]['error']==0 )) { // delete ou update
+								if (isset($_REQUEST[$name."_delete"]) || (isset($_FILES[$name]) && $_FILES[$name]['error']==0 )) { // delete ou update
 
-								if (locateFile($FirstfileName,$ext)) {
+									$ext = '';
+									if (locateFile($FirstfileName,$ext)) {
 									@unlink($FirstfileName);
 									$thumbVersions = isset($dimconfigMD[$name][CONS_XML_THUMBNAILS])?count($dimconfigMD[$name][CONS_XML_THUMBNAILS]):1;
 									for ($tb=1;$tb<$thumbVersions;$tb++) { # for all thumbs ...
@@ -54,9 +58,9 @@
 
 								# quota test
 								if (isset($core->dimconfig['_usedquota']) && isset($core->dimconfig['quota']) && $core->dimconfig['quota'] > 0) {
-									if ($core->dimconfig['_usedquota'] > $core->dimconfig['quota']) {
-										$core->errorControl->raise(210,$name,'dincomfig');
-										continue;
+						if ($core->dimconfig['_usedquota'] > $core->dimconfig['quota']) {
+							$core->errorControl->raise(210,$name,'dincomfig');
+							continue 2;
 									}
 								}
 
@@ -102,10 +106,10 @@
 
 								$mfs = isset($dimconfigMD[$name][CONS_XML_FILEMAXSIZE])?$dimconfigMD[$name][CONS_XML_FILEMAXSIZE]:0;
 								if (isset($dimconfigMD[$name][CONS_XML_FILEMAXSIZE]) && !$isImg) {
-									if (filesize($_FILES[$name]['tmp_name'])>$dimconfigMD[$name][CONS_XML_FILEMAXSIZE]) {
-										@unlink($_FILES[$name]['tmp_name']);
-										$core->errorControl->raise(202,$name,'dincomfig');
-										continue;
+						if (filesize($_FILES[$name]['tmp_name'])>$dimconfigMD[$name][CONS_XML_FILEMAXSIZE]) {
+							@unlink($_FILES[$name]['tmp_name']);
+							$core->errorControl->raise(202,$name,'dincomfig');
+							continue 2;
 									}
 								}
 

@@ -1,0 +1,5 @@
+services:
+  web:
+    volumes:
+      - .:/var/www/html
+      - ./config:/var/www/html/config

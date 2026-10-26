@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 	if (!$core->authControl->checkPermission('bi_adm','can_importexport'))
 		$core->fastClose(403);
@@ -7,7 +10,8 @@
 
 
 
-	if (isset($_POST['haveinfo'])) {
+		$previousSafety = $core->safety;
+		if (isset($_POST['haveinfo'])) {
 		$core->storage['failed'] = array();
 		$core->loadAllmodules();
 		if (!CONS_ONSERVER)
@@ -26,7 +30,7 @@
 			$c = 0;
 			$fT = array(0=>-1);
 			include_once(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/importer.php");
-			$importerObj = new Cimporter($core);
+			$importerObj = new CImporter($core);
 			$iFields = $importerObj->fields($module); // database fields
 			foreach ($iFields as $idx => $field) {
 				$fT[$field['#']] = $idx; // converts a field number to the place in iFields
@@ -130,15 +134,22 @@
 												/**/#echo "old parent not found<br/>";
 											}
 
-											if (!isset($linkerCache[$iFields[$idx]['name']])) # do I have a cache for this table?
-												$linkerCache[$iFields[$idx]['name']] = array(); # no
-											if (!isset($linkerCache[$iFields[$idx]['name']][$regs[$c]])) { # do not have this item cached, look for it
-												if (isset($_REQUEST['exactlinkers']))
-													$sql = $iFields[$idx]['remoteModule']->get_base_sql("(".$iFields[$idx]['remoteModule']->title." LIKE \"".cleanString($regs[$c])."\" OR ".$iFields[$idx]['remoteModule']->keys[0]."=\"".cleanString($regs[$c])."\")");
-												else
-													$sql = $iFields[$idx]['remoteModule']->get_base_sql("(".$iFields[$idx]['remoteModule']->title." LIKE \"%".cleanString($regs[$c])."%\" OR ".$iFields[$idx]['remoteModule']->keys[0]."=\"".cleanString($regs[$c])."\")");
-												$sql['SELECT'] = array($iFields[$idx]['remoteModule']->keys[0]);
-												$core->dbo->query($sql,$r,$n);
+								if (!isset($linkerCache[$iFields[$idx]['name']])) # do I have a cache for this table?
+									$linkerCache[$iFields[$idx]['name']] = array(); # no
+					if (!isset($linkerCache[$iFields[$idx]['name']][$regs[$c]])) { # do not have this item cached, look for it
+						$r = false;
+						$n = 0;
+						$lookupValue = (string)$regs[$c];
+						$lookupTitle = isset($_REQUEST['exactlinkers']) ? $lookupValue : "%".$lookupValue."%";
+						$remoteModule = $iFields[$idx]['remoteModule'];
+						$sql = $remoteModule->get_base_sql(
+							"(".$remoteModule->title." LIKE ? OR ".$remoteModule->keys[0]."=?)"
+						);
+						$sql['SELECT'] = array($remoteModule->keys[0]);
+						$sqlText = $core->dbo->sqlarray_echo($sql);
+						$r = false;
+						$n = 0;
+						$core->dbo->queryPrepared($sqlText,'ss',array($lookupTitle,$lookupValue),$r,$n);
 												if ($n == 1) {
 													list($coreID) = $core->dbo->fetch_row($r);
 													$linkerCache[$iFields[$idx]['name']][$regs[$c]] = $coreID;
@@ -159,7 +170,7 @@
 											}
 										} else if ($iFields[$idx]['type'] == CONS_TIPO_DATE) {
 											/**/#echo "Item is a date<br/>";
-											if (ereg("([0-9]{2})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2})",$regs[$c],$tuplas)) {
+											if (preg_match("/([0-9]{2})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2})[^0-9]?([0-9]{2})/",$regs[$c],$tuplas)) {
 												switch ($_REQUEST['cvsData']) {
 													case "ymd":
 														$dataArray[$iFields[$idx]['name']] = $tuplas[1].$tuplas[2]."-".$tuplas[3]."-".$tuplas[4];
@@ -177,8 +188,8 @@
 											} else if ($iFields[$idx]['type'] == CONS_TIPO_ENUM) {
 												/**/#echo "Item is an enum<br/>";
 												if ($iFields[$idx]['enum'] == "'y','n'") { // translate 1/0 boolean to y/n
-													if ($regs[c] == 1) $regs[c] = 'y';
-													else $regs[c] == 'n';
+									if ($regs[$c] == 1) $regs[$c] = 'y';
+									else $regs[$c] = 'n';
 												}
 											} else {
 												$dataArray[$iFields[$idx]['name']] = $regs[$c];
@@ -195,8 +206,9 @@
 							}
 							/**/#echo "Array: ".print_r($dataArray,true)."<br/>";
 
-							if ($ok) {
-								$core->setLog(CONS_LOGGING_SUCCESS);
+								$oldKey = 0;
+								if ($ok) {
+									$core->setLog(CONS_LOGGING_SUCCESS);
 								$dataArray = fillDefaults($module,$dataArray);
 
 								if ($isSimulation) {
@@ -209,6 +221,7 @@
 									}
 									$core->lastReturnCode++;
 								} else {
+									$tempOk = true;
 									if (count($dataArray)>0) {
 										$tempOk = $core->runAction($module,CONS_ACTION_INCLUDE,$dataArray);
 										if (!$tempOk){
@@ -272,6 +285,7 @@
 					for ($c=0;$c<count($replacer);$c++)
 						$replacer[$c] = explode("=",$replacer[$c]);
 					foreach ($importContent as $Content) {
+						$originalContent = $Content;
 						if (isset($_REQUEST['utf8enforce'])) $Content = utf8_decode($Content);
 						if ($Content != "" && preg_match($pattern,$Content,$regs)!=0) {
 							$dataArray = array();
@@ -330,13 +344,13 @@
 
 		} else
 			$core->log[] = "Module not found";
-	}
+		}
+		$core->safety = $previousSafety;
 
-	function fillDefaults($module,$dA) {
+		function fillDefaults($module,$dA) {
 		foreach ($module->fields as $fname => $field) {
 			if (!isset($dA[$fname]) && isset($_REQUEST[$fname]) && $_REQUEST[$fname] != '')
 				$dA[$fname] = $_REQUEST[$fname];
 		}
 		return $dA;
 	}
-

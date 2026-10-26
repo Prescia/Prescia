@@ -1,4 +1,6 @@
-<?	# -------------------------------- BB Plugin
+<?php	# -------------------------------- BB Plugin
+
+/** @var CPrescia $this Core context injected by CPrescia::addPlugin(). */
 
 if (CONS_DB_HOST=='') $this->errorControl->raise(4,'bi_bb','Bulleting Board/Blogger module requires database');
 if (!isset($this->loadedPlugins['bi_adm'])) $this->errorControl->raise(4,'bi_bb','Bulleting Board/Blogger module requires the ADMIN module');
@@ -28,7 +30,8 @@ class mod_bi_bb extends CscriptedModule  {
 	var $ignorefolders = ""; // leave empty or it will ignore root. Use this for sub-folders that are not part of the bi_bb, thus all bi_bb scripts will be ignored. Comma delimited
 	######################
 
-	var $customPermissions = array('can_flag' => 'can_flag',
+	/** @var array<string, string> */
+	public array $customPermissions = array('can_flag' => 'can_flag',
 								   'can_blog' => 'can_blog', // the standard settings is for every mode. This is just for blog/article (if you disable main permission, this is useless)
 								   'can_prop' => 'can_prop'
 									);
@@ -124,6 +127,7 @@ class mod_bi_bb extends CscriptedModule  {
 			}
 
 
+			$frame = "";
 			if (($this->parent->layout == 0 || $this->parent->layout == 3) && $this->parent->nextContainer != '') {
 
 				if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/template/".$this->bbfolder."frame.html")) {
@@ -165,25 +169,46 @@ class mod_bi_bb extends CscriptedModule  {
 		if (!$earlyNotify && $module->name == "forum" && isset($data['id_parent']) && $data['id_parent'] != 0 && $action != CONS_ACTION_DELETE) {
 			// we changed a forum that have a parent. We will FORCE same language and operation mode as parent
 			$objForum = $this->parent->loaded('forum');
-			if ($this->parent->dbo->query("SELECT lang,operationmode FROM ".$objForum->dbname." WHERE id=".$data['id_parent'],$r,$n) && $n>0) {
+			$r = false;
+			$n = 0;
+				if ($this->parent->dbo->queryPrepared("SELECT lang,operationmode FROM ".$objForum->dbname." WHERE id=?", 'i', array((int)$data['id_parent']), $r, $n) && $n>0) {
 				list($lang,$om) = $this->parent->dbo->fetch_row($r);
-				if ((isset($data['lang']) && $data['lang'] != $lang) ||
-				    (isset($data['operationmode']) && $data['operationmode'] != $om))
-					$this->parent->log[] = $this->parent->langOut("force_lang_and_om_to_parent");
-				$ok = $this->parent->dbo->simpleQuery("UPDATE ".$objForum->dbname." SET lang='$lang', operationmode='$om' WHERE id=".$data['id']);
+					if ((isset($data['lang']) && $data['lang'] != $lang) ||
+					    (isset($data['operationmode']) && $data['operationmode'] != $om))
+						$this->parent->log[] = $this->parent->langOut("force_lang_and_om_to_parent");
+					$updateResult = false;
+					$updateRows = 0;
+					$ok = $this->parent->dbo->queryPrepared("UPDATE ".$objForum->dbname." SET lang=?, operationmode=? WHERE id=?", 'ssi', array($lang, $om, (int)$data['id']), $updateResult, $updateRows);
 
 			}
 		}
 
 	}
 
-	function getTags($filter="") { # Filter is an SQL where statement
+	/**
+	 * @param array<string, scalar|null> $filters Equality filters keyed by module field.
+	 * @return array<string, int>
+	 */
+	function getTags(array $filters = array()) {
 		# tag sizes 0 ~ 4
+		/** @var array<string, int> $TAGS */
 		$TAGS = array();
 		$maxTAG = 1;
 		$mod = $this->parent->loaded($this->moduleRelation);
-		$sql = "SELECT ".$mod->name.".tags FROM ".$mod->dbname." as ".$mod->name." WHERE ".$mod->name.".tags<>''".($filter != ""?" AND ".$filter:"");
-		$this->parent->dbo->query($sql,$r,$n);
+		$types = '';
+		$params = array();
+		$clauses = array($mod->name.".tags<>''");
+		foreach ($filters as $field => $value) {
+			if (!is_string($field) || !array_key_exists($field, $mod->fields))
+				throw new InvalidArgumentException('Tag filter field is not available in the selected module.');
+			$clauses[] = $mod->name.".".$field."=?";
+			$types .= is_int($value) ? 'i' : (is_float($value) ? 'd' : 's');
+			$params[] = $value;
+		}
+		$sql = "SELECT ".$mod->name.".tags FROM ".$mod->dbname." as ".$mod->name." WHERE ".implode(' AND ', $clauses);
+		$r = false;
+		$n = 0;
+		$this->parent->dbo->queryPrepared($sql,$types,$params,$r,$n);
 		for ($c=0;$c<$n;$c++) {
 			list($ttags) = $this->parent->dbo->fetch_row($r);
 			$ttags = multiexplode(array(" ",',',';'),strtolower($ttags));
@@ -193,22 +218,39 @@ class mod_bi_bb extends CscriptedModule  {
 						$TAGS[$tag]++;
 					else
 						$TAGS[$tag] = 1;
-					if ($TAGS[$tag]>$maxTAG) $maxTAG =$TAGS[$tag];
+						if ($TAGS[$tag] > $maxTAG) $maxTAG = (int) $TAGS[$tag];
 				}
 			}
 		}
 		foreach ($TAGS as $tag => $count) {
-			$TAGS[$tag] = ($count<$maxTAG/5)?0:(($count<2*$maxTAG/5)?1:(($count<3*$maxTAG/5)?2:(($count<4*$maxTAG/5)?3:4)));
+				$count = (int) $count;
+				$TAGS[$tag] = ($count < $maxTAG / 5) ? 0 : (($count < 2 * $maxTAG / 5) ? 1 : (($count < 3 * $maxTAG / 5) ? 2 : (($count < 4 * $maxTAG / 5) ? 3 : 4)));
 		}
 
 		return $TAGS;
 	}
 
-	function getArchieveDates($filter="") { # Filter is an SQL where statement
+	/**
+	 * @param array<string, scalar|null> $filters Equality filters keyed by module field.
+	 * @return array<string, array<string, string>>
+	 */
+	function getArchieveDates(array $filters = array()) {
 		$mod = $this->parent->loaded($this->moduleRelation);
-		$sql = "SELECT ".$mod->name.".date FROM ".$mod->dbname." as ".$mod->name." ".($filter!=""?"WHERE $filter":"")." ORDER BY ".$mod->name.".date DESC";
+		$types = '';
+		$params = array();
+		$clauses = array($mod->name.".date<>''");
+		foreach ($filters as $field => $value) {
+			if (!is_string($field) || !array_key_exists($field, $mod->fields))
+				throw new InvalidArgumentException('Archive date filter field is not available in the selected module.');
+			$clauses[] = $mod->name.".".$field."=?";
+			$types .= is_int($value) ? 'i' : (is_float($value) ? 'd' : 's');
+			$params[] = $value;
+		}
+		$sql = "SELECT ".$mod->name.".date FROM ".$mod->dbname." as ".$mod->name." WHERE ".implode(' AND ', $clauses)." ORDER BY ".$mod->name.".date DESC";
 		$result = array();
-		$this->parent->dbo->query($sql,$r,$n);
+		$r = false;
+		$n = 0;
+		$this->parent->dbo->queryPrepared($sql,$types,$params,$r,$n);
 		for($c=0;$c<$n;$c++) {
 			list($date) = $this->parent->dbo->fetch_row($r);
 			$YM = substr($date,0,4).substr($date,5,2);
@@ -221,9 +263,15 @@ class mod_bi_bb extends CscriptedModule  {
 	function countMessages($filterOnlyNew=false) { # get number of messages on inbox
 		if (!$this->parent->logged()) return false;
 		$mod = $this->parent->loaded('bbmail');
-		$sql = "SELECT count(*) FROM ".$mod->dbname." WHERE outbox='n' AND id_recipient=".$_SESSION[CONS_SESSION_ACCESS_USER]['id'];
-		if ($filterOnlyNew) $sql .= " AND dateseen<>'0000-00-00 00:00:00'";
-		return $this->parent->dbo->fetch($sql);
+		$sql = "SELECT count(*) FROM ".$mod->dbname." WHERE outbox='n' AND id_recipient=?";
+		$types = 'i';
+		$params = array((int)$_SESSION[CONS_SESSION_ACCESS_USER]['id']);
+		if ($filterOnlyNew) {
+			$sql .= " AND dateseen<>?";
+			$types .= 's';
+			$params[] = '0000-00-00 00:00:00';
+		}
+		return $this->parent->dbo->fetchPrepared($sql, $types, $params);
 	}
 	
 	function showHeader() {
@@ -232,7 +280,6 @@ class mod_bi_bb extends CscriptedModule  {
 		$this->parent->template->assign("areaname",$this->areaname);
 		$this->parent->template->assign("homename",$this->homename);
 		if ($this->parent->template->get("_topforums") !== false)
-			$this->parent->runContent('forum',$this->parent->template,array('(forum.id_parent=0 OR forum.id_parent is NULL)  AND forum.urla<>"" AND forum.lang="'.$_SESSION[CONS_SESSION_LANG].'"','forum.ordem asc',''),'_topforums',false,'frameforuns');
+			$this->parent->runContent('forum',$this->parent->template,array('where'=>'(forum.id_parent=0 OR forum.id_parent is NULL) AND forum.urla<>"" AND forum.lang=?','types'=>'s','params'=>array((string)$_SESSION[CONS_SESSION_LANG]),'order'=>'forum.ordem ASC','limit'=>''),'_topforums',false,'frameforuns');
 	}	
 }
-

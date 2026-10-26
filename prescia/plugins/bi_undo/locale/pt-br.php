@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 	"modulo" => "Módulo",
 	"event" => "Evento",
 	"deletion" => "Deleção",

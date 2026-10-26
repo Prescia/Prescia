@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 	// master options (remove if not master)
 	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<100) $core->template->assign("_master");
 	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<99) $core->template->assign("_highadmin");
@@ -18,7 +21,7 @@
 			if (!$module->options[CONS_MODULE_SYSTEM] && !$module->linker) {
 				if ($core->authControl->checkPermission($name)) {
 					$sql = "SELECT count(*) FROM ".$module->dbname;
-					$n = $core->dbo->fetch($sql);
+					$n = $core->dbo->fetchPrepared($sql, "", array());
 					$temp .= $template->techo(array('module' => $name,
 													'name' => $core->langOut($name).($module->options[CONS_MODULE_PARTOF]!=''?" (".$core->langOut($module->options[CONS_MODULE_PARTOF]).")":""),
 													'n' => $n)
@@ -39,7 +42,7 @@
 		$maxActions = $shown>0?$shown:10;
 		$temp = "";
 		$template = $core->template->get("_actions");
-		function appendActs(&$core,&$output,&$template,$data,$limit=20) {
+		function appendAdminActs(&$core,&$output,&$template,$data,$limit=20) {
 			$added = 0;
 			$size = count($data);
 			for ($c=$size-1;$c>=0;$c--) {
@@ -64,14 +67,14 @@
 		$previousDay = date("Ymd");
 		$added = 0;
 		if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log"))
-			$added = appendActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")),$maxActions);
+			$added = appendAdminActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")),$maxActions);
 		$maxActions -= $added;
 		if ($maxActions>0) {
 			// 1 day ago
 			$previousDay = datecalc(date("Y-m-d"),0,0,-1);
 			$previousDay = str_replace("-","",$previousDay);
 			if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log"))
-				appendActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")),$maxActions);
+				appendAdminActs($core,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/act".$previousDay.".log")),$maxActions);
 		}
 		$core->template->assign("_actions",$temp);
 		$core->cacheControl->addCachedContent('admindex_actionlog',$temp,true);
@@ -84,7 +87,7 @@
 		$core->template->assign("_devwarning");
 
 	// Statistics
-	if ($this->hasStats) {
+		if ($this->hasStatsModule()) {
 		// stats installed, show today's hits
 		$stp = $core->loadedPlugins['bi_stats']->getHits(7);
 		$biggest = 0;

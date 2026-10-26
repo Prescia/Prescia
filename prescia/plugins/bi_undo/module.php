@@ -1,11 +1,13 @@
-<?	# -------------------------------- bi_undo plugin
+<?php	# -------------------------------- bi_undo plugin
+
+/** @var CPrescia $this Core context while loading the plugin module. */
 
 if (CONS_DB_HOST=='') $this->errorControl->raise(4,'bi_undo','UNDO module requires database');
 
 class mod_bi_undo extends CscriptedModule  {
 
 
-	var $name = "bi_undo";
+	public string $name = "bi_undo";
 	var $internalMemory = array(); // will prefetch data to store on the first notify pass, and actually store on second (which means it was sucessful)
 
 	function __construct(&$parent,$moduleRelation="") {
@@ -30,8 +32,8 @@ class mod_bi_undo extends CscriptedModule  {
 	function onMeta() {
 		# Run this function during meta-load (debugmode >>ONLY<<)
 		###### -> Construct should add this module to the onMeta array
-		if (!is_dir(CONS_FMANAGER."_undodata/"))
-			safe_mkdir(CONS_FMANAGER."_undodata/");
+			if (!is_dir(CONS_FMANAGER."_undodata/"))
+				(new \Prescia\Services\FileService())->ensureDirectory(CONS_FMANAGER."_undodata/");
 	}
 
 
@@ -42,11 +44,13 @@ class mod_bi_undo extends CscriptedModule  {
 			$core = &$this->parent;
 			$undoModule = $this->parent->loaded($this->moduleRelation);
 			$sql = "SELECT id, files FROM ".$undoModule->dbname." WHERE files<>'' AND data<NOW() - INTERVAL 1 WEEK";
-			$core->dbo->query($sql,$r,$n);
-			if ($n>0) {
+			$r = false;
+				$n = 0;
+					$core->dbo->queryPrepared($sql,'',array(),$r,$n);
+				if ((int) $n > 0) {
 				for ($c=0;$c<$n;$c++) {
 					list($id,$files) = $core->dbo->fetch_row($r);
-					$files = @unserialize($files);
+					$files = presciaSafeUnserialize($files);
 					if ($files) {
 						foreach ($files as $file) {
 							if (is_file(CONS_FMANAGER."_undodata/".$file))
@@ -55,7 +59,9 @@ class mod_bi_undo extends CscriptedModule  {
 					}
 				}
 			}
-			$core->dbo->simpleQuery("DELETE FROM ".$undoModule->dbname." WHERE data<NOW() - INTERVAL 1 WEEK");
+			$deleteResult = false;
+			$deleteRows = 0;
+			$core->dbo->queryPrepared("DELETE FROM ".$undoModule->dbname." WHERE data<NOW() - INTERVAL 1 WEEK",'',array(),$deleteResult,$deleteRows);
 			# Find orphan files and delete them
 			$lastWeek = date("Y-m-d")." 00:00:00";
 			$lastWeek = datecalc($lastWeek,0,0,-7);
@@ -72,13 +78,15 @@ class mod_bi_undo extends CscriptedModule  {
 
 	}
 
-	function undo($id,$record=false) {
+		function undo($id,$record=false) {
 
-		$core = &$this->parent;
-		$undo = $core->loaded('bi_undo');
-		if (!$record) {
-			$sql = $undo->get_base_sql($undo->name.".id=".$id);
-			$core->dbo->query($sql,$record,$n);
+			$core = &$this->parent;
+			$id = (int)$id;
+			$undo = $core->loaded('bi_undo');
+			if (!$record) {
+				$sql = "SELECT * FROM ".$undo->dbname." WHERE id=?";
+			$n = 0;
+			$core->dbo->queryPrepared($sql,'i',array($id),$record,$n);
 			if ($n == 0) {
 				$core->fastClose(404);
 				return false;
@@ -91,7 +99,7 @@ class mod_bi_undo extends CscriptedModule  {
 
 		$realdados = array();
 		$canUndo = true;
-		$history = unserialize($undodados['history']);
+		$history = presciaSafeUnserialize($undodados['history']);
 		foreach ($module->fields as $fname => $fields) {
 			// fill up $_REQUEST to simulate and edit/add
 			if (isset($history[$fname])) {
@@ -101,19 +109,25 @@ class mod_bi_undo extends CscriptedModule  {
 				if ($fields[CONS_XML_TIPO] == CONS_TIPO_LINK && $history[$fname]!=0 && $history[$fname] != NULL) {
 					$remoteOk = true;
 					$remoteModule = $core->loaded($fields[CONS_XML_MODULE]);
-					$sql = $remoteModule->get_base_sql("","","",true);
-					$sql['SELECT'] = array("count(*)"); # just want to check if it exists
-					foreach ($remoteModule->keys as $key) {
-						if ($key == $remoteModule->keys[0])
-							$sql['WHERE'][] = $key."=\"".$history[$fname]."\"";
-						else if (isset($undodados[$key]))
-							$sql['WHERE'][] = $key."=\"".$history[$key]."\"";
-						else {
-							$remoteOk =false;
-							break;
+						$where = array();
+						$whereTypes = '';
+						$whereParams = array();
+						foreach ($remoteModule->keys as $key) {
+							if ($key == $remoteModule->keys[0]) {
+								$where[] = $key."=?";
+								$whereParams[] = (string)$history[$fname];
+							} else if (isset($undodados[$key])) {
+								$where[] = $key."=?";
+								$whereParams[] = (string)$undodados[$key];
+							}
+							else {
+								$remoteOk =false;
+								break;
+							}
+							$whereTypes .= 's';
 						}
-					}
-					$n = $core->dbo->fetch($sql);					
+						$sql = "SELECT count(*) FROM ".$remoteModule->dbname." WHERE ".implode(" AND ",$where);
+						$n = $remoteOk ? $core->dbo->fetchPrepared($sql,$whereTypes,$whereParams,false) : 0;
 					if ($n == 0) $remoteOk = false;
 					if (!$remoteOk) {
 						// field does not exist, what now?
@@ -140,7 +154,7 @@ class mod_bi_undo extends CscriptedModule  {
 			// ok, we can undo
 			// any files to undo this?
 			if ($undodados['files'] != "") {
-				$files = unserialize($undodados['files']);
+				$files = presciaSafeUnserialize($undodados['files']);
 				if ($files !== false) {
 					foreach ($files as $file => $exists) {
 						if ($exists && is_file(CONS_FMANAGER."_undodata/".$file)) {
@@ -166,14 +180,16 @@ class mod_bi_undo extends CscriptedModule  {
 			if ($ok) {
 				$core->log[] = $core->langOut("undo_sucessfull");
 				$this->parent->setLog(CONS_LOGGING_SUCCESS);
-				$sql = "DELETE FROM ".$undo->dbname." WHERE id=".$id; # undoed ... so we don't need this log
-				$core->dbo->simpleQuery($sql);
+					$deleteResult = false;
+					$deleteRows = 0;
+					$core->dbo->queryPrepared("DELETE FROM ".$undo->dbname." WHERE id=?", 'i', array($id), $deleteResult, $deleteRows); # undoed ... so we don't need this log
 				if ($undodados['event'] == 'delete') {
 					$newKey = $core->lastReturnCode;
 					if ($newKey != $realdados[$module->keys[0]]) {
 						# try recover main key to original state
-						$sql = "UPDATE ".$module->dbname." SET ".$module->keys[0]."=".$realdados[$module->keys[0]]." WHERE ".$module->keys[0]."=$newKey";
-						$ok = $core->dbo->simpleQuery($sql);
+						$restoreResult = false;
+						$restoreRows = 0;
+						$ok = $core->dbo->queryPrepared("UPDATE ".$module->dbname." SET ".$module->keys[0]."=? WHERE ".$module->keys[0]."=?", 'ii', array((int)$realdados[$module->keys[0]], (int)$newKey), $restoreResult, $restoreRows);
 						if (!$ok) {
 							$core->log[] = $core->langOut('undo_unable_to_keep_key');
 							$this->parent->setLog(CONS_LOGGING_WARNING);
@@ -202,19 +218,24 @@ class mod_bi_undo extends CscriptedModule  {
 		# notify followup for this field (happens before standard notify)
 
 		if ($module === false || $module->options[CONS_MODULE_SYSTEM] || isset($module->options[CONS_MODULE_NOUNDO])) return;
-		$ws = "";$ka = array();
-		if ($action != CONS_ACTION_INCLUDE) {
+			$ws = "";$ka = array();
+			if ($action != CONS_ACTION_INCLUDE) {
 			if ($earlyNotify) {
 				// saves INTENTION of performing an action. If it FAILS, we don't need to store UNDO data.
 				if (isset($this->internalMemory[$module->name])) $this->internalMemory[$module->name] = array();
-				$module->getKeys($ws,$ka,$data);
-				$sql = "SELECT * FROM ".$module->dbname." WHERE $ws";
-				$ok =$this->parent->dbo->query($sql,$r,$n);
+					$wTypes = "";
+					$wParams = array();
+					$module->getPreparedKeys($ws,$wTypes,$wParams,$ka,$data);
+					$sql = "SELECT * FROM ".$module->dbname." WHERE $ws";
+				$r = false;
+				$n = 0;
+					$ok =$this->parent->dbo->queryPrepared($sql,$wTypes,$wParams,$r,$n);
 				if ($ok && $n>0) {
 					$data = $this->parent->dbo->fetch_assoc($r);
 					$files = array();
 					// saves files ... this will be saved even if a DELETE fails, but we can't wait as the data above since later it will be deleted
 					// move files (only mains, no thumbs)
+					$keys = '';
 					foreach ($ka as $value)
 						$keys = $value."_"; // keys (searchable)
 					$keys = substr($keys,0,strlen($keys)-1); // remove last _
@@ -244,22 +265,27 @@ class mod_bi_undo extends CscriptedModule  {
 								if ($data[$key] != $iMi[1][$key]) continue 2; // not this item, next item please ...
 							}
 							// if we got here, the keys were compared sucessfuly. Save
-							$undoModule = $this->parent->loaded($this->moduleRelation);
-							$module->getKeys($ws,$ka,$data);
+						$undoModule = $this->parent->loaded($this->moduleRelation);
+						$wTypes = "";
+						$wParams = array();
+						$module->getPreparedKeys($ws,$wTypes,$wParams,$ka,$data);
+							$keys = '';
 							foreach ($ka as $value)
 								$keys = $value."_"; // keys (searchable)
 							$keys = substr($keys,0,strlen($keys)-1); // remove last _
 							$files = $iMi[1]['___FILES___'];
-							$sql = "INSERT INTO ".$undoModule->dbname." SET
-									modulo='".$module->name."',
-									event='".($action==CONS_ACTION_DELETE?'delete':'update')."',
-									ids='$keys',
-									history=\"".addslashes_EX(serialize($iMi[1]))."\",
-									files=\"".addslashes_EX(serialize($files))."\",
-									data=NOW(),
-									id_author = '".($this->parent->logged()?$_SESSION[CONS_SESSION_ACCESS_USER]['id']:0)."'";
-
-							$ok = $this->parent->dbo->simpleQuery($sql);
+						$sql = "INSERT INTO ".$undoModule->dbname." SET
+								modulo=?, event=?, ids=?, history=?, files=?, data=NOW(), id_author=?";
+						$insertResult = false;
+						$insertRows = 0;
+						$ok = $this->parent->dbo->queryPrepared($sql, 'sssssi', array(
+							$module->name,
+							$action==CONS_ACTION_DELETE?'delete':'update',
+							$keys,
+							serialize($iMi[1]),
+							serialize($files),
+							(int)($this->parent->logged()?$_SESSION[CONS_SESSION_ACCESS_USER]['id']:0)
+						), $insertResult, $insertRows);
 							break;
 						}
 					}

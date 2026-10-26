@@ -1,7 +1,10 @@
-<?
-	if (!isset($_REQUEST['module']) || !($module = $core->loaded($_REQUEST['module'])) || !$module) {
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+		$requestedModule = isset($_POST['module']) && is_string($_POST['module']) ? $_POST['module'] : '';
+		if ($requestedModule === '' || !($module = $core->loaded($requestedModule)) || !$module) {
 		# master check if this is a valid module
-		$core->errorControl->raise(512,"reorder",(isset($_REQUEST['module'])?$_REQUEST['module']:''));
+			$core->errorControl->raise(512,"reorder",$requestedModule);
 		$core->action = "404";
 		$_REQUEST = array();
 		$_GET = array();
@@ -10,13 +13,12 @@
 	}
 
 	
-	if ($_REQUEST['haveinfo'] == 1 && isset($_REQUEST['new_order'])) {
-		$module = $core->loaded($_REQUEST['module']);
-		$changed = array(); 
-		$ok = true;
-		if (!isset($_REQUEST['min_id'])) $_REQUEST['min_id'] = 1;
-        if ($core->authControl->checkPermission($module,CONS_ACTION_UPDATE)) {
-            $no = explode("=",$_REQUEST['new_order']); // (order_ul[]=#&)
+		if (isset($_POST['haveinfo']) && $_POST['haveinfo'] == 1 && isset($_POST['new_order']) && is_string($_POST['new_order'])) {
+			$changed = array();
+			$ok = true;
+			$minId = isset($_POST['min_id']) && is_numeric($_POST['min_id']) ? (int)$_POST['min_id'] : 1;
+	        if ($core->authControl->checkPermission($module,CONS_ACTION_UPDATE)) {
+	            $no = explode("=",$_POST['new_order']); // (order_ul[]=#&)
             array_shift($no); // first is useless and only define it as an array (order_ul[])
             for ($c=0;$c<count($no);$c++) {
               // #&order_ul[] ,except the last which has only the number
@@ -26,9 +28,12 @@
               } else {
                 $id = $no[$c];
               }
-              $sql = "UPDATE ".$module->dbname." SET ordem=".($c + $_REQUEST['min_id'])." WHERE ".$module->keys[0]."=$id";
-              if (!in_array($id,$changed)) { // sometimes scriptaculos can send a repeated item
-				$ok = $ok && $core->dbo->simpleQuery($sql);
+	              $id = is_numeric($id) ? (int)$id : 0;
+	              $sql = "UPDATE ".$module->dbname." SET ordem=? WHERE ".$module->keys[0]."=?";
+	              if (!in_array($id,$changed)) { // sometimes scriptaculos can send a repeated item
+					$r = false;
+					$n = 0;
+					$ok = $ok && $core->dbo->queryPrepared($sql, 'ii', array($c + $minId, $id), $r, $n);
                 array_push($changed,$id);
               }
             }
@@ -41,4 +46,3 @@
         $core->action = "list";
         $core->headerControl->internalFoward("list.php?module=".$module->name);
 	}
-

@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | removeSimbols : Prepares a string to be used as a filename
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ www.prescia.net
   | Free to use, change and redistribute, but please keep the above disclamer.

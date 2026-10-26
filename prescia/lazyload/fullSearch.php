@@ -1,4 +1,5 @@
-<?/* -------------------------------- Prescia extra core functions
+<?php
+/* -------------------------------- Prescia extra core functions
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
   | These functions are not used so often, so to reduce parse time from the PHP compiler, they where removed from the core.php
@@ -28,6 +29,10 @@ $parameters[] = array('module' => '',
 */
 
 
+/** @var CPrescia $this Core context of CPrescia::fullSearch(). */
+/** @var array<int, array<string, mixed>> $parameters Search definitions. */
+/** @var bool $groupPerModule Whether to preserve module grouping. */
+
 $mylist = array();
 
 $c = 0;
@@ -43,7 +48,9 @@ foreach ($parameters as $mod) {
 	$order = isset($mod['order'])?$mod['order']:'';
 
 	$sql = $module->get_base_sql($where,$order,$limit);
-	$this->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$this->dbo->queryPrepared($this->dbo->sqlarray_echo($sql),"",array(),$r,$n);
 
 	$dateField = isset($mod['date'])?$mod['date']:'';
 	if ($dateField == '') {
@@ -79,4 +86,3 @@ if (!$groupPerModule) {
 }
 
 return $mylist; // returns: module, title, description, date, link, id
-

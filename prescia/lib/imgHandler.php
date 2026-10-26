@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | Image Handler Bundle: Implements functions for handling images
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ prescia.net
   | Free to use, change and redistribute, but please keep the above disclamer.
@@ -99,7 +100,7 @@ if (!defined('CONS_JPGQUALITY')) define ("CONS_JPGQUALITY",85);
 			$Hbgcolor = imagecolorallocate($img_dest, hexdec(substr($bgcolor,0,2)), hexdec(substr($bgcolor,2,2)), hexdec(substr($bgcolor,4,2))); // forces a white bg on thumbs
 			imagefilledrectangle($img_dest, 0, 0, $cropsize[0],$cropsize[1],$Hbgcolor);
 		} else
-			imagealphablending($im_dest, ($ih[2] == IMAGETYPE_JPEG || $ih[2] == IMAGETYPE_BMP) || count($watermarkArray)==0);
+				imagealphablending($img_dest, ($ih[2] == IMAGETYPE_JPEG || $ih[2] == IMAGETYPE_BMP) || count($watermarkArray)==0);
 		// crop/resample
 		imagecopyresampled($img_dest,$miniatura_id,0,0,$cropposition[0],$cropposition[1],$cropsize[0],$cropsize[1],$cropsize[0],$cropsize[1]);
 		// no need for the original image now
@@ -143,7 +144,7 @@ if (!defined('CONS_JPGQUALITY')) define ("CONS_JPGQUALITY",85);
 		if ($thumbext == 'jpg' || $thumbext == 'png' || $thumbext == 'gif' || $thumbext == 'bmp') {
 			// removes extension
 			$miniatura = explode(".",$miniatura);
-			array_pop($minuatura);
+				array_pop($miniatura);
 			$miniatura = implode(".",$miniatura);
 		}
 		// miniatura have no extension from here on
@@ -439,4 +440,3 @@ if (!defined('CONS_JPGQUALITY')) define ("CONS_JPGQUALITY",85);
 			return '<iframe '.($class!=''?'class="'.$class.'" ':'width="'.$w.'" height="'.$h.'" ').'src="//www.youtube.com/embed/'.$code.'" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
 		}
   }
-

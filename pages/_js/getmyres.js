@@ -7,5 +7,6 @@ function createXMLHttpRequest() {
    return null;
 }
 var xhReq = createXMLHttpRequest();
-xhReq.open("GET", "/setres.ajax?layout=2&res=" + screen.width + "x" + screen.height, false);
-xhReq.send(null);
+xhReq.open("POST", "/setres.ajax?layout=2", false);
+xhReq.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+xhReq.send("res=" + encodeURIComponent(screen.width + "x" + screen.height));

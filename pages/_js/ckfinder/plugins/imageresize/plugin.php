@@ -84,13 +84,14 @@ class CKFinder_Connector_CommandHandler_ImageResize extends CKFinder_Connector_C
             $this->_errorHandler->throwError(CKFINDER_CONNECTOR_ERROR_FILE_NOT_FOUND);
         }
 
-        $newWidth = trim($_POST['width']);
-        $newHeight = trim($_POST['height']);
-        $quality = 80;
-        $resizeOriginal = !empty($_POST['width']) && !empty($_POST['height']);
+	        $newWidth = isset($_POST['width']) ? trim((string) $_POST['width']) : '';
+	        $newHeight = isset($_POST['height']) ? trim((string) $_POST['height']) : '';
+	        $quality = 80;
+	        $newFilePath = $filePath;
+	        $resizeOriginal = !empty($_POST['width']) && !empty($_POST['height']);
 
         if ($resizeOriginal) {
-            if (!preg_match("/^\d+$/", $newWidth) || !preg_match("/^\d+$/", $newHeight) || !preg_match("/^\d+$/", $newWidth)) {
+            if (!preg_match("/^[1-9]\d*$/", $newWidth) || !preg_match("/^[1-9]\d*$/", $newHeight)) {
                 $this->_errorHandler->throwError(CKFINDER_CONNECTOR_ERROR_INVALID_REQUEST);
             }
             if (!isset($_POST["newFileName"])) {
@@ -107,14 +108,15 @@ class CKFinder_Connector_CommandHandler_ImageResize extends CKFinder_Connector_C
             if (!is_writable(dirname($newFilePath))) {
                 $this->_errorHandler->throwError(CKFINDER_CONNECTOR_ERROR_ACCESS_DENIED);
             }
-            if ($_POST['overwrite'] != "1" && file_exists($newFilePath)) {
+            $overwrite = isset($_POST['overwrite']) && (string) $_POST['overwrite'] === "1";
+            if (!$overwrite && file_exists($newFilePath)) {
                 $this->_errorHandler->throwError(CKFINDER_CONNECTOR_ERROR_ALREADY_EXIST);
             }
             $_imagesConfig = $_config->getImagesConfig();
             $maxWidth = $_imagesConfig->getMaxWidth();
             $maxHeight = $_imagesConfig->getMaxHeight();
             // Shouldn't happen as the JavaScript validation should not allow this.
-            if ( ( $maxWidth > 0 && $newWidth > $maxWidth ) || ( $maxHeight > 0 && $newHeight > $maxHeight ) ) {
+            if ( ( $maxWidth > 0 && (int) $newWidth > $maxWidth ) || ( $maxHeight > 0 && (int) $newHeight > $maxHeight ) ) {
                 $this->_errorHandler->throwError(CKFINDER_CONNECTOR_ERROR_INVALID_REQUEST);
             }
         }
@@ -216,7 +218,11 @@ class CKFinder_Connector_CommandHandler_ImageResizeInfo extends CKFinder_Connect
             $this->_errorHandler->throwError(CKFINDER_CONNECTOR_ERROR_FILE_NOT_FOUND);
         }
 
-        list($width, $height) = getimagesize($filePath);
+        $imageInfo = @getimagesize($filePath);
+        if ($imageInfo === false || empty($imageInfo[0]) || empty($imageInfo[1])) {
+            $this->_errorHandler->throwError(CKFINDER_CONNECTOR_ERROR_INVALID_REQUEST);
+        }
+        list($width, $height) = $imageInfo;
         $oNode = new Ckfinder_Connector_Utils_XmlNode("ImageInfo");
         $oNode->addAttribute("width", $width);
         $oNode->addAttribute("height", $height);

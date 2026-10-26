@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 	$core->layout = 2;
 	if (!isset($_REQUEST['module']) || !isset($_REQUEST['filter'])) echo "ERRO";
@@ -7,7 +10,7 @@
 		if ($module === false) echo "ERRO";
 		else {
 			include_once(CONS_PATH_SYSTEM."plugins/".$this->name."/payload/importer.php");
-			$importerObj = new Cimporter($core);
+				$importerObj = new CImporter($core);
 			$iFields = $importerObj->fields($module);
 			if (isset($_REQUEST['sep']))
 				$sep = $_REQUEST['sep'];
@@ -54,6 +57,5 @@
 		}
 	}
 	$core->close();
-
 
 

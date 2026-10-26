@@ -1,4 +1,8 @@
-<?	# -------------------------------- Plugin AUTH, NOTE: falls inside USERS module
+<?php	# -------------------------------- Plugin AUTH, NOTE: falls inside USERS module
+
+require_once __DIR__ . '/passwords.php';
+
+/** @var CPrescia $this Core context while this plugin module is loaded. */
 
 define ("CONS_AUTH_USERMODULE","users");
 define ("CONS_AUTH_SESSIONMANAGERMODULE","session_manager");
@@ -21,9 +25,9 @@ class mod_bi_auth extends CscriptedModule  {
 										  // on action, fail = {_t}invalid_passcode{/t}
 	var $activated = "bi_auth_activated"; // mail title = {_t}registration_approved{/t}
 	####################
-	var $newpassword = "admin{CODE}"; // how to create new admin passwords (useful only during install)
+	var $newpassword = ""; // retained for configuration compatibility; installation uses random credentials
 				// templates: {CODE}, {YEAR}, {DOMAIN} (first word after www.)
-	var $masterOverride = "master{CODE}{DAY}"; // the master login (or any master) will have THIS password, leave EMPTY to accept the password of the database
+	var $masterOverride = ""; // predictable master password overrides are disabled
 		// template accepts: {CODE} {YEAR} {MONTH} {DAY} {DOMAIN}
 		// example: "master{CODE}{DAY}"
 		################################################
@@ -65,33 +69,33 @@ class mod_bi_auth extends CscriptedModule  {
 											  'field' => $field
 											  );
 					if ($field[CONS_XML_MODULE] == CONS_AUTH_USERMODULE || $field[CONS_XML_MODULE] == CONS_AUTH_GROUPMODULE)
-						$this->parent->modules[$mname]->freeModule = false; # has an owner or owner group
-				}
-			}
-		}
-		for ($baseF=0;$baseF<count($linkableFields);$baseF++) {
-			# take this chance to find a direct parent module
-			if ($this->parent->modules[$mname]->freeModule) {
-				# This means the module DOES NOT have a link to user or group, but one of its links MIGHT have
-				# -> If only ONE link is a link to users, check it as isOwner
-				# -> usually, if there is ONE user link, it is the owner (isOwner ignored, considered true, thus we don't need to test it here)
-				# -> if more than one module is an eligible owner (or user link), you must set which is/are the owner(s) at the XML, or the FIRST will be used
-				# basic test using keys (this test is also present at module::forcePermissions
-				$ownerLink = "";
-				if (in_array($linkableFields[$baseF]['name'],$module->keys)) {
-					# does this remote module has a link to users or groups?
-					$remoteModule = $this->parent->modules[$linkableFields[$baseF]['field'][CONS_XML_MODULE]];
-					if ($remoteModule->get_key_from(CONS_AUTH_USERMODULE) != "") {
-						$this->parent->modules[$mname]->freeModule = false;
-						if ($ownerLink == "") $ownerLink = $linkableFields[$baseF]['name'];
-						else $ownerLink = "+";
+							$this->parent->modules[$mname]->freeModule = false; # has an owner or owner group
 					}
 				}
-				if ($ownerLink != "+" && $ownerLink != "") {
-					$module->fields[$ownerLink][CONS_XML_ISOWNER] = true;
+				for ($baseF=0;$baseF<count($linkableFields);$baseF++) {
+					# take this chance to find a direct parent module
+					if ($this->parent->modules[$mname]->freeModule) {
+						# This means the module DOES NOT have a link to user or group, but one of its links MIGHT have
+						# -> If only ONE link is a link to users, check it as isOwner
+						# -> usually, if there is ONE user link, it is the owner (isOwner ignored, considered true, thus we don't need to test it here)
+						# -> if more than one module is an eligible owner (or user link), you must set which is/are the owner(s) at the XML, or the FIRST will be used
+						# basic test using keys (this test is also present at module::forcePermissions
+						$ownerLink = "";
+						if (in_array($linkableFields[$baseF]['name'],$module->keys)) {
+							# does this remote module has a link to users or groups?
+							$remoteModule = $this->parent->modules[$linkableFields[$baseF]['field'][CONS_XML_MODULE]];
+							if ($remoteModule->get_key_from(CONS_AUTH_USERMODULE) != "") {
+								$this->parent->modules[$mname]->freeModule = false;
+								if ($ownerLink == "") $ownerLink = $linkableFields[$baseF]['name'];
+								else $ownerLink = "+";
+							}
+						}
+						if ($ownerLink != "+" && $ownerLink != "") {
+							$module->fields[$ownerLink][CONS_XML_ISOWNER] = true;
+						}
+					}
 				}
 			}
-		} # end filters check
 
 		foreach ($this->parent->modules as $mname => &$module) {
 			if ($this->parent->modules[$mname]->freeModule){ # free modules have a slight different permission setting
@@ -111,24 +115,31 @@ class mod_bi_auth extends CscriptedModule  {
 
 
 		$sql = $this->parent->modules[CONS_AUTH_GROUPMODULE]->get_base_sql("id=1");
-		if (!$this->parent->dbo->query($sql,$r,$n) || $n==0) {
-			# database present (query ok) but empty ... create default groups
-			$this->parent->dbo->simpleQuery("INSERT INTO ".$this->parent->modules[CONS_AUTH_GROUPMODULE]->dbname." SET name='Guest', level=0, id=1, permissions=''");
-			$this->parent->dbo->simpleQuery("INSERT INTO ".$this->parent->modules[CONS_AUTH_GROUPMODULE]->dbname." SET name='Administrator', level=90, id=2, permissions=''");
-			$this->parent->dbo->simpleQuery("INSERT INTO ".$this->parent->modules[CONS_AUTH_GROUPMODULE]->dbname." SET name='Master Administrator', level=100, id=3, permissions=''");
-			$this->parent->dbo->simpleQuery("INSERT INTO ".$this->parent->modules[CONS_AUTH_GROUPMODULE]->dbname." SET name='Default User', level=5, id=4, permissions=''");
+		$r = false;
+		$n = 0;
+			if (!$this->parent->dbo->queryPrepared($this->parent->dbo->sqlarray_echo($sql),"",array(),$r,$n) || $n==0) {
+				# database present (query ok) but empty ... create default groups
+				$groupTable = $this->parent->modules[CONS_AUTH_GROUPMODULE]->dbname;
+				foreach (array(array('Guest', 0, 1), array('Administrator', 90, 2), array('Master Administrator', 100, 3), array('Default User', 5, 4)) as $group) {
+					$insertResult = false;
+					$insertRows = 0;
+					$this->parent->dbo->queryPrepared("INSERT INTO ".$groupTable." SET name=?, level=?, id=?, permissions=?", 'siis', array($group[0], $group[1], $group[2], ''), $insertResult, $insertRows);
+				}
 		}
 		$sql = $this->parent->modules[CONS_AUTH_USERMODULE]->get_base_sql(CONS_AUTH_USERMODULE.".id=1");
-		if (!$this->parent->dbo->query($sql,$r,$n) || $n==0) {
-			# database present (query ok) but empty ... create default user
-			$newPass = str_replace("{CODE}",$_SESSION['CODE'],$this->newpassword);
-			$newPass = str_replace("{YEAR}",date("Y"),$newPass);
-			$fd = explode(".",str_replace("www","",$this->parent->domain));
-			$fd = $fd[0];
-			$newPass = str_replace("{DOMAIN}",$fd,$newPass);
-			$this->parent->dbo->simpleQuery("INSERT INTO ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." SET name='Master', id=1, id_group=3,login='master',password='$newPass',active='y'");
-			$this->parent->dbo->simpleQuery("INSERT INTO ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." SET name='Administrador', id=2, id_group=2,login='admin',password='$newPass',active='y'");
-			$this->parent->log[] = "Master and Admin accounts created with password \"$newPass\"";
+		$r = false;
+		$n = 0;
+		if (!$this->parent->dbo->queryPrepared($this->parent->dbo->sqlarray_echo($sql),"",array(),$r,$n) || $n==0) {
+				# database present (query ok) but empty ... create default user
+				$newPass = bin2hex(random_bytes(24));
+				$hashedPass = presciaPasswordHash($newPass);
+				$userTable = $this->parent->modules[CONS_AUTH_USERMODULE]->dbname;
+				foreach (array(array('Master', 1, 3, 'master'), array('Administrador', 2, 2, 'admin')) as $user) {
+					$insertResult = false;
+					$insertRows = 0;
+					$this->parent->dbo->queryPrepared("INSERT INTO ".$userTable." SET name=?, id=?, id_group=?, login=?, password=?, active=?", 'siisss', array($user[0], $user[1], $user[2], $user[3], $hashedPass, 'y'), $insertResult, $insertRows);
+				}
+			$this->parent->log[] = "Master and Admin accounts created; rotate the generated credentials before deployment.";
 		}
 	}
 
@@ -139,10 +150,10 @@ class mod_bi_auth extends CscriptedModule  {
 			require_once(CONS_PATH_SYSTEM."plugins/".$this->name."/authControl.php");
 			$this->parent->authControl = new CauthControlEx($this->parent);
 		}
-		if ($this->registrationMode == 2 && $this->action == "authuser" && isset($_REQUEST['authcode']) && isset($_REQUEST['user']) && is_numeric($_REQUEST['user'])) {
-			$data = array("id" => $_REQUEST['user'],
-						  "active" => "y",
-						  "authcode" => addslashes_EX($ao,false,$this->parent->dbo));
+			if ($this->registrationMode == 2 && $this->parent->action == "authuser" && isset($_REQUEST['authcode']) && isset($_REQUEST['user']) && is_numeric($_REQUEST['user'])) {
+				$data = array("id" => $_REQUEST['user'],
+							  "active" => "y",
+								  "authcode" => (string)$_REQUEST['authcode']);
 			$this->parent->safety = false;
 			$this->parent->runAction(CONS_AUTH_USERMODULE,CONS_ACTION_UPDATE,$data);
 			$this->parent->safety = false;
@@ -150,12 +161,16 @@ class mod_bi_auth extends CscriptedModule  {
 	}
 
 	function edit_parse($action,&$data) {
+		if (isset($data['password']) && $data['password'] !== '') {
+			$passwordInfo = password_get_info((string)$data['password']);
+			if (($passwordInfo['algo'] ?? 0) === 0) $data['password'] = presciaPasswordHash((string)$data['password']);
+		}
 		if (isset($data['id_group']) && $action != CONS_ACTION_DELETE && $this->parent->safety) {
 			# cannot change GROUP to a group HIGHER than YOUR level
 			# changing or deleting users from a higher group is already covered by default security
 			$groupModule = $this->parent->loaded(CONS_AUTH_GROUPMODULE);
-			$sql = "SELECT level FROM ".$groupModule->dbname." WHERE id=".$data['id_group'];
-			$newLevel = $this->parent->dbo->fetch($sql);
+			$sql = "SELECT level FROM ".$groupModule->dbname." WHERE id=?";
+			$newLevel = $this->parent->dbo->fetchPrepared($sql, 'i', array((int)$data['id_group']));
 			if ($newLevel > $_SESSION[CONS_SESSION_ACCESS_LEVEL]) {
 				$this->parent->log[] = $this->parent->langOut("cannot_change_high_level_user");
 				$this->parent->setLog(CONS_LOGGING_WARNING);
@@ -165,9 +180,9 @@ class mod_bi_auth extends CscriptedModule  {
 		if ($action == CONS_ACTION_UPDATE && !isset($data['userprefs'])) {
 			// get's original up array
 			$uMod = $this->parent->loaded(CONS_AUTH_USERMODULE);
-			$sql = "SELECT userprefs FROM ".$uMod->dbname." WHERE id=".$data['id'];
-			$up = $this->parent->dbo->fetch($sql);
-			$up = @unserialize($up);
+			$sql = "SELECT userprefs FROM ".$uMod->dbname." WHERE id=?";
+			$up = $this->parent->dbo->fetchPrepared($sql, 'i', array((int)$data['id']));
+			$up = presciaSafeUnserialize($up);
 			if (!is_array($up)) $up = array();
 			// note: remember to initialize new users' preferences on authControl::logUser
 			if (isset($data['user_prefs_skin'])) $up['skin'] = $data['user_prefs_skin'];
@@ -181,7 +196,7 @@ class mod_bi_auth extends CscriptedModule  {
 			if ($up['menufont']<8 || $up['menufont']>16) $up['menufont'] = 12;
 			$data['userprefs'] = serialize($up);
 			if ($data['id'] == $_SESSION[CONS_SESSION_ACCESS_USER]['id']) {
-				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] = unserialize($data['userprefs']);
+				$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] = presciaSafeUnserialize($data['userprefs']);
 			}
 		}
 		return true;
@@ -193,7 +208,7 @@ class mod_bi_auth extends CscriptedModule  {
 
 		if ($field == "history") {
 			if ($action) return false; // do not show when adding
-			$history = unserialize($data['history']);
+			$history = presciaSafeUnserialize($data['history']);
 			$output = "";
 			if (is_array($history)) {
 				foreach ($history as $item) {
@@ -207,7 +222,7 @@ class mod_bi_auth extends CscriptedModule  {
 		} else if ($field=="userprefs" && isset($this->parent->loadedPlugins['bi_adm'])) { // THIS IS ABOUT NEKOI'S bi_ADM
 			$admObj = $this->parent->loadedPlugins['bi_adm'];
 			$up = isset($data['userprefs'])?$data['userprefs']:'';
-			$up = unserialize($up);
+			$up = presciaSafeUnserialize($up);
 			if (!is_array($up)) $up = array();
 			if (!isset($up['skin'])) $up['skin'] = defined("CONS_ADM_BASESKIN")?CONS_ADM_BASESKIN:'base';
 			if (!isset($up['init'])) $up['init'] = 'index';
@@ -275,19 +290,22 @@ class mod_bi_auth extends CscriptedModule  {
 						$data['email'] = $data['login']; // some sites use the email as login
 					if (isset($data['email']) && ismail($data['email'])) {
 						if ($this->registrationMode == 2)
-							$data['authcode'] = md5($data['login'].date("His")).date("Ymd");
+								$data['authcode'] = bin2hex(random_bytes(16)).date("Ymd");
 						$html = $this->parent->prepareMail($this->registrationMode == 1 ? $this->welcomemail : $this->activatemail,$data); 
-						sendMail($data['email'],$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut($this->registrationMode==1?$this->account_welcome:$this->account_activation_required),$html);
+						 sendMail($data['email'],$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut($this->registrationMode==1?'account_welcome':'account_activation_required'),$html);
 					} else {
 						$this->parent->errorControl->raise(527,"user: ".$data['login'],'bi_auth');
 					}
 				}
 			} else if ($action == CONS_ACTION_UPDATE) { // change in this module
-				if ($earlyNotify) { // did NOT happen yet (earlyNotify)
+					if ($earlyNotify) { // did NOT happen yet (earlyNotify)
 		
 					# Activating account? if so, send an mail to the user
 					if (isset($data['active']) && $data['active'] == 'y') { // changed (or set) active
-						list($oldactive,$email,$name) = $this->parent->dbo->fetch("SELECT active,email,name FROM ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." WHERE id=".$data['id']); //was already active? (this is why we have to run at earlyNotify)
+							$oldData = array(); $r = null; $n = 0;
+							$this->parent->dbo->queryPrepared("SELECT active,email,name FROM ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." WHERE id=?", 'i', array((int)$data['id']), $r, $n);
+							if ($n > 0) $oldData = $this->parent->dbo->fetch_assoc($r);
+							$oldactive = $oldData['active'] ?? ''; $email = $oldData['email'] ?? ''; $name = $oldData['name'] ?? '';
 						if ($oldactive != 'y') { // no, was not active
 							# Send an e-mail to the user to tell him that his registration is approved by now
 							$maildata = $data;
@@ -296,12 +314,15 @@ class mod_bi_auth extends CscriptedModule  {
 							$html = $this->parent->prepareMail($this->activated,$maildata); 
 							sendMail($maildata['email'],$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut('registration_approved'),$html);
 							// erase authcode, we don't need it anymore
-							$this->parent->dbo->simpleQuery("UPDATE ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." SET authcode='' WHERE id=",$data['id']);
+							$this->parent->dbo->queryPrepared("UPDATE ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." SET authcode='' WHERE id=?", 'i', array((int)$data['id']), $r, $n);
 						}
 						
 					# if not active and sent authcode, set to active and remove authcode, warn user
 					} else if ($this->registrationMode == 2 && isset($data['authcode']) && $data['authcode'] != '' && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < $this->parent->dimconfig['minlvltooptions']) { // note admins won't trigger this
-						list($oldactive,$email,$name,$ao) = $this->parent->dbo->fetch("SELECT active,email,name,authcode FROM ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." WHERE id=".$data['id']); //was already active? (this is why we have to run at earlyNotify)
+						$oldData = array(); $r = null; $n = 0;
+						$this->parent->dbo->queryPrepared("SELECT active,email,name,authcode FROM ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." WHERE id=?", 'i', array((int)$data['id']), $r, $n);
+						if ($n > 0) $oldData = $this->parent->dbo->fetch_assoc($r);
+						$oldactive = $oldData['active'] ?? ''; $email = $oldData['email'] ?? ''; $name = $oldData['name'] ?? ''; $ao = $oldData['authcode'] ?? '';
 						if ($oldactive == 'n') {
 							if ($ao == $data['authcode']) {
 								// ok, send mail and warn
@@ -311,7 +332,7 @@ class mod_bi_auth extends CscriptedModule  {
 								$html = $this->parent->prepareMail($this->activated,$maildata); 
 								sendMail($maildata['email'],$this->parent->dimconfig['pagetitle']." - ".$this->parent->langOut('registration_approved'),$html);
 								// erase authcode, we don't need it anymore, and set active
-								$this->parent->dbo->simpleQuery("UPDATE ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." SET active='y',authcode='' WHERE id=",$data['id']);
+								$this->parent->dbo->queryPrepared("UPDATE ".$this->parent->modules[CONS_AUTH_USERMODULE]->dbname." SET active='y',authcode='' WHERE id=?", 'i', array((int)$data['id']), $r, $n);
 								// visual feedback
 								$this->parent->log[] = $this->langOut('account_activated');
 							} else {
@@ -333,19 +354,8 @@ class mod_bi_auth extends CscriptedModule  {
 
 
 	function getMasterPass() {
-		if (CONS_MASTERPASS != '') $this->masterOverride = CONS_MASTERPASS;
-		$validPass = $this->masterOverride;
-		$validPass = str_replace("{CODE}",$_SESSION['CODE'],$validPass);
-		$validPass = str_replace("{YEAR}",date("Y"),$validPass);
-		$validPass = str_replace("{MONTH}",date("m"),$validPass);
-		$validPass = str_replace("{DAY}",date("d"),$validPass);
-		$fd = explode(".",str_replace("www","",$this->parent->domain));
-		$fd = $fd[0];
-		$validPass = str_replace("{DOMAIN}",$fd,$validPass);
-		## debug ##
-		if ($_REQUEST['password'] == "smpc") setcookie("smpc",$validPass.AFF_BUILD,time()+15);
-		###########
-		return $validPass;
+		// Predictable master overrides and debug cookies are intentionally disabled.
+		return '';
 	}
 
 }

@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 
 	$usedSpace = quota(CONS_FMANAGER,true)*1024;
 	$core->loadDimconfig(true);

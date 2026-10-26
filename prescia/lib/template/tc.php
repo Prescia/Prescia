@@ -1,4 +1,4 @@
-<? /* ------------------------
+<?php /* ------------------------
    | Caio's Template Engine
    | Version: 6.0 (simpla version)
    | (cc) Caio Vianna de Lima Netto
@@ -47,7 +47,9 @@ class CKTemplate {
 
   private $iec = 0; // anti-loop device
 
-  function __construct($parent = null, $mypath = "", $debugmode = false) { // parent must be a CKTemplate too
+  function __construct($parent = null, $mypath = "", $debugmode = false, $_legacyMode = false) { // parent must be a CKTemplate too; legacyMode is retained for compatibility
+	// The fourth argument is retained for old callers; it has no runtime effect.
+	unset($_legacyMode);
 	$this->clear();
 	$this->cache = null;
 	if ($parent == null) {
@@ -198,9 +200,10 @@ class CKTemplate {
   }
 
   // reads a file. The encoded file will be saved at the cache
-  public function fetch($arquivo) {
-	$this->contents = array(); // reset
-	$seed = $this->cacheSeed != "" ? $this->cacheSeed."/" : "";
+	  public function fetch($arquivo) {
+		$this->contents = array(); // reset
+		$cfile = '';
+		$seed = $this->cacheSeed != "" ? $this->cacheSeed."/" : "";
 	if (is_file($arquivo)) {
 
 	  if ($this->cachepath != "" && !isset($_REQUEST['nocache'])) {
@@ -214,7 +217,7 @@ class CKTemplate {
 			$thattime = filemtime($cfile);
 			if ($thistime < $thattime) {
 				$temp = cReadFile($cfile);
-				$temp = @unserialize($temp);
+				$temp = presciaSafeUnserialize($temp);
 				if ($temp !== false) {
 					$this->copyfrom($temp);
 					unset($temp);
@@ -236,7 +239,7 @@ class CKTemplate {
 	  else $this->cache = "";
 	  fclose($fd);
 	  $ok = $this->tbreak($this->cache);
-	  if ($ok && $this->cachepath != "") {
+		  if ($ok && $this->cachepath != "" && $cfile != "") {
 	  	$temp = $this->cache;
 	  	$this->cache = "";
 	  	if (count($this->lang_replacer)>0) {
@@ -435,10 +438,11 @@ class CKTemplate {
 			else return $content;
 		case "toplain":
 			return str_replace("<","&lt;",str_replace(">","&gt;",$content));
-		case "html": // create amps, and if param is set, remove '
-			return str_replace("&amp;","&",isset($params[0])?str_replace("'","",htmlspecialchars($content)):htmlspecialchars($content));
+			case "html": // create amps, and if param is set, remove '
+				$escapedContent = \Prescia\Services\Sanitizer::escapeHtml(str_replace("&amp;","&",$content));
+				return isset($params[0])?str_replace('&#039;','',$escapedContent):$escapedContent;
 		case "htmlentities":
-  			return htmlentities_ex($content);
+			return \Prescia\Services\Sanitizer::escapeHtml((string)$content);
 		case "url":
 			if ($content == "")
 				return "#";
@@ -469,9 +473,9 @@ class CKTemplate {
 					return substr($temp,$initTagL,strlen($temp)-strlen($initTag)-1-$initTagL);
 			}
 			return $content;
-  		case "nohtml": # removes HTML, if parameter is set, also remove quotes
+		case "nohtml": # removes HTML, if parameter is set, also remove quotes
 			$temp = trim($content);
-			$temp = stripHTML($temp);
+			$temp = \Prescia\Services\Sanitizer::stripTags((string)$temp);
 			if (isset($params[0])) $temp = str_replace("\"","",$temp);
 			return $temp;
   		case "map": // maps output (map,map,map|default)
@@ -516,9 +520,9 @@ class CKTemplate {
 
   			if ($m>=1 && $m<=12) return $this->str_monthlabels[$m-1];
   			else return "";
-		case "day": // same as above, with day
-			$d = date('w',$content);
-			if ($d !== false) return $this->$str_daylabels[$d];
+			case "day": // same as above, with day
+				$d = date('w',$content);
+				if ($d !== false) return $this->str_daylabels[$d];
   			else return "";
 		case "past": // how long has passed, in i18n. Send "true" as a parameter to short the past time in one leter
 			$sdif = time_diff(date("Y-m-d H:i:s"),$content);
@@ -780,7 +784,7 @@ class CKTemplate {
 	$this->flushcache();
 	if ($arrayin !== false && !$recursive) $this->fill($arrayin);
 	if (!$recursive && CKAUTORESET) $this->reset();
-	$this->runclasses($arrayin,true);
+	$this->runclasses($arrayin);
 	foreach ($this->contents as $key => $content) {
 	  if ( $content[0] == "" || !in_array( $content[0],$emptyme)) {
 		if (is_object($content[2])) {

@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | Basic Bundle: Functions that often (if not always) are used
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto
   | Free to use, change and redistribute, but please keep the above disclamer.
@@ -26,7 +27,7 @@
 		if (!in_array('parent',$alsoIgnore)) $alsoIgnore[] = "parent";
 		for ($c=0;$c<$tab;$c++) $pad .= "\t";
 		foreach ($object as $key=>$value) {
-			if (!is_numeric($key) && in_array($key,$alsoIgnore)) 
+			if (!is_numeric($key) && in_array($key,$alsoIgnore))
 				echo $pad.$key." => *HIDDEN*\n";
 			else if (is_Array($value) || is_Object($value)) {
 				if (is_Array($value)) echo "$pad$key => Array (\n";
@@ -75,10 +76,11 @@
 		$ready = str_replace($delimiters, $delimiters[0], $string);
 		return explode($delimiters[0], $ready);
 	}
-	function extractUri($install_root="",$uri="") { // returns an array with: array of folders from URI, filename (no extension), actual filename with extension, extension
+		/** @return array{0: list<string>, 1: string, 2: string, 3: string} */
+		function extractUri($install_root="",$uri="") { // returns an array with: array of folders from URI, filename (no extension), actual filename with extension, extension
 		// removes install_root to make some changes to how it is handled (basically, ignores it)
 		# context
-		if ($uri == "") $uri = str_replace("%2F","/",isset($_SERVER['REQUEST_URI']) && $_SERVER['REQUEST_URI'] != "" ? $_SERVER['REQUEST_URI'] : "");		
+		if ($uri == "") $uri = str_replace("%2F","/",isset($_SERVER['REQUEST_URI']) && $_SERVER['REQUEST_URI'] != "" ? $_SERVER['REQUEST_URI'] : "");
 		if ($uri != "") {
 			# removes query from request
 			if ($uri[0] != "/") $uri = "/".$uri; # ALWAYS START WITH /
@@ -135,4 +137,4 @@
 		} else // not greater
 			return ($preserveEOL?str_replace("\n","<br/>",$content):$content)."";
 	}
-	
+

@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 'printver' => "Versão para impressão",
 'change_local_site' => "Mudar site apresentado neste domínio (local)",
 'importer' => 'Importação',

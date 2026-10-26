@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 
 	// This file is the same as edit.php, with removed features
 
@@ -9,8 +11,8 @@
 	$maxHeight = 500;
 	if ($core->layout == 0 && defined('CONS_USER_RESOLUTION') && isset($_SESSION[CONS_USER_RESOLUTION])) {
 		$maxWidth = explode("x",$_SESSION[CONS_USER_RESOLUTION]);
-		$maxHeight = $maxWidth[1] - 400;
-		$maxWidth = $maxWidth[0] - 400;	
+		$maxHeight = (int) $maxWidth[1] - 400;
+		$maxWidth = (int) $maxWidth[0] - 400;
 	}
 	
 	// Display the module name (template should have a {t} tag set already)
@@ -20,15 +22,22 @@
 	$hasImages = false; // if we have images, so we load shadowbox
 	
 	#################################### PREPARES KEYS & isADD ##############################
-	$sql = $module->get_base_sql(); // Prepare SQL to fetch data >>if<< this is an EDIT based on incomming keys (if keys fail, won't even use it, but load first to fill the WHERE field)
-	foreach ($module->keys as $key) {
+		$preparedWhere = '';
+		$preparedTypes = '';
+		$preparedParams = array();
+		$preparedKeys = array();
+		$keyData = array();
+		foreach ($module->keys as $key) {
 		// for each key for this module
 		if (isset($_REQUEST[$key]) && !is_array($_REQUEST[$key]) && $_REQUEST[$key] != "") {
 			// that came in the request
-			// prepare keys and SQL
-			$sql['WHERE'][] = $module->name.".$key = \"".$_REQUEST[$key]."\"";
+				$keyData[$key] = $_REQUEST[$key];
 		} else { // a key is missing, this is most certainly not an edit
 			$core->fastClose(404); // this pane does not support ADD
+		}
+		if (!$module->getPreparedKeys($preparedWhere,$preparedTypes,$preparedParams,$preparedKeys,$keyData)) {
+			$core->fastClose(404);
+			return;
 		}
 	}
 	
@@ -39,13 +48,18 @@
 	
 	#################################### GET DATA TO SHOW #################################
 	include CONS_PATH_INCLUDE."filetypeIcon.php";
-	$ntp = new CKTemplate(); // some random template just to call runContent
-	$data = $module->runContent($ntp,$sql); // Get all data using the SQL we built based on incomming keys
-	unset($ntp); // trash the template (free memory)
-	if ($core->errorState || $data===false) {
-		// not found? how? keys probable are wrong .. so toggle to 404
-		$core->fastClose(404);
-	}
+		$sql = "SELECT * FROM ".$module->dbname." WHERE ".$preparedWhere;
+		$r = false;
+		$n = 0;
+		$core->dbo->queryPrepared($sql,$preparedTypes,$preparedParams,$r,$n);
+			$data = $n > 0 ? $core->dbo->fetch_assoc($r) : false;
+			if ($core->errorState || $data===false) {
+			// not found? how? keys probable are wrong .. so toggle to 404
+			$core->fastClose(404);
+		}
+			if (!is_array($data)) {
+				return;
+			}
 	
 	####################################### PREPARES FORM #####################################
 	$objfield = $core->template->get("_FORM_field"); # how any single field shows
@@ -89,9 +103,9 @@
 							$fileName .= $data[$key]."_";
 						$FirstfileName = $path.$fileName."1";
 						$hasFile = locateAnyFile($FirstfileName,$ext);
-						if (!$hasFile) {
-							$content = false;
-							continue;
+			if (!$hasFile) {
+				$content = false;
+				continue 2;
 						} else {
 							$fillDT['filesize'] = humanSize(filesize($FirstfileName));
 							$ext = strtolower($ext);
@@ -99,7 +113,11 @@
 							$fillDT['ico'] = filetypeIcon($ext);
 							if (in_array($ext,array("jpg","gif","swf","png","jpeg"))) {
 								$hasImages = true;
-								$h = getimagesize($FirstfileName);
+								$h = @getimagesize($FirstfileName);
+								if (!is_array($h) || !isset($h[0],$h[1])) {
+									$content = false;
+									continue 2;
+								}
 								$fillDT['width'] = $h[0];
 								$fillDT['height'] = $h[1];
 								$fillDT['dim'] = $h[0]."x".$h[1];
@@ -118,10 +136,11 @@
 										$tObj = clone $tobjTemp;
 										$fileName = $fileName;
 										$tTemp= "";
-										$h = getimagesize($path."t/".$fileName."2.jpg");
 										for ($tv = 2; $tv <= $thumbVersions; $tv++) {
-											$tTemp .= $tObj->techo(array('tdownload'=>CONS_INSTALL_ROOT.$path."t/".$fileName.$tv.".jpg"));
-											$h = getimagesize($path."t/".$fileName.$tv.".jpg");
+											$thumbPath = $path."t/".$fileName.$tv.".jpg";
+											$h = @getimagesize($thumbPath);
+											if (!is_array($h) || !isset($h[0],$h[1])) continue;
+											$tTemp .= $tObj->techo(array('tdownload'=>CONS_INSTALL_ROOT.$thumbPath));
 										}
 										$using->assign("_thumb",$tTemp);
 									} else
@@ -136,15 +155,21 @@
 						}
 						$content = $using->techo($fillDT,$emptyme);
 					break;
-					case CONS_TIPO_LINK: // ############################################### LINK TO ANOTHER MODULE
-						$mod = $core->loaded($module->fields[$name][CONS_XML_MODULE]);
-						$where = $module->getRemoteKeys($mod,$data);
-						$sql = "SELECT ".$mod->title." FROM ".$mod->dbname." as ".$mod->name." WHERE ".implode(" AND ",$where);
+		case CONS_TIPO_LINK: // ############################################### LINK TO ANOTHER MODULE
+			$mod = $core->loaded($module->fields[$name][CONS_XML_MODULE]);
+			$remoteWhere = '';
+			$remoteTypes = '';
+			$remoteParams = array();
+			if (!$module->getRemotePreparedKeys($mod,$remoteWhere,$remoteTypes,$remoteParams,$data)) {
+				$content = false;
+				continue 2;
+			}
+			$sql = "SELECT ".$mod->title." FROM ".$mod->dbname." as ".$mod->name." WHERE ".$remoteWhere;
 
 						$field_select = $core->template->get("_select_field");
 						$using = clone $field_select;
 						
-						$fillDT['title'] = $core->dbo->fetch($sql);
+			$fillDT['title'] = $core->dbo->fetchPrepared($sql,$remoteTypes,$remoteParams);
 						 
 						$content = $using->techo($fillDT);
 						
@@ -155,25 +180,25 @@
 						$fillDT['value'] = isset($data[$name])?$data[$name]:'';
 						if ($fillDT['value'] == '') {
 							$content = false;
-							continue;
+							continue 2;
 						}						
 						$content = $using->techo($fillDT);
 					break;
 					case CONS_TIPO_ENUM: // ############################################### LIST OF ITEMS IN ENUM FORM
 						$content = $core->langOut($data[$name]);
 					break;
-					case CONS_TIPO_DATE: // ############################################### DATE / DATETIME
-						$content = fd($data[$name],$core->intlControl->getDate());
-						if ($content == '') {
-							$content = false;
-							continue;
+				case CONS_TIPO_DATE: // ############################################### DATE / DATETIME
+					$content = fd($data[$name],$core->intlControl->getDate());
+					if ($content == '') {
+						$content = false;
+						continue 2;
 						}
 					break;
-					case CONS_TIPO_DATETIME:
-						$content = fd($data[$name],"H:i:s ".$core->intlControl->getDate());
-						if ($content == '') {
-							$content = false;
-							continue;
+				case CONS_TIPO_DATETIME:
+					$content = fd($data[$name],"H:i:s ".$core->intlControl->getDate());
+					if ($content == '') {
+						$content = false;
+						continue 2;
 						}
 					break;
 					case CONS_TIPO_VC: // ############################################### SIMPLE INPUT WITH HEAVY TYPESETTING
@@ -201,7 +226,7 @@
 						}
 						if ($fillDT['value'] == '') {
 							$content = false;
-							continue;
+							continue 2;
 						}
 						$content =  $using->techo($fillDT);
 					break;

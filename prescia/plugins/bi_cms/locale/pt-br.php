@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 "contentman"=>"Gerenciador de conteúdo",
 "code"=>"Código",
 "page"=>"Página",

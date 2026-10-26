@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 
 	if (!$core->authControl->checkPermission('bi_adm','can_undo'))
 		$core->fastClose(403);

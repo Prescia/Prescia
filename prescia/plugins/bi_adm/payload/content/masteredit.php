@@ -1,9 +1,11 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 
 	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<100 || strpos(CONS_MASTERDOMAINS,$_SESSION['DOMAIN'])===false) $core->fastClose(403);
 	$isADD = !isset($_REQUEST['code']);
 	
-	$domains = unserialize(cReadFile(CONS_PATH_CACHE."domains.dat"));
+	$domains = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE."domains.dat"));
 	$codes = array();
 	foreach ($domains as $url => $code) {
 		if (!isset($codes[$code])) {

@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Core context injected by mod_bi_labels::onShow(). */
 
 	if (isset($core->loadedPlugins['bi_adm']))
 		$core->template->constants['SKIN_PATH'] = CONS_INSTALL_ROOT.CONS_PATH_PAGES."_common/files/adm/skin/".$core->loadedPlugins['bi_adm']->skin."/";

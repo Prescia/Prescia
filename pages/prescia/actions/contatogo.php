@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $this Core context of the page action loader. */
+
 	$this->tCaptcha('safetycode',true);
 	if(isset($_POST['haveinfo']) and $_POST['haveinfo'] == "1") {
 
@@ -15,4 +18,4 @@
 			$this->action = "contato";
 		}
 	 }
-	
+

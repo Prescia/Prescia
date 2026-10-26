@@ -1,4 +1,4 @@
-<?  return array(
+<?php  return array(
 	"groups" => "Grupos",
 	"permissions" => "Permissões",
 	"level" => "nível",

@@ -1,8 +1,8 @@
-<?	# -------------------------------- Developer Tools plugin
+<?php	# -------------------------------- Developer Tools plugin
 
 class mod_bi_dev extends CscriptedModule  {
 
-	var $name = "bi_dev";
+	public string $name = "bi_dev";
 	var $devDisable = false;
 	private $devCheckHTML = true;
 	private $overheadTime = 0;
@@ -12,6 +12,7 @@ class mod_bi_dev extends CscriptedModule  {
 
 	function __construct(&$parent,$moduleRelation="") {
 		$this->parent = &$parent; // framework object
+		$this->moduleRelation = $moduleRelation;
 		$this->loadSettings();
 	}
 
@@ -222,7 +223,7 @@ class mod_bi_dev extends CscriptedModule  {
 								$hasParent = true;
 								$rmodule = $this->parent->loaded($field[CONS_XML_MODULE]);
 								# TODO: this won't work for multikeys
-								$dataToAdd[$fname] = $this->parent->dbo->fetch("SELECT ".$rmodule->keys[0]." FROM ".$rmodule->dbname." ORDER BY RAND() LIMIT 1");
+								$dataToAdd[$fname] = $this->parent->dbo->fetchPrepared("SELECT ".$rmodule->keys[0]." FROM ".$rmodule->dbname." ORDER BY RAND() LIMIT 1", "", array());
 								break;
 							case CONS_TIPO_OPTIONS:
 								$dataToAdd[$fname] = "";
@@ -287,7 +288,9 @@ class mod_bi_dev extends CscriptedModule  {
 			foreach ($this->parent->modules[$module]->keys as $key)
 				$keys[] = $key; # SELECT keys
 			$sql = "SELECT ".implode(",",$keys)." FROM ".$this->parent->modules[$module]->dbname;
-			$this->parent->dbo->query($sql,$r,$n);
+			$r = false;
+			$n = 0;
+			$this->parent->dbo->queryPrepared($sql, "", array(), $r, $n);
 			$report[] = "-Module '".$this->parent->modules[$module]->dbname."' opened with $n entries, each with ".count($keys)." key".(count($keys)>1?"s":"");
 			$keystore[$this->parent->modules[$module]->name] = array();
 			for ($c=0;$c<$n;$c++)
@@ -328,7 +331,9 @@ class mod_bi_dev extends CscriptedModule  {
 			if (count($moduleLinks)>0) {
 				# I want something from this module
 				$sql = "SELECT ".implode(",",$desired)." FROM ".$module->dbname;
-				$this->parent->dbo->query($sql,$r,$n);
+				$r = false;
+				$n = 0;
+				$this->parent->dbo->queryPrepared($sql, "", array(), $r, $n);
 				$report[] = "-Performing integrity check on table '".$module->dbname."' with $n entries";
 				for ($c=0;$c<$n;$c++) {
 					$data = $this->parent->dbo->fetch_row($r); # keys, then desired in module order
@@ -390,7 +395,7 @@ class mod_bi_dev extends CscriptedModule  {
 			if (count($uploadFields)>0) {
 				$setStatement = substr($setStatement,0,strlen($setStatement)-1);
 				$sql = "UPDATE ".$module->dbname." SET $setStatement";
-				$ok = $this->parent->dbo->simpleQuery($sql);
+				$ok = $r = false; $n = 0; $this->parent->dbo->queryPrepared($sql, "", array(), $r, $n);
 				$existingFiles = listFiles(CONS_FMANAGER.$name,'@^(.*)$@',false,false,true);
 				$report[] = "-Module $name has uploads: ".count($existingFiles)." files found at ".CONS_FMANAGER.$name."/. ".($ok?"Database markers reset":"Unable to reset markers")." ...";
 				foreach ($existingFiles as $file) {
@@ -421,7 +426,7 @@ class mod_bi_dev extends CscriptedModule  {
 								}
 								$keys = implode(" AND ",$keys2);
 								$sql = "UPDATE ".$module->dbname." SET $field='y' WHERE $keys";
-								if ($this->parent->dbo->simpleQuery($sql)) $notorphans++;
+								$r = false; $n = 0; if ($this->parent->dbo->queryPrepared($sql, "", array(), $r, $n)) $notorphans++;
 							}
 						}
 					}
@@ -596,8 +601,8 @@ class mod_bi_dev extends CscriptedModule  {
 		return $totalNotTranslated>0?$notTranslated:false;
 	}
 
-	function log($die = true) {
-		function appendErrors(&$core,&$output,&$template,$data) {
+		function log($die = true) {
+			$appendErrors = function (&$core,&$output,&$template,$data): void {
 			foreach ($data as $line) {
 				$line = explode("|",$line);
 				# date|id_client|uri|errCode|module|parameters|extended parameters|log[|...]
@@ -617,8 +622,8 @@ class mod_bi_dev extends CscriptedModule  {
 
 				}
 			}
-		}
-		$outputTemplate = "<div style='line-height:25px;border-bottom:1px solid #999999;margin-bottom:3px;'>{date} {id_client}: <span style='color:red'>{errCode} ({_t}e{errCode}{/t})</span> [{module}] {parameters} (<strong>{extended}</strong>) @ {uri}</div>";
+			};
+			$outputTemplate = "<div style='line-height:25px;border-bottom:1px solid #999999;margin-bottom:3px;'>{date} {id_client}: <span style='color:red'>{errCode} ({_t}e{errCode}{/t})</span> [{module}] {parameters} (<strong>{extended}</strong>) @ {uri}</div>";
 		$template = new CKTemplate($this->parent->template);
 		$template->tbreak($outputTemplate);
 		$this->parent->close(false);
@@ -626,14 +631,14 @@ class mod_bi_dev extends CscriptedModule  {
 		$temp = "";
 		// 1 day ago
 		$previousDay = datecalc(date("Y-m-d"),0,0,-1);
-		$previousDay = str_replace("-","",$previousDay);
-		if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/err".$previousDay.".log"))
-			appendErrors($this->parent,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/err".$previousDay.".log")));
+			$previousDay = str_replace("-","",$previousDay);
+			if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/err".$previousDay.".log"))
+				$appendErrors($this->parent,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/err".$previousDay.".log")));
 
-		# Today
-		$previousDay = date("Ymd");
-		if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/err".$previousDay.".log"))
-			appendErrors($this->parent,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/err".$previousDay.".log")));
+			# Today
+			$previousDay = date("Ymd");
+			if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/err".$previousDay.".log"))
+				$appendErrors($this->parent,$temp,$template,explode("\n",cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/err".$previousDay.".log")));
 		if (is_file(CONS_PATH_LOGS.$_SESSION['CODE']."/out".$previousDay.".log"))
 			$temp .= nl2br(cReadFile(CONS_PATH_LOGS.$_SESSION['CODE']."/out".$previousDay.".log"));
 		echo "Log files are located at ".CONS_PATH_LOGS.$_SESSION['CODE']."/<br/><br/>";
@@ -896,8 +901,12 @@ class mod_bi_dev extends CscriptedModule  {
 			if (!isset($_SESSION['affbidevut'])) { # start up
 				$pages = array();
 				$_SESSION['affbidevut'] = array(0,$pages,array(),"end"); // current test, pages to test, error messages
+				if (count($pages) === 0) {
+					$this->unitTest();
+					return;
+				}
 				sleep(1);
-				$this->parent->headerControl->internalFoward(CONS_INSTALL_ROOT.$_SESSION['affbidevut'][1][0]."?dev_test=1");
+				$this->parent->headerControl->internalFoward(CONS_INSTALL_ROOT.$pages[0]."?dev_test=1");
 			}
 			if ($_SESSION['affbidevut'][3] == "start") { // last script DIED on me! user used "back" button or typed /?dev_test=1 ... redirect to the proper NEXT page to test
 				$_SESSION['affbidevut'][3] = "end";
@@ -956,7 +965,7 @@ class mod_bi_dev extends CscriptedModule  {
 			$thereAreErrors = false;
 			if ($this->devCheckHTML || isset($_REQUEST['dev_test'])) {
 				if (!function_exists('checkHTML')) include CONS_PATH_INCLUDE."checkHTML.php";
-				$log = checkHTML($PAGE,false);
+				$log = checkHTML($PAGE);
 				if (count($log)>0) {
 					$thereAreErrors = true;
 					$this->log[] = implode("<br/>",$log); // for dev_test
@@ -1081,10 +1090,10 @@ class mod_bi_dev extends CscriptedModule  {
 			if ($this->fulltest(true)) {
 				$pms = strtolower(trim(ini_get('post_max_size')));
 				$pmsv = $pms[strlen($pms)-1];
-				$pms = substr($pms,0,strlen($pms)-1);
+					$pms = (float) substr($pms,0,strlen($pms)-1);
 				$umfs = strtolower(trim(ini_get('upload_max_filesize')));
 				$umfsv = $umfs[strlen($umfs)-1];
-				$umfs = substr($umfs,0,strlen($umfs)-1);
+					$umfs = (float) substr($umfs,0,strlen($umfs)-1);
 				switch ($pmsv) {
 					case 'g':
 						$pms *= 1024;

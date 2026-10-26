@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 	$core->loadDimconfig(true);
 
 	// info
@@ -17,8 +19,8 @@
 	$maxHeight = 500;
 	if ($core->layout == 0 && defined('CONS_USER_RESOLUTION') && isset($_SESSION[CONS_USER_RESOLUTION])) {
 		$maxWidth = explode("x",$_SESSION[CONS_USER_RESOLUTION]);
-		$maxHeight = $maxWidth[1] - 400;
-		$maxWidth = $maxWidth[0] - 420;
+		$maxHeight = (int) $maxWidth[1] - 400;
+		$maxWidth = (int) $maxWidth[0] - 420;
 	}
 
 
@@ -27,7 +29,7 @@
 	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL]<$core->dimconfig['minlvltooptions'])
 		$core->fastClose(403);
 
-	$dimconfigMD = unserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_dimconfig.dat"));
+	$dimconfigMD = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/_dimconfig.dat"));
 	// fields that are NOT in the dimconfigMD are considered VC
 
 	$hasImages = false; // if we have images, so we load shadowbox
@@ -71,9 +73,11 @@
 			// arrays are never editable
 			// _pluginStarter neither
 					
-			$fillDT = array('field' => $data['name'],
-							'width' => '99%');
-			switch($fieldType) {
+				$fillDT = array('field' => $data['name'],
+								'width' => '99%');
+				$content = "";
+					$using = clone $objfield;
+				switch($fieldType) {
 
 				case CONS_TIPO_UPLOAD: // ############################################### FILE(s)
 
@@ -155,10 +159,12 @@
 							$field_sel = $core->template->get("_selecttree_field");
 							$using = clone $field_sel;
 
-							$sql = $mod->get_base_sql();
-							$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."='".$data['value']."',1,0) as selected";
+						$sql = $mod->get_base_sql();
+						$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."=?,1,0) as selected";
+						$sql['_preparedTypes'] = 's';
+						$sql['_preparedParams'] = array((string)$data['value']);
 
-							$tree = $mod->getContents("","","","\\",$sql);
+						$tree = $mod->getContents("","","","\\",$sql);
 							$using->getTreeTemplate("_sdirs","_ssubdirs",$tree);
 
 						} else {
@@ -168,8 +174,10 @@
 
 							$sql = $mod->get_base_sql();
 							# TODO: this probably won't work on multiple keys
-							$sql['SELECT'] = array($mod->name.".".$mod->keys[0]." as ids",$mod->name.".".$mod->title." as title");
-							$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."='".$data['value']."',1,0) as selected";
+					$sql['SELECT'] = array($mod->name.".".$mod->keys[0]." as ids",$mod->name.".".$mod->title." as title");
+					$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."=?,1,0) as selected";
+					$sql['_preparedTypes'] = 's';
+					$sql['_preparedParams'] = array((string)$data['value']);
 							if ($core->runContent($mod,$using,$sql,"_options")===false)
 								$using->assign("_options");
 						}
@@ -286,7 +294,7 @@
 	if ($_SESSION[CONS_SESSION_ACCESS_LEVEL] == 100) {
 		$core->template->assign("_hiddenoptions",$temp);
 		if (!CONS_ONSERVER && CONS_SITESELECTOR ) {
-			$domains = unserialize(cReadFile(CONS_PATH_CACHE."domains.dat"));
+			$domains = presciaSafeUnserialize(cReadFile(CONS_PATH_CACHE."domains.dat"));
 			$codes = array();
 			foreach ($domains as $url => $code) {
 				if (!isset($codes[$code])) {
@@ -321,4 +329,3 @@
 	$core->template->assign("_textarea_field","");
 	$core->template->assign("_slider_field","");
 	$core->template->assign("_selecttree_field","");
-

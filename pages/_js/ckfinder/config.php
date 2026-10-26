@@ -32,7 +32,11 @@ function CheckAuthentication()
 	// user logs in your system. To be able to use session variables don't
 	// forget to add session_start() at the top of this file.
 
-	return isset($_SESSION['CODE']) && isset($_SESSION['prescia_sa_level']) && $_SESSION['prescia_sa_level']>10;
+	$isAuthorized = isset($_SESSION['CODE']) && isset($_SESSION['prescia_sa_level']) && $_SESSION['prescia_sa_level']>10;
+	if ($isAuthorized) {
+		$_SESSION['CKFinder_UserRole'] = 'admin';
+	}
+	return $isAuthorized;
 }
 
 // LicenseKey : Paste your license key here. If left blank, CKFinder will be
@@ -45,7 +49,7 @@ $config['LicenseKey'] = '';
  Do not do this on a production server. Might be helpful when debugging why CKFinder does not work as expected.
 */
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', '0');
 
 /*
 To make it easy to configure CKFinder, the $baseUrl and $baseDir can be used.
@@ -139,7 +143,7 @@ Subfolders inherit their default settings from their parents' definitions.
 */
 
 $config['AccessControl'][] = Array(
-		'role' => '*',
+		'role' => 'admin',
 		'resourceType' => '*',
 		'folder' => '/',
 
@@ -195,27 +199,19 @@ $config['DefaultResourceTypes'] = '';
 
 $config['ResourceType'][] = Array(
 		'name' => 'Files',				// Single quotes not allowed
-		'url' => $baseUrl/*. 'files'*/,
-		'directory' => $baseDir/* . 'files'*/,
-		'maxSize' => 0,
-		'allowedExtensions' => '7z,aiff,asf,avi,bmp,csv,doc,docx,fla,flv,gif,gz,gzip,jpeg,jpg,mid,mov,mp3,mp4,mpc,mpeg,mpg,ods,odt,pdf,png,ppt,pptx,pxd,qt,ram,rar,rm,rmi,rmvb,rtf,sdc,sitd,swf,sxc,sxw,tar,tgz,tif,tiff,txt,vsd,wav,wma,wmv,xls,xlsx,zip',
-		'deniedExtensions' => '');
+			'url' => $baseUrl/*. 'files'*/,
+			'directory' => $baseDir/* . 'files'*/,
+			'maxSize' => '8M',
+				'allowedExtensions' => '7z,aiff,asf,avi,bmp,csv,doc,docx,gif,gz,gzip,jpeg,jpg,mid,mov,mp3,mp4,mpc,mpeg,mpg,ods,odt,pdf,png,ppt,pptx,pxd,qt,ram,rm,rmi,rmvb,rtf,sdc,sitd,sxc,sxw,tar,tgz,tif,tiff,txt,vsd,wav,wma,wmv,xls,xlsx,zip',
+				'deniedExtensions' => 'php,php3,php4,php5,php7,phar,phtml,pl,py,sh,cgi,exe,bin,dll,js,html,htm,xml,svg,swf,flv');
 
 $config['ResourceType'][] = Array(
 		'name' => 'Images',
-		'url' => $baseUrl /*. 'images'*/,
-		'directory' => $baseDir /*. 'images'*/,
-		'maxSize' => 0,
-		'allowedExtensions' => 'bmp,gif,jpeg,jpg,png',
-		'deniedExtensions' => '');
-
-$config['ResourceType'][] = Array(
-		'name' => 'Flash',
-		'url' => $baseUrl /*. 'flash'*/,
-		'directory' => $baseDir /*. 'flash'*/,
-		'maxSize' => 0,
-		'allowedExtensions' => 'swf,flv',
-		'deniedExtensions' => '');
+			'url' => $baseUrl /*. 'images'*/,
+			'directory' => $baseDir /*. 'images'*/,
+			'maxSize' => '5M',
+				'allowedExtensions' => 'bmp,gif,jpeg,jpg,png',
+				'deniedExtensions' => 'php,php3,php4,php5,php7,phar,phtml,pl,py,sh,cgi,exe,bin,dll,js,html,htm,xml,svg,swf,flv');
 
 /*
  Due to security issues with Apache modules, it is recommended to leave the
@@ -271,10 +267,9 @@ after scaling them. Otherwise, it is checked right after uploading.
 $config['CheckSizeAfterScaling'] = true;
 
 /*
-For security, HTML is allowed in the first Kb of data for files having the
-following extensions only.
+Reject HTML content in uploaded files regardless of their extension.
 */
-$config['HtmlExtensions'] = array('html', 'htm', 'xml', 'js');
+$config['HtmlExtensions'] = array('html', 'htm', 'xml', 'js', 'svg');
 
 /*
 Folders to not display in CKFinder, no matter their location.
@@ -297,13 +292,13 @@ If possible, it is recommended to set more restrictive permissions, like 0755.
 Set to 0 to disable this feature.
 Note: not needed on Windows-based servers.
 */
-$config['ChmodFiles'] = 0775 ;
+$config['ChmodFiles'] = 0640 ;
 
 /*
 See comments above.
 Used when creating folders that does not exist.
 */
-$config['ChmodFolders'] = 0775 ;
+$config['ChmodFolders'] = 0750 ;
 
 /*
 Force ASCII names for files and folders.

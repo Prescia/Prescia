@@ -1,4 +1,4 @@
-<?
+<?php
 
 	// change how the debug messages show?
 	# $this->debugFile = CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html";

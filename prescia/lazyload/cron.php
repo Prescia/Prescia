@@ -1,9 +1,14 @@
-<?/* -------------------------------- Prescia Cron
+<?php
+/* -------------------------------- Prescia Cron
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
   | NOTE: forcecron=day|hour|true only works if you are logged as master
 -*/
 
+/** @var CPrescia $this Runtime cron context injected by the framework. */
+/** @var bool|string $forceCron Cron mode supplied by CPrescia::cronCheck(). */
+
+require_once CONS_PATH_INCLUDE."autoClean.php";
 
 if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_cronD'] && $forceCron != 'hour')) { // Daily cron
 
@@ -29,7 +34,7 @@ if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_c
 	}
 
 	// reset 404 caches
-	$core->dimconfig['_404cache'] = array();
+	$this->dimconfig['_404cache'] = array();
 
 	// backup main files
 	$this->loadDimconfig(true);
@@ -48,7 +53,7 @@ if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_c
 		$httpderrlog = str_replace("{d}",date("d"),$httpderrlog);
 		if (is_file(CONS_HTTPD_ERRDIR.$httpderrlog) && filesize(CONS_HTTPD_ERRDIR.$httpderrlog)>1048576) {
 			# php log has more than 1Mb, come on!
-			$this->raise(604,"size=".filesize(CONS_HTTPD_ERRDIR.$httpderrlog),"PHP error log too big");
+			$this->errorControl->raise(604,"size=".filesize(CONS_HTTPD_ERRDIR.$httpderrlog),"PHP error log too big");
 		}
 	} else {
 		$httpderrlog = "";
@@ -70,23 +75,32 @@ if ($forceCron=='day' || $forceCron=='all' || (date("d") != $this->dimconfig['_c
 	foreach ($this->modules as $name => &$module) {
 		if (isset($module->options[CONS_MODULE_AUTOCLEAN]) && $module->options[CONS_MODULE_AUTOCLEAN] != "" && (strpos($module->options[CONS_MODULE_AUTOCLEAN],"DAY") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"WEEK") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"MONTH") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"YEAR") !== false)) {
 
-			# daily only runs autocleans with DAY, WEEK, MONTH or YEAR
-			if ($module->options[CONS_MODULE_VOLATILE]) {
-				$sql = "DELETE FROM ".$module->dbname." WHERE ".$module->options[CONS_MODULE_AUTOCLEAN];
-				$this->dbo->simpleQuery($sql);
-			} else {
-				$sql = "SELECT * FROM ".$module->dbname." WHERE ".$module->options[CONS_MODULE_AUTOCLEAN];
-				$this->dbo->query($sql,$r,$n);
-				if ($n>0) {
+				# daily only runs autocleans with DAY, WEEK, MONTH or YEAR
+				try {
+					$autoclean = CPresciaAutoClean::compile($module->options[CONS_MODULE_AUTOCLEAN],$module,$this->dbo);
+					$table = $this->dbo->quoteIdentifier($module->dbname);
+				} catch (InvalidArgumentException $exception) {
+					$this->log[] = "Rejected invalid autoclean for module ".$name;
+					continue;
+				}
+				$r = false;
+				$n = 0;
+				if ($module->options[CONS_MODULE_VOLATILE]) {
+					$sql = "DELETE FROM ".$table." WHERE ".$autoclean['sql'];
+					$this->dbo->queryPrepared($sql,$autoclean['types'],$autoclean['params'],$r,$n);
+				} else {
+					$sql = "SELECT * FROM ".$table." WHERE ".$autoclean['sql'];
+					if ($this->dbo->queryPrepared($sql,$autoclean['types'],$autoclean['params'],$r,$n)) {
 					$this->safety = false;
-					for ($c=0;$c<$n;$c++) {
-						$data = $this->dbo->fetch_assoc($r);
+					$c = 0;
+					while (is_array($data = $this->dbo->fetch_assoc($r))) {
 						$this->runAction($module,CONS_ACTION_DELETE,$data,true);
 						if ($c%10 == 0 && $this->nearTimeLimit()) {
 							$this->errorControl->raise(111,'cleanup-stage');
 							$this->safety = true; # aborts cron as of now
 							return;
 						}
+						$c++;
 					}
 					$this->safety = true;
 				}
@@ -142,22 +156,31 @@ if ($forceCron=='hour' || $forceCron=='all' || $this->dimconfig['_cronH'] != dat
 		if (isset($module->options[CONS_MODULE_AUTOCLEAN]) && $module->options[CONS_MODULE_AUTOCLEAN] != "" && (strpos($module->options[CONS_MODULE_AUTOCLEAN],"HOUR") !== false || strpos($module->options[CONS_MODULE_AUTOCLEAN],"MINUTE") !== false)) {
 
 			# hourly only runs autocleans with HOUR or MINUTE
-			if ($module->options[CONS_MODULE_VOLATILE]) {
-				$sql = "DELETE FROM ".$module->dbname." WHERE ".$module->options[CONS_MODULE_AUTOCLEAN];
-				$this->dbo->simpleQuery($sql);
-			} else {
-				$sql = "SELECT * FROM ".$module->dbname." WHERE ".$module->options[CONS_MODULE_AUTOCLEAN];
-				$this->dbo->query($sql,$r,$n);
-				if ($n>0) {
+			try {
+				$autoclean = CPresciaAutoClean::compile($module->options[CONS_MODULE_AUTOCLEAN],$module,$this->dbo);
+				$table = $this->dbo->quoteIdentifier($module->dbname);
+				} catch (InvalidArgumentException $exception) {
+					$this->log[] = "Rejected invalid autoclean for module ".$name;
+					continue;
+				}
+				$r = false;
+				$n = 0;
+				if ($module->options[CONS_MODULE_VOLATILE]) {
+					$sql = "DELETE FROM ".$table." WHERE ".$autoclean['sql'];
+					$this->dbo->queryPrepared($sql,$autoclean['types'],$autoclean['params'],$r,$n);
+				} else {
+					$sql = "SELECT * FROM ".$table." WHERE ".$autoclean['sql'];
+					if ($this->dbo->queryPrepared($sql,$autoclean['types'],$autoclean['params'],$r,$n)) {
 					$this->safety = false;
-					for ($c=0;$c<$n;$c++) {
-						$data = $this->dbo->fetch_assoc($r);
+					$c = 0;
+					while (is_array($data = $this->dbo->fetch_assoc($r))) {
 						$this->runAction($module,CONS_ACTION_DELETE,$data,true);
 						if ($c%10 == 0 && $this->nearTimeLimit()) {
 							$this->errorControl->raise(112,'cleanup-stage');
 							$this->safety = true; # aborts cron as of now
 							return;
 						}
+						$c++;
 					}
 					$this->safety = true;
 				}
@@ -195,11 +218,17 @@ if ($forceCron=='hour' || $forceCron=='all' || $this->dimconfig['_cronH'] != dat
 			if ($module->dbname != "" && !in_array($module->dbname,$mods))
 				$mods[] = $module->dbname;
 		}
+		$quotedMods = array();
+		foreach ($mods as $mod) $quotedMods[] = $this->dbo->quoteIdentifier($mod);
 		// optimize
-		$sql = "REPAIR TABLE ".implode(",",$mods);
-		$this->dbo->simpleQuery($sql,false);
-		$sql = "OPTIMIZE TABLE ".implode(",",$mods);
-		$this->dbo->simpleQuery($sql,false);
+		$sql = "REPAIR TABLE ".implode(",",$quotedMods);
+		$maintenanceResult = false;
+		$maintenanceRows = 0;
+		$this->dbo->queryPrepared($sql,"",array(),$maintenanceResult,$maintenanceRows,false);
+		$sql = "OPTIMIZE TABLE ".implode(",",$quotedMods);
+		$maintenanceResult = false;
+		$maintenanceRows = 0;
+		$this->dbo->queryPrepared($sql,"",array(),$maintenanceResult,$maintenanceRows,false);
 		// backup
 		if (!$this->nearTimeLimit()) {
 			$mods = array();
@@ -232,5 +261,3 @@ if ($forceCron=='hour' || $forceCron=='all' || $this->dimconfig['_cronH'] != dat
 
 	$this->dimconfig['_cronH'] = date("H");
 }
-
-

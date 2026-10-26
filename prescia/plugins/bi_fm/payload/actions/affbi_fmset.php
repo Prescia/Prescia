@@ -1,6 +1,8 @@
-<?
+<?php
 
-	if (!$core->authControl->checkPermission('bi_fm','change_fmp')) return; // cannot change permissions
+/** @var CPrescia $core Core context injected by mod_bi_fm::onCheckActions(). */
+
+		if (!$core->authControl->checkPermission('bi_fm','change_fmp')) return; // cannot change permissions
 
 	$data = array(
 		'filenm' => $_GET['file'],
@@ -25,8 +27,8 @@
 		}
 	}
 	$mod = $core->loaded('bi_fm');
-	$sql = "SELECT filenm FROM ".$mod->dbname." WHERE filenm LIKE \"".$data['filenm']."\"";
-	$hasData = $core->dbo->fetch($sql) !== false;
+	$sql = "SELECT filenm FROM ".$mod->dbname." WHERE filenm LIKE ?";
+	$hasData = $core->dbo->fetchPrepared($sql, 's', array($data['filenm'])) !== false;
 	$core->safety = false;
 	if ($hasData)
 		$core->runAction('bi_fm',CONS_ACTION_UPDATE,$data);
@@ -35,4 +37,3 @@
 	$core->safety = true;
 
   	$core->close();
-

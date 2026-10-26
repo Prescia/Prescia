@@ -1,0 +1,30 @@
+{
+  "assets": [
+    {
+      "name": "jquery",
+      "version": "3.7.1",
+      "source": "https://code.jquery.com/jquery-3.7.1.min.js",
+      "files": [
+        {
+          "path": "pages/_js/jquery-3.7.1.min.js",
+          "sha256": "fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a"
+        },
+        {
+          "path": "pages/_js/ckfinder/plugins/gallery/colorbox/jquery.min.js",
+          "sha256": "fc9a93dd241f6b045cbff0481cf4e1901becd0e12fb45166a8f17f95823f0b1a"
+        }
+      ]
+    },
+    {
+      "name": "colorbox",
+      "version": "1.6.4",
+      "source": "https://raw.githubusercontent.com/jackmoore/colorbox/1.6.4/jquery.colorbox-min.js",
+      "files": [
+        {
+          "path": "pages/_js/ckfinder/plugins/gallery/colorbox/jquery.colorbox-min.js",
+          "sha256": "41bc4d4fe88139d6ee89abfcb2abac71e1430d85dbffc0be7c8f6bd36f4ced7e"
+        }
+      ]
+    }
+  ]
+}

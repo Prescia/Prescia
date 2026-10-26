@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 "users" => "Usuários",
 "id_group" => "grupo",
 "name" => "Nome",

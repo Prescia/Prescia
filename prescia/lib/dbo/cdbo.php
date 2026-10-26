@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | dbo.php - Master version
   | if you want more logging, set quickmode to false after creating the object
   | last change: 14.8.20 to support some php 5.4 improvements
@@ -6,12 +7,12 @@
 
 class CDBO {
 
-	private $ctype = '';
-  	private $connection = false; // MySQL resource OR MySQLi Object
-  	private $host = "";
-  	private $user = "";
-  	private $password = "";
-  	private $database = "";
+	protected $ctype = '';
+	protected $connection = false; // MySQL resource OR MySQLi Object
+	protected $host = "";
+	protected $user = "";
+	protected $password = "";
+	protected $database = "";
 	public $serverVersion = 0;
   	public $debugmode = false;
   	public $log = array();
@@ -80,7 +81,7 @@ class CDBO {
 	} // close
 
 	function query($sql, &$result, &$numrows, $debugmode= null) { // SHOULD BE EXTENDED, replace $result with resource/object for result, $numrows with rows returned. Returns true on sucess
-		return false; // WHEN EXTENDING, REMOVE THIS
+			return false; // WHEN EXTENDING, REMOVE THIS
 
 		// COPY/PASTE ALL CONTENT TO GUARANTEE DEBUGMODE AND BENCHMARK ARE IN PLACE
 		
@@ -109,7 +110,24 @@ class CDBO {
       			echo $err."\n<br/>\n".$sql;
       		return false;
     	}
-    } // query
+	    } // query
+
+		/** Execute a parameterized query. Connectors should override this method. */
+		/**
+     * @param-out mixed $result Driver-specific result object or false.
+     * @param-out int $numrows Number of rows returned by the driver.
+		 * @return bool Whether execution succeeded.
+		 */
+		function queryPrepared($sql, $types, $params, &$result, &$numrows, $debugmode = null) {
+			$result = false;
+			$numrows = 0;
+			return false;
+		}
+
+		/** @return mixed First column of the first row, or false when unavailable. */
+		function fetchPrepared($sql, $types, $params, $abortOnError = false) {
+			return false;
+		}
 
 	function simpleQuery($sql,$debugmode  = null) { // SHOULD BE EXTENDED, this one is used for queries which you don't care for the result, only if the suceeded (true/false on return)
 		return false; // WHEN EXTENDING, REMOVE THIS
@@ -174,9 +192,20 @@ class CDBO {
     	} else
     		// FREE RESOURCES
     	return false;
-	} // fetch
+		} // fetch
 
-	function insert_id() { // SHOULD BE EXTENDED
+	/**
+	 * Quote a single SQL identifier after validating its metadata-derived shape.
+	 * Values must use prepared statements; this method is only for identifiers.
+	 */
+	function quoteIdentifier($identifier) {
+		if (!is_string($identifier) || preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $identifier) !== 1) {
+			throw new InvalidArgumentException('Invalid SQL identifier');
+		}
+		return CONS_SQL_QUOTE.$identifier.CONS_SQL_QUOTE;
+	}
+
+		function insert_id() { // SHOULD BE EXTENDED
 		return false; // LAST AUTO_INCREMENT ID
 	}
 

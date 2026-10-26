@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 
 	$b = getbrowser(false);
 	$core->template->assign("browser",$b[0]);

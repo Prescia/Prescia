@@ -1,4 +1,10 @@
-<?/* -------------------------------- Prescia - Scripts
+<?php
+
+/** @var CPrescia $this Core context that includes this lazy-load. */
+/** @var string $scriptname Script name requested by CPrescia::addScript(). */
+/** @var array<string, mixed> $parameters Optional script parameters. */
+
+/* -------------------------------- Prescia - Scripts
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
   | Automate the inclusion of multiple scripts here
@@ -27,7 +33,7 @@
 				$this->addLink("html5shiv.min.js");
 				$this->addLink("respond.min.js");
 			}
-			if (!isset($this->storage['_scripts_jquery_added'])) $this->addLink("jquery-1.11.1.min.js"); // bootstrap flavours j-query 1.x
+			if (!isset($this->storage['_scripts_jquery_added'])) $this->addLink("jquery-3.7.1.min.js");
 			$this->addLink("bootstrap/js/bootstrap.min.js");
 
 			$this->storage['_scripts_bootstrap_added'] = true;
@@ -73,4 +79,3 @@
 			$this->storage['_scripts_prettify_added'] = true;
 		break;
 	}
-

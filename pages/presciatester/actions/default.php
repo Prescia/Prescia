@@ -1,6 +1,8 @@
-<?
+<?php
 
-	// change how the debug messages show?
+/** @var CPrescia $this Page action context injected by CPrescia::checkActions(). */
+
+		// change how the debug messages show?
 	$this->debugFile = CONS_PATH_PAGES.$_SESSION['CODE']."/template/_debugarea.html";
 
 	// perform UDM (routes)?

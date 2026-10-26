@@ -1,4 +1,6 @@
-<?	# -------------------------------- Advanced Admin (Codde's Nekoi), requires prototype/scriptaculous
+<?php	# -------------------------------- Advanced Admin (Codde's Nekoi), requires prototype/scriptaculous
+
+/** @var CPrescia $this Core context while this plugin module is loaded. */
 
 # NOTE: admFolder in this can be a list of comma delimited folders
 # ADMIN MENU: will create normal new/list for modules that are not flagged as systemModule="true"
@@ -44,11 +46,13 @@ if (!CONS_USE_I18N) $this->errorControl->raise(4,'bi_adm','ADVADM module require
 class mod_bi_adm extends CscriptedModule  {
 
 	// config ----
-	var $admFolder = 'adm';
+	/** @var string|array<int, string> */
+	public string|array $admFolder = 'adm';
 	var $testDomainHash = "test"; # these will be considered test domains (instr)
 	// internals -----
 	var $skin = ''; // gets from dimconfig or userprefs, do not change here
-	var $customPermissions = array('can_monitor' => 'can_monitor',
+	/** @var array<string, string> */
+	public array $customPermissions = array('can_monitor' => 'can_monitor',
 								   'can_undo' => 'can_undo',
 								   'can_importexport' => 'can_importexport',
 								   'can_fm' => 'can_fm',
@@ -59,7 +63,15 @@ class mod_bi_adm extends CscriptedModule  {
 	private $menudata = array();
 	public $isAdminPage = false; // cache test result
 	private $hasUndo = false; // cache for testing if have Undo module
-	private $hasStats = false; // cache for testing if have stats module
+	protected bool $hasStats = false; // cache for testing if have stats module
+
+	public function hasStatsModule(): bool {
+		return $this->hasStats;
+	}
+
+	public function hasUndoModule(): bool {
+		return $this->hasUndo;
+	}
 
 	function loadSettings() {
 		$this->name = "bi_adm";
@@ -112,17 +124,21 @@ class mod_bi_adm extends CscriptedModule  {
 		}
 
 		# DEFAULT WARNING ON IMPROPER MERGE
-		if (count($this->parent->modules[$mname]->options[CONS_MODULE_MERGE])>0) {
-			foreach ($this->parent->modules[$mname]->options[CONS_MODULE_MERGE] as $m) {
-				if (!isset($this->parent->modules[$m])) {
-					$this->parent->log[] = "Merged module $m does not exist in $mname";
-					$this->parent->setLog(CONS_LOGGING_ERROR);
+		$mname = '';
+		if (count($this->parent->modules)>0) {
+			$mname = array_key_last($this->parent->modules);
+			if (count($this->parent->modules[$mname]->options[CONS_MODULE_MERGE])>0) {
+				foreach ($this->parent->modules[$mname]->options[CONS_MODULE_MERGE] as $m) {
+					if (!isset($this->parent->modules[$m])) {
+						$this->parent->log[] = "Merged module $m does not exist in $mname";
+						$this->parent->setLog(CONS_LOGGING_ERROR);
+					}
 				}
 			}
 		}
-	}
+		}
 
-	function onCheckActions() { // check if we should do something, and also check if we are properly on admin page
+		function onCheckActions() { // check if we should do something, and also check if we are properly on admin page
 
 		if (!$this->parent->virtualFolder) return; // other module processed the folder. The adm pane is a mandatory virtual folder
 	
@@ -154,7 +170,7 @@ class mod_bi_adm extends CscriptedModule  {
 			$this->skin = isset($this->parent->dimconfig['bi_adm_skin']) && $this->parent->dimconfig['bi_adm_skin'] != ''?$this->parent->dimconfig['bi_adm_skin']:CONS_ADM_BASESKIN;
 			if (isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']) && $_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] != '') {
 				$up = $_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'];
-				if (!is_array($up)) $up = @unserialize($up);
+				if (!is_array($up)) $up = presciaSafeUnserialize($up);
 				if (is_array($up)) {
 					$this->parent->storage['up'] = $up;
 					$this->skin = $up['skin'];
@@ -199,13 +215,13 @@ class mod_bi_adm extends CscriptedModule  {
 		return false;
 	}
 
-	function onRender(){ // if there is no index.php to run the admin, use default
-		if ($this->isAdminPage) { // on admin
-			// build administrative frame
-			$core = &$this->parent;
-			if ($this->parent->layout != 2) { // cannot use core::frame because we want the full path to avoid loading default files
+		function onRender(){ // if there is no index.php to run the admin, use default
+			if ($this->isAdminPage) { // on admin
+				// build administrative frame
+				$core = &$this->parent;
 				$sname = $this->name;
-				if (is_file(CONS_PATH_SYSTEM."plugins/$sname/payload/template/basefile.html")) {
+				if ($this->parent->layout != 2) { // cannot use core::frame because we want the full path to avoid loading default files
+					if (is_file(CONS_PATH_SYSTEM."plugins/$sname/payload/template/basefile.html")) {
 					$frame = CONS_PATH_SYSTEM."plugins/$sname/payload/template/basefile.html";
 				} else {
 					$frame = CONS_PATH_SETTINGS."defaults/basefile.html";
@@ -293,7 +309,7 @@ class mod_bi_adm extends CscriptedModule  {
 	function createAdminSuggestion() {
 		// create a xml suggestion for the admin (not a good suggestion, but good for copy&paste)
 		$output = "";
-		$this->parent->loadAllModules();
+		$this->parent->loadAllmodules();
 		foreach ($this->parent->modules as $name => $module) {
 			if (!$module->linker) {
 				$pluginOptions = 0;
@@ -371,17 +387,15 @@ class mod_bi_adm extends CscriptedModule  {
 			$this->parent->lockPermissions(); // guarantee permissions are loaded
 			$this->addMenuItens($menuXML->getbranch(0),$menu,0,$this->parent);
 
-			if (!function_exists("mysort")) {
-				function mysort($a,$b) {
+				$menuSorter = static function ($a,$b) {
 					if ($a['id_parent'] == $b['id_parent']) {
 						return ($a['id'] <= $b['id'])?-1:1; // itens on the same level sorted by id
-					} else
-						return ($a['id_parent'] <= $b['id_parent'])?-1:1; // menus sorted by ID
-				}
-			}
+					}
+					return ($a['id_parent'] <= $b['id_parent'])?-1:1; // menus sorted by ID
+				};
 
-			usort($menu,'mysort');
-			$this->menudata = new TTree();
+				usort($menu,$menuSorter);
+				$this->menudata = new ttree();
 			$this->menudata->arrayToTree($menu,'\\','id_parent','title');
 
 			// save caches
@@ -390,7 +404,7 @@ class mod_bi_adm extends CscriptedModule  {
 
 		} else {
 
-			@$this->menudata = unserialize(cReadFile($file));
+			@$this->menudata = presciaSafeUnserialize(cReadFile($file));
 			if ($this->menudata === false || !is_object($this->menudata)) {
 				$this->parent->log[] = "Error loading admin menu";
 				$this->parent->setLog(CONS_LOGGING_ERROR);
@@ -398,8 +412,9 @@ class mod_bi_adm extends CscriptedModule  {
 		}
 	}
 
-	function addMenuItens(&$xml,&$menu,$idp,&$core,$inModule="") {
-		if ($xml->data[0] != 'xhtml') { // not the BASE node
+		function addMenuItens(&$xml,&$menu,$idp,&$core,$inModule="") {
+			$id = $idp;
+			if ($xml->data[0] != 'xhtml') { // not the BASE node
 			$tm = $core->loaded(strtolower($xml->data[0]),true); // check if this is a module
 			if (!is_object($tm) && $inModule != '') $tm = $core->loaded($inModule,true); // if not a module, but we are INSIDE a module, inherit it
 			if (is_object($tm)) $inModule = $tm->name; // works both ways
@@ -500,7 +515,7 @@ class mod_bi_adm extends CscriptedModule  {
 			}
 			unset($xml);
 		} else // use cache
-			$monitorXml = unserialize(cReadFile($monitorXmlCache));
+			$monitorXml = presciaSafeUnserialize(cReadFile($monitorXmlCache));
 		return $monitorXml;
 	}
 }

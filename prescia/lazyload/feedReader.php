@@ -1,4 +1,5 @@
-<?/* -------------------------------- Prescia extra core functions
+<?php
+/* -------------------------------- Prescia extra core functions
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
   | These functions are not used so often, so to reduce parse time from the PHP compiler, they where removed from the core.php
@@ -7,7 +8,11 @@
   | $cancache= true|false if this can be cached
 -*/
 
-	if ($cancache) {
+/** @var CPrescia $this Core context of CPrescia::feedReader(). */
+/** @var string $url URL of the external feed. */
+/** @var bool $cancache Whether the feed may use the cache. */
+
+		if ($cancache) {
 		$cached = $this->cacheControl->getCachedContent("feedReader_".$url);
 		if ($cached !== false) return $cached;
 	}
@@ -46,4 +51,3 @@
 		}
 	}
 	return false; // ops
-

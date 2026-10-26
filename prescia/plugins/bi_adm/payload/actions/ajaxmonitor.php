@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 	// this code is taken from default.php
 
@@ -6,15 +9,15 @@
 	$template->fetch(CONS_PATH_SYSTEM."plugins/bi_adm/payload/template/skin/".$this->skin."/admframe.html");
 	$mObj = $template->get("_monitor");
 
-	// monitored items
-	if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/_config/monitor.xml") && $core->authControl->checkPermission('bi_adm','can_monitor')) {
+		// monitored items
+		$monitorTxt = "";
+		if (is_file(CONS_PATH_PAGES.$_SESSION['CODE']."/_config/monitor.xml") && $core->authControl->checkPermission('bi_adm','can_monitor')) {
 		// we have monitored items AND can see them
 
 		$monitorXml = $this->getMonitorArray();
 		// now perform sql queries COUNTING items we are monitoring
 
-		$monitorTxt = "";
-		$c=0;
+			$c=0;
 		$totalItems =0;
 		foreach ($monitorXml as $monitoredItem) {
 			$monitoredModule = $core->loaded($monitoredItem['module'],true);
@@ -23,7 +26,9 @@
 			$sql['ORDER'] = array();
 			$sql['SELECT'] = array("count(*) as myresult");
 			if (!isset($monitoredItem['monitor_level'])) $monitoredItem['monitor_level'] = 'warning';
-			$ok = $core->dbo->query($sql,$r,$n);
+				$r = false;
+				$n = 0;
+				$ok = $core->dbo->queryPrepared($core->dbo->sqlarray_echo($sql), "", array(), $r, $n);
 			if ($ok) {
 				if ($n>0) list($n) = $core->dbo->fetch_row($r);
 				$monitorData = array(

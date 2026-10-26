@@ -1,4 +1,5 @@
-<?/* -------------------------------- Prescia extra core functions
+<?php
+/* -------------------------------- Prescia extra core functions
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
   | These functions are not used so often, so to reduce parse time from the PHP compiler, they where removed from the core.php
@@ -9,6 +10,11 @@ Expected data in the $data array (see rsstemplate.xml):
 title, link, description, language
 module, category, itemlinktemplate, itemtitle, itemdescription
 */
+
+/** @var CPrescia $this Runtime context of CPrescia::rss(). */
+/** @var array<string, mixed> $data RSS configuration and item data. */
+/** @var bool $echoHeader Whether to emit the RSS content-type header. */
+/** @var string $imgtitle Optional image title. */
 
 if (!isset($data['title']) ||
 	!isset($data['link']) ||
@@ -39,9 +45,9 @@ $ilt = explode(",",$data['itemlinktemplate']);
 $it = explode(",",$data['itemtitle']);
 $idesc = explode(",",$data['itemdescription']);
 
-if (count($modules) != count($ilt) &&
-	count($modules) != count($it) &&
-	count($module) != count($idesc)) {
+if (count($modules) != count($ilt) ||
+		count($modules) != count($it) ||
+		count($modules) != count($idesc)) {
 	return false;
 }
 
@@ -55,7 +61,9 @@ foreach ($modules as $mod) {
 	$sql = $module->get_base_sql('','',$itemsPerModule);
 
 	$hasCategory = $hasCategory || (isset($category[$rssId]) && $category[$rssId] != "");
-	$this->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$this->dbo->queryPrepared($this->dbo->sqlarray_echo($sql),"",array(),$r,$n);
 	$dateField = "";
 
 	foreach ($module->fields as $fname => &$field) {

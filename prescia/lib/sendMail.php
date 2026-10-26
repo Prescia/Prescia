@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | sendMail : Improved version of PHP's mail function
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ www.prescia.net
   | -r parameter for postfix
@@ -31,6 +32,8 @@
 	  	$header .= "Reply-To: $mailfrom\n";
 	  if (strpos(strtoupper($header),"FROM:") === false && isMail($mailfrom,true)) // no FROM, add if possible
 	  	$header .= "From: $mailfrom\n";
+	  $bound = '';
+	  $bnext = '';
 	  if ($isHTML || $attach != "") { // HTML mode with attachment
 	  		$isHTML = true;
 	  		$bound = "--=XYZ_" . md5(date("dmYis")) . "_ZYX";
@@ -108,4 +111,3 @@
 	}
 	return $ok;
 	}
-

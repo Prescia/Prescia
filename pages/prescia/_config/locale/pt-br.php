@@ -1,4 +1,4 @@
-<? return array(
+<?php return array(
 # "TERM" => "TRANSLATION",
 "toggle_navigation" => "Alterar Navegação",
 "about" => "Sobre",
@@ -10,7 +10,6 @@
 "framework_reference" => "Referência do Framework",
 "documentation" => "Documentação",
 "toc" => "Tabela de Conteúdo",
-"quick_reference" => "Referência Rápida",
 "welcome_to_prescia" => "Bem-vindo(a) à Prescia",
 "learn_more" => "Saiba mais",
 "mvc" => "MVC",

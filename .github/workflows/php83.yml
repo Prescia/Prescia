@@ -1,0 +1,84 @@
+name: PHP compatibility matrix
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }} tests
+    runs-on: ubuntu-latest
+    env:
+      PRESCIA_DB_HOST: 127.0.0.1
+      PRESCIA_DB_PORT: 3306
+      PRESCIA_DB_NAME: prescia_test
+      PRESCIA_DB_USER: prescia_test
+      PRESCIA_DB_PASSWORD: prescia_test
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: prescia_test
+          MYSQL_USER: prescia_test
+          MYSQL_PASSWORD: prescia_test
+          MYSQL_ROOT_PASSWORD: root_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.4', '8.5']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, pdo_mysql, mbstring
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate Composer configuration
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Audit Composer dependencies
+        run: composer audit --no-interaction
+
+      - name: Run compatibility tests
+        run: composer test
+
+      - name: Lint tracked PHP files
+        run: git ls-files '*.php' -z | xargs -0 -n1 php -l
+
+      - name: Run PHPStan
+        run: composer analyse
+
+      - name: Build Docker image
+        if: matrix.php == '8.3'
+        run: docker build --tag prescia:php${{ matrix.php }} .
+
+      - name: Scan Docker image
+        if: matrix.php == '8.3'
+        # v0.35.0; pin immutable commit after the 2026 supply-chain incident.
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        with:
+          image-ref: prescia:php${{ matrix.php }}
+          format: table
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+          exit-code: '1'

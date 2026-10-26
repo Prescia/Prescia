@@ -1,6 +1,9 @@
-<? // ------------------------ Prescia Fast Close
+<?php // ------------------------ Prescia Fast Close
 
-	# fastClose($action,$context = "")
+	/** @var CPrescia $this Runtime context of CPrescia::fastClose(). */
+	/** @var string $action HTTP/application error action supplied by fastClose(). */
+
+		# fastClose($action,$context = "")
 	$abrupt = $this->ignore404; // prevent loop
 	$this->ignore404 = true;
 

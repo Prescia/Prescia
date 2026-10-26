@@ -1,11 +1,13 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | listFiles : Returns an array with all the files on the specified path given a PREG match. Remaining fields are self-explanatory
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ www.prescia.net
   | Free to use, change and redistribute, but please keep the above disclamer.
   | Uses:
 -*/
 
-	function listFiles($path,$eregfilter='',$orddata = false, $ordname = false, $recurse = false) {
+		/** @return list<string> */
+		function listFiles($path,$eregfilter='',$orddata = false, $ordname = false, $recurse = false) {
 	  if ($path == '') $path = './';
 	  $array = array();
 	  $cont = 0;

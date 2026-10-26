@@ -1,11 +1,14 @@
-<?
+<?php
 
-	$p = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])?$_REQUEST['p_init']:0; // item starting this page
+/** @var CPrescia $core Core context assigned by mod_bi_bb::onRender(). */
+/** @var mod_bi_bb $this Module context assigned by the framework include. */
+
+	$p = isset($_REQUEST['p_init']) && is_numeric($_REQUEST['p_init'])?(int)$_REQUEST['p_init']:0; // item starting this page
 	
 	$up = isset($_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'])?$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs']:false;
 	if ($up !== false) {
-		if (!is_array($up)) $up = @unserialize($up);
-		$ipp = $up['pfim'];
+		if (!is_array($up)) $up = presciaSafeUnserialize($up);
+		$ipp = isset($up['pfim']) && is_numeric($up['pfim'])?(int)$up['pfim']:15;
 	} else
 		$ipp = 15; 
 
@@ -16,11 +19,12 @@
 	}
 
 	$fdata = $core->runContent('forum',$core->template,$_REQUEST['id_forum']); // filled by udm
-	$id = $_REQUEST['id_forum'];
+	$id = isset($_REQUEST['id_forum']) && is_numeric($_REQUEST['id_forum'])?(int)$_REQUEST['id_forum']:0;
 	if ($fdata['id_parent'] > 0) $core->template->assign("separator","‒");
 	$this->parent->template->constants['PAGE_TITLE'] .= " - ".$fdata['title'];
 
 	$mode = $fdata['operationmode'];
+	$sql = '';
 	
 	switch ($mode) {
 		case "bb": // order by last post, gather data from last post, gather totals

@@ -1,4 +1,4 @@
-<? /* EDIT PANEL TOC (you can search these strings):
+<?php /* EDIT PANEL TOC (you can search these strings):
  *
  * VARIABLES
  * PREPARATION
@@ -13,6 +13,9 @@
  * ENDSCRIPTS
  * CLEAN-UP
 -*/
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 	// We use the same scripts as in the list.html to handle ajax lists, get them
 	$listHTML = new CKTemplate($core->template);
@@ -63,8 +66,8 @@
 	$p['maxHeight'] = 500;
 	if ($core->layout == 0 && defined('CONS_USER_RESOLUTION') && isset($_SESSION[CONS_USER_RESOLUTION])) {
 		$p['maxWidth'] = explode("x",$_SESSION[CONS_USER_RESOLUTION]);
-		$p['maxHeight'] = $p['maxWidth'][1] - 400;
-		$p['maxWidth'] = $p['maxWidth'][0] - 400;
+		$p['maxHeight'] = (int) $p['maxWidth'][1] - 400;
+		$p['maxWidth'] = (int) $p['maxWidth'][0] - 400;
 	}
 
 	// login also comes as cookie, so we must differentiate them by disabling the request/post/get if what we have is the cookie login
@@ -104,7 +107,9 @@
 	$sql = $module->get_base_sql(); // Prepare SQL to fetch data >>if<< this is an EDIT based on incomming keys (if keys fail, won't even use it, but load first to fill the WHERE field)
 	if (!$p['isMultiple']) {
 		$p['isADD'] = false; // assume this is edit (alas just prep the variable here)
-		// on add, some data might be comming already defined. Do not show them, while still considering ADD and not EDIT
+			$preparedTypes = '';
+			$preparedParams = array();
+			// on add, some data might be comming already defined. Do not show them, while still considering ADD and not EDIT
 		// also remember to remove autoincrement key if present (we never change these)
 		foreach ($module->keys as $key) {
 			// for each key for this module
@@ -114,17 +119,23 @@
 				$p['allKeys'] .= "&".$key."=".$_REQUEST[$key];
 				$p['hideKeys'][] = $key;
 				$p['refererKeys'][] = $_REQUEST[$key];
-				$sql['WHERE'][] = $module->name.".$key = \"".$_REQUEST[$key]."\"";
+					$sql['WHERE'][] = $module->name.".$key = ?";
+					$preparedTypes .= 's';
+					$preparedParams[] = (string)$_REQUEST[$key];
 			} else { // a key is missing, this is most certainly not an edit
 				$p['isADD'] = true;
 				if (strpos($module->fields[$key][CONS_XML_SQL],"AUTO_INCREMENT")!==false) {
 					// the item missing is the main auto_increment key, which is always hidden
 					$p['hideKeys'][] = $key; // hide auto_increment fields
 				}
+				}
 			}
-		}
-	} else {
-		$p['isADD'] = false; // multiple EDIT, so behave as an EDIT
+			if ($preparedTypes !== '') {
+				$sql['_preparedTypes'] = $preparedTypes;
+				$sql['_preparedParams'] = $preparedParams;
+			}
+		} else {
+			$p['isADD'] = false; // multiple EDIT, so behave as an EDIT
 		foreach ($module->keys as $key) {
 			// locate autoincrement keys so we never show them
 			if (strpos($module->fields[$key][CONS_XML_SQL],"AUTO_INCREMENT")!==false) {
@@ -155,9 +166,11 @@
 
 		# TODO: not working for multiple keys!
 
-		$msi_nfiltered = implode(",",$msi_nfiltered);
-		$sql = "SELECT ".$module->title." as title, ".$module->keys[0]." as id FROM ".$module->dbname." WHERE ".$module->keys[0]." IN ($msi_nfiltered)";
-		$core->dbo->query($sql,$r,$n);
+			$placeholders = implode(',',array_fill(0,count($msi_nfiltered),'?'));
+			$sql = "SELECT ".$module->title." as title, ".$module->keys[0]." as id FROM ".$module->dbname." WHERE ".$module->keys[0]." IN ($placeholders)";
+			$r = false;
+			$n = 0;
+			$core->dbo->queryPrepared($sql,str_repeat('s',count($msi_nfiltered)),array_map('strval',$msi_nfiltered),$r,$n);
 		if ($n == 0) {
 			// no return? some error or the keys specified don't exist
 			$core->errorControl->raise(513,$msi_nfiltered,$module->name,"multiSelectedIds=".$_REQUEST['multiSelectedIds']);
@@ -362,7 +375,7 @@
 					case CONS_TIPO_UPLOAD: // ############################################### FILE(s)
 						if ($p['isMultiple'] || $p['isMup']) {
 							$content = false;
-							continue; // continue will leave only the switch, since switch is considered a loop (??? WHY PHP, WHY ???)
+							break; // skip the upload case when a multiple-upload field is handled elsewhere
 						}
 
 						$field_upload = $core->template->get("_upload_field");
@@ -449,10 +462,13 @@
 
 								$using = clone $field_sel;
 
-								$sql = $mod->get_base_sql();
-								if (isset($data[$name]))
-									$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."='".$data[$name]."',1,0) as selected";
-								$sql['SELECT'][] = $mod->name.".".$mod->title." as treetitle";
+							$sql = $mod->get_base_sql();
+							if (isset($data[$name])) {
+								$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."=?,1,0) as selected";
+								$sql['_preparedTypes'] = 's';
+								$sql['_preparedParams'] = array((string)$data[$name]);
+							}
+							$sql['SELECT'][] = $mod->name.".".$mod->title." as treetitle";
 
 								$tree = $mod->getContents("","treetitle","","\\",$sql);
 								$using->getTreeTemplate("_sdirs","_ssubdirs",$tree);
@@ -481,31 +497,45 @@
 										for ($cbf=0;$cbf<count($canBeFilteredBy);$cbf++)
 											$canBeFilteredBy_translated[$cbf] = $core->langOut($canBeFilteredBy[$cbf]);
 										$using->assign("_options","<option value=\"\">".$core->langOut("select_other_field").": ".implode(", ",$canBeFilteredBy_translated)."</option>");
-									} else  { // we can fill this since all prerequisites are present!
-										$sql = $mod->get_base_sql();
-										$sql['SELECT'] = array($mod->name.".".$mod->keys[0]." as ids",$mod->name.".".$mod->title." as title");
-										if (isset($data[$name]))
-											$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."='".$data[$name]."',1,0) as selected";
-										// add filters
-										foreach ($canBeFilteredBy as $filterfield) { // we know the data exists because this is an edit, but it could be empty
-											if ($data[$filterfield] != '') {
-												$remodeField = $mod->get_key_from($module->fields[$filterfield][CONS_XML_MODULE]);
-												$sql['WHERE'][] = $mod->name.".".$remodeField."=\"".$data[$filterfield]."\"";
-											}
-										}
-										if ($core->runContent($mod,$using,$sql,"_options")===false)
+						} else  { // we can fill this since all prerequisites are present!
+							$sql = $mod->get_base_sql();
+							$sql['SELECT'] = array($mod->name.".".$mod->keys[0]." as ids",$mod->name.".".$mod->title." as title");
+							$preparedTypes = '';
+							$preparedParams = array();
+							if (isset($data[$name])) {
+								$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."=?,1,0) as selected";
+								$preparedTypes .= 's';
+								$preparedParams[] = (string)$data[$name];
+							}
+							// add filters
+							foreach ($canBeFilteredBy as $filterfield) { // we know the data exists because this is an edit, but it could be empty
+								if ($data[$filterfield] != '') {
+									$remodeField = $mod->get_key_from($module->fields[$filterfield][CONS_XML_MODULE]);
+									$sql['WHERE'][] = $mod->name.".".$remodeField."=?";
+									$preparedTypes .= 's';
+									$preparedParams[] = (string)$data[$filterfield];
+								}
+							}
+							if ($preparedTypes !== '') {
+								$sql['_preparedTypes'] = $preparedTypes;
+								$sql['_preparedParams'] = $preparedParams;
+							}
+							if ($core->runContent($mod,$using,$sql,"_options")===false)
 											$using->assign("_options");
 									}
 									// add the corresponding data for the ajaxContextHandler
 									$p['ajaxContextHandler'][$name] = $canBeFilteredBy;
 								} else {
-									$sql = $mod->get_base_sql();
+						$sql = $mod->get_base_sql();
 
 									# TODO: this probably won't work on multiple keys
 
 									$sql['SELECT'] = array($mod->name.".".$mod->keys[0]." as ids",$mod->name.".".$mod->title." as title");
-									if (isset($data[$name]))
-										$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."='".$data[$name]."',1,0) as selected";
+						if (isset($data[$name])) {
+							$sql['SELECT'][] = "if (".$mod->name.".".$mod->keys[0]."=?,1,0) as selected";
+							$sql['_preparedTypes'] = 's';
+							$sql['_preparedParams'] = array((string)$data[$name]);
+						}
 									//print_r($sql);
 									//die();
 									if ($core->runContent($mod,$using,$sql,"_options")===false)
@@ -718,7 +748,7 @@
 	foreach ($module->fields as $name => $field) { // FOR EACH FIELD ON THIS MODULE/DATABASE ...
 		if ($field[CONS_XML_TIPO] == CONS_TIPO_SERIALIZED) {
 			if (isset($data[$name]) && $data[$name] != '') {
-				$data[$name] = @unserialize($data[$name]);
+				$data[$name] = presciaSafeUnserialize($data[$name]);
 				if ($data[$name] === false) {
 					unset($data[$name]);
 					$core->errorControl->raise(188,$name,$module->name);
@@ -743,9 +773,9 @@
 		$p['mfs'] = 1048576*$p['maxMUPupload'];
 	else {
 		$phpmfs = ini_get('upload_max_filesize'); // detect hard limit
-		if (strpos($phpmfs,"M")!==false) $phpmfs = substr($phpmfs,0,-1)*1048576;
-		else if (strpos($phpmfs,"K")!==false) $phpmfs = substr($phpmfs,0,-1)*1024;
-		else if (strpos($phpmfs,"G")!==false) $phpmfs = substr($phpmfs,0,-1)*1073741824;
+			if (strpos($phpmfs,"M")!==false) $phpmfs = (float) substr($phpmfs,0,-1)*1048576;
+			else if (strpos($phpmfs,"K")!==false) $phpmfs = (float) substr($phpmfs,0,-1)*1024;
+			else if (strpos($phpmfs,"G")!==false) $phpmfs = (float) substr($phpmfs,0,-1)*1073741824;
 
 		if ($p['mfs']>0) $p['mfs'] *=$p['maxReductionSize']; // allows automatic reduction up to X times
 		else $p['mfs'] = $phpmfs; // no automatic reduction, use raw phpmfs
@@ -899,4 +929,3 @@
 	$core->template->assign("_selecttree_field","");
 	$core->template->assign("_serializearray_field","");
 	####################################### -------- #######################################
-

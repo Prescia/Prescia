@@ -1,4 +1,5 @@
-<?/* -------------------------------- Prescia extra core functions
+<?php
+/* -------------------------------- Prescia extra core functions
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
   | Translates a URL to another URL using friendly url rules
@@ -16,6 +17,9 @@
   | Note: you can use data from the returned module by accessing the variables in $this->storage['friendlyurldata'] at your script
   | Returns true|false if a hit for friendlyurl was found
 -*/
+
+/** @var CPrescia $this Runtime context of CPrescia::friendlyurl(). */
+/** @var array<string, mixed> $param Friendly URL matching and rendering options. */
 
 if (!isset($param['module']))
 	$this->errorControl->raise(185,'friendlyurl',"","Module not defined");
@@ -43,14 +47,20 @@ foreach ($m as $moduletxt) {
 	$module = $this->loaded($moduletxt);
 	if ($module === false)
 		$this->errorControl->raise(185,'friendlyur',$moduletxt,"Module not found (multiple)");
+	$preparedTypes = '';
+	$preparedParams = array();
+	$filterTypes = '';
+	$filterParams = array();
 	if (isset($param['queryfilter'])) {
 		$param['queryfilter'] = explode(",",$param['queryfilter']);
 		foreach ($param['queryfilter'] as $field) {
 			/*$filterName = str_replace("_",".",$field);
 			$queryName = str_replace(".","_",$field);*/
 			if (isset($_REQUEST[$field])) {
-				if (!isset($param['filter'])) $param['filter'] = $field."=\"".$this->checkHackAttempt($_REQUEST[$field])."\"";
-				else $param['filter'] .= " AND ".$field."=\"".$this->checkHackAttempt($_REQUEST[$field])."\"";
+					if (!isset($param['filter'])) $param['filter'] = $field."=?";
+					else $param['filter'] .= " AND ".$field."=?";
+					$filterTypes .= 's';
+					$filterParams[] = (string)$this->checkHackAttempt($_REQUEST[$field]);
 			}
 		}
 	} # queryfilter
@@ -62,17 +72,26 @@ foreach ($m as $moduletxt) {
 	$fields = explode(",",$param['keys']);
 	$sql = $module->get_base_sql("","",1);
 	foreach ($fields as $field) {
-		if ($module->fields[$field][CONS_XML_TIPO] == CONS_TIPO_INT && is_numeric($this->action))
+		if ($module->fields[$field][CONS_XML_TIPO] == CONS_TIPO_INT && is_numeric($this->action)) {
 			// if the mysql field is INT, and one test id = "123_this_is_a_url", it will actually test id=123 duh
-			$sql['WHERE'][] = $module->name.".".$field."=\"".$this->action."\"";
-		else if ($module->fields[$field][CONS_XML_TIPO] != CONS_TIPO_INT)
-			$sql['WHERE'][] = $module->name.".".$field."=\"".$this->action."\"";
+			$sql['WHERE'][] = $module->name.".".$field."=?";
+			$preparedTypes .= 'i';
+			$preparedParams[] = (int)$this->action;
+		} else if ($module->fields[$field][CONS_XML_TIPO] != CONS_TIPO_INT) {
+			$sql['WHERE'][] = $module->name.".".$field."=?";
+			$preparedTypes .= 's';
+			$preparedParams[] = (string)$this->action;
+		}
 	}
 	if (isset($param['filter']))
 		$sql['WHERE'][] = $param['filter'];
+	$preparedTypes .= $filterTypes;
+	$preparedParams = array_merge($preparedParams,$filterParams);
 
 
-	if ($this->dbo->query($sql,$r,$n) && $n>0) { // found!
+	$r = false;
+	$n = 0;
+	if ($this->dbo->queryPrepared($this->dbo->sqlarray_echo($sql),$preparedTypes,$preparedParams,$r,$n) && $n>0) { // found!
 		$this->action = $param['page'];
 		$result = $this->dbo->fetch_assoc($r);
 		foreach ($module->keys as $index)

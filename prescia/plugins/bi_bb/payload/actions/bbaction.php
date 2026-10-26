@@ -1,6 +1,9 @@
-<?
+<?php
 
-	// safety: are we logged to perform actions? if not, kick out to 403 (unless you are registering)
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_bb $this Runtime module context injected by the framework. */
+
+		// safety: are we logged to perform actions? if not, kick out to 403 (unless you are registering)
 	// we test post include (self) because that's the most basic permission
 	if (!$core->authControl->checkPermission('FORUMPOST',CONS_ACTION_INCLUDE,array(true,false,false)) && $_POST['bbaction'] != 'profile') {
 		$core->action = 403;
@@ -13,9 +16,10 @@
 		return;
 	}
 
-	$_REQUEST['nocache'] = true; // no caches on actions
+		$_REQUEST['nocache'] = true; // no caches on actions
+		$ok = false;
 
-	// ok let's get to work
+		// ok let's get to work
 	switch ($_POST['bbaction']) {
 		case 'tpreview': // preview a thread
 			if (!$core->queryOk(array("#id_forum","ttitle","fmessage"))) {
@@ -51,7 +55,7 @@
 							  );
 			$threadobj = $core->loaded('forumthread');
 			if (!isset($_REQUEST['operationmode'])) { // UDM could have filled this for us
-				$_REQUEST['operationmode'] = $core->dbo->fetch("SELECT operationmode FROM ".$threadobj->dbname." WHERE id=".$_POST['id_forum']);
+					$_REQUEST['operationmode'] = $core->dbo->fetchPrepared("SELECT operationmode FROM ".$threadobj->dbname." WHERE id=?", 'i', array((int)$_POST['id_forum']));
 			}
 			if ($_REQUEST['operationmode'] == 'bb') {
 				// on BB mode, people can't post images directly
@@ -75,11 +79,15 @@
 			// no break: continue on to add post
 		case 'post': // post a comment
 			if (!$core->queryOk(array("#id_forum","#id_forumthread","fmessage"))) {
-				$core->action = "index";
-				$core->log[] = "Error on post";
-				// fail to post comment but thread created ... destroy thread
-				if ($_POST['bbaction'] =='tpost') $core->simpleQuery("DELETE FROM bb_thread WHERE id=".$_POST['id_forumthread']);
-				return;
+					$core->action = "index";
+					$core->log[] = "Error on post";
+					// fail to post comment but thread created ... destroy thread
+					if ($_POST['bbaction'] =='tpost') {
+						$rollbackResult = false;
+						$rollbackRows = 0;
+						$core->dbo->queryPrepared("DELETE FROM bb_thread WHERE id=?", 'i', array((int)$_POST['id_forumthread']), $rollbackResult, $rollbackRows);
+					}
+					return;
 			}
 			if (!defined('C_XHTML_AUTOTAB')) {
 				include CONS_PATH_INCLUDE."xmlHandler.php";
@@ -95,9 +103,13 @@
 				$core->cacheControl->killCache("postsforidt".$_POST['id_forumthread']."idf".$_POST['id_forum']."*"); // thread view
 				$core->cacheControl->killCache("threadsfor".$_POST['id_forumthread']."p*"); // forum view
 				$core->headerControl->internalFoward($_POST['url']."?lastpage=true");
-			} else {
-				// fail to post comment but thread created ... destroy thread
-				if ($_POST['bbaction'] =='tpost') $core->simpleQuery("DELETE FROM bb_thread WHERE id=".$_POST['id_forumthread']);
+				} else {
+					// fail to post comment but thread created ... destroy thread
+					if ($_POST['bbaction'] =='tpost') {
+						$rollbackResult = false;
+						$rollbackRows = 0;
+						$core->dbo->queryPrepared("DELETE FROM bb_thread WHERE id=?", 'i', array((int)$_POST['id_forumthread']), $rollbackResult, $rollbackRows);
+					}
 				$core->log[] = "Error adding Post";
 				$core->action = "forum";
 				$_REQUEST['id'] = $_POST["id_forum"];

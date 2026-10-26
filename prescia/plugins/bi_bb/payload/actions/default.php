@@ -1,6 +1,8 @@
-<?
+<?php
 
-	if ($this->parent->action == "preview" || $this->parent->action == "profile") $_REQUEST['nocache'] = true; 
+/** @var mod_bi_bb $this Module context assigned by mod_bi_bb::onCheckActions(). */
+
+		if ($this->parent->action == "preview" || $this->parent->action == "profile") $_REQUEST['nocache'] = true;
 
 	$permaFolders = count(explode("/",$this->bbfolder))-2;
 	$ok = $this->parent->udm(array(array('module' => 'FORUM',

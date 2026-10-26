@@ -1,4 +1,4 @@
-<?
+<?php
 	function filetypeIcon($ext) { #converts to a standardized icon
 	    switch($ext) {
 	      case "jpg":case "jpeg":case "gif":case "qif":case "png":case "tif":case "ico":case "bmp": return "jpg"; # picture

@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | xmlHandler : Implements a XML object
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto
   | Free to use, change and redistribute, but please keep the above disclamer.
@@ -26,6 +27,7 @@ define ("C_XML_LAX", 2); # ignore errors
 define ("C_XML_REMOVECOMMENTS", 3); // if true, will not store <!-- --> or <?  comments
 define ("C_XML_KEEPCASE", 4); // disable auto-uppercase for tags
 
+/** @return array<string, string>|string */
 function xmlParamsParser($data) {
 	if (is_array($data)) return $data;
 	$data = trim($data);
@@ -475,4 +477,3 @@ class xmlHandler {
   }
 
 }
-

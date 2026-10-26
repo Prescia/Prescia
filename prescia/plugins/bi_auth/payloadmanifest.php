@@ -1,5 +1,7 @@
-<?
-	# FROM => TO (full path using system constants)
+<?php
+
+/** @var string $sname Plugin name supplied by CPrescia::applyMetaData(). */
+		# FROM => TO (full path using system constants)
 	# Sample: CONS_PATH_SYSTEM."plugins/$sname/payload/[filename]" => CONS_PATH_PAGES.$_SESSION['CODE']."/template/[filename]"
 	return array(
 		CONS_PATH_SYSTEM."plugins/$sname/payload/bi_auth_activate.html" => CONS_PATH_PAGES.$_SESSION['CODE']."/mail/bi_auth_activate.html",

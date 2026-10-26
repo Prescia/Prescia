@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $this Core context of the page content loader. */
+
 	// basic frameset
 	$this->frame("basefile.html:BASEFILE_CONTENT","frame.html:FRAME_CONTENT");
 

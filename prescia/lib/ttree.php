@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
 	| ttree : Implements a tree structure
 	| Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ www.prescia.net
 	| Free to use, change and redistribute, but please keep the above disclamer.
@@ -238,9 +239,10 @@ class ttree {
 	}
 
 	# Will echo the contents of the tree as HTML (considering it was a (x)HTML loaded into this tree, obviously)
-	public function echoHTML($ignoreMyTag=false) {
-		$autoclose = array('img','input','br','meta','link','hr');
-		$output = "";
+		public function echoHTML($ignoreMyTag=false) {
+			$autoclose = array('img','input','br','meta','link','hr');
+			$tag = "";
+			$output = "";
 		if ($this->data[0] != '' && !$ignoreMyTag) {
 			$tag = strtolower($this->data[0]);
 			$output = "<".$tag;
@@ -262,4 +264,3 @@ class ttree {
 	}
 
 }
-

@@ -1,6 +1,8 @@
-<?
+<?php
 
-	$core->layout = 2;
+/** @var CPrescia $core Core context injected by mod_bi_labels::onCheckActions(). */
+
+		$core->layout = 2;
 	if (!isset($_REQUEST['m'])) $core->fastClose(404);
 	$module = $_REQUEST['m'];
 	$module = $core->loaded($module);

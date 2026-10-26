@@ -1,8 +1,13 @@
-<?
+<?php
 
-	if (isset($_POST['haveinfo']) && isset($_POST['dir']) && isset($_FILES['newuploadfile'])) {
-		$core->loadAllmodules();
-		$dir = str_replace(".","",$_POST['dir']);
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
+
+		if (isset($_POST['haveinfo']) && isset($_POST['dir']) && is_string($_POST['dir']) && isset($_FILES['newuploadfile'])) {
+			$core->loadAllmodules();
+			$dir = trim(str_replace(".","",$_POST['dir']),"/");
+			if ($dir !== '' && !preg_match('#^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*$#',$dir))
+				return;
 		if ($dir!= "" && $dir[0] == "/") $dir = substr($dir,1);
 		if ($dir != "" && $dir[strlen($dir)-1] == "/")
 			$dir = substr($dir,0,-1);

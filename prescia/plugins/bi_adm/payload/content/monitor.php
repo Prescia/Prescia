@@ -1,4 +1,7 @@
-<? 
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 	if (!$core->authControl->checkPermission('bi_adm','can_monitor'))		
 		$core->fastClose(403);

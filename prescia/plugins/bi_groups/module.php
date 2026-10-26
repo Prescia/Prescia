@@ -1,4 +1,6 @@
-<?	# -------------------------------- Plugin GROUPS (automatically added by plugin AUTH)
+<?php	# -------------------------------- Plugin GROUPS (automatically added by plugin AUTH)
+
+/** @var CPrescia $this Core context injected by CPrescia::addPlugin(). */
 
 define ("CONS_AUTH_GROUPMODULE","groups");
 if (CONS_DB_HOST=='') $this->errorControl->raise(4,'bi_groups','GROUPS module requires database');
@@ -32,8 +34,8 @@ class mod_bi_groups extends CscriptedModule  {
 					if ($action == CONS_ACTION_INCLUDE) $data['level'] = 99;
 					else unset($data['level']);
 				}
-			} else if ($action == CONS_ACTION_UPDATE) {
-				$lvl = $this->parent->dbo->fetch("SELECT level FROM ".$baseModule->dbname." WHERE id=".$data['id']);
+				} else if ($action == CONS_ACTION_UPDATE) {
+					$lvl = $this->parent->dbo->fetchPrepared("SELECT level FROM ".$baseModule->dbname." WHERE id=?","s",array((string)$data['id']),false);
 				if ($lvl == 100 && $_SESSION[CONS_SESSION_ACCESS_LEVEL] < 100)  {
 					$this->parent->log[] = $this->parent->langOut("cannot_change_master_group");
 					$this->parent->setLog(CONS_LOGGING_WARNING);
@@ -52,7 +54,7 @@ class mod_bi_groups extends CscriptedModule  {
 			}
 		} else if ($action == CONS_ACTION_DELETE && $this->parent->safety) {
 			# gets the group level, if it's higher, disallow delete
-			$lvl = $this->parent->dbo->fetch("SELECT level FROM ".$baseModule->dbname." WHERE id=".$data['id']);
+			$lvl = $this->parent->dbo->fetchPrepared("SELECT level FROM ".$baseModule->dbname." WHERE id=?","s",array((string)$data['id']),false);
 			if ($lvl >= $_SESSION[CONS_SESSION_ACCESS_LEVEL]) {
 				$this->parent->log[] = $this->parent->langOut("group_cannot_change_higher");
 				$this->parent->setLog(CONS_LOGGING_WARNING);
@@ -84,4 +86,3 @@ class mod_bi_groups extends CscriptedModule  {
 
 
 }
-

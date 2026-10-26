@@ -40,11 +40,17 @@ if (CONS_ONSERVER && is_file("heavymaint.html")) {
 	include "heavymaint.html";
 	die();
 }
-# Server settings and libraries
-require CONS_PATH_SETTINGS."settings.php";
-# Database
-require CONS_PATH_INCLUDE."dbo/cdbo.php";
-require CONS_PATH_INCLUDE."dbo/".CONS_AFF_DATABASECONNECTOR.".php";
+	# Server settings and libraries
+	$settingsFile = CONS_PATH_SETTINGS."settings.php";
+	if (!is_file($settingsFile))
+		throw new RuntimeException("Prescia settings file not found: ".$settingsFile);
+	require $settingsFile;
+	# Database
+	require CONS_PATH_INCLUDE."dbo/cdbo.php";
+	$databaseConnectorFile = CONS_PATH_INCLUDE."dbo/".CONS_AFF_DATABASECONNECTOR.".php";
+	if (!is_file($databaseConnectorFile))
+		throw new RuntimeException("Prescia database connector not found: ".$databaseConnectorFile);
+	require $databaseConnectorFile;
 # Core
 require CONS_PATH_SYSTEM."coreVar.php";
 require CONS_PATH_SYSTEM."core.php";
@@ -182,6 +188,7 @@ $core->headerControl->showHeaders();
 foreach ($core->onEcho as $scriptName) {
 	$core->loadedPlugins[$scriptName]->onEcho($PAGE);
 }
+$PAGE = presciaInjectCsrfFields($PAGE);
 # -- collect and serve
 $error = ob_get_contents();
 ob_end_clean();

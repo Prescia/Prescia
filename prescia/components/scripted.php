@@ -1,19 +1,28 @@
-<?	# -------------------------------- Prescia scripts, all plugins inherit this
+<?php	# -------------------------------- Prescia scripts, all plugins inherit this
   # USE THIS AS A BASE FOR NEW PLUGINS (/[framework]/plugins/ or /pages/[site]/_config/plugins/)
 
 //class mod_[name] extends CscriptedModule  {
 class CscriptedModule {
 
-	var $parent = null; // framework object
-	var $name = ""; // SET THIS TO THE SCRIPT NAME either here (inherited module) or the construct!
-	var $moduleRelation = ""; // which database module is related to this (set by "plugins" on XML)
-	var $admFolder = "adm"; // Virtual folder where eventual administrative/reports are located. Match it with your administrative plugin/page
-	var $admOptions = array(); // pages that this script will add on the admin (add just the page name, not the folder, since it will use the above)
+	/** Framework object. */
+	public ?CPrescia $parent = null;
+	public string $name = ""; // SET THIS TO THE SCRIPT NAME either here (inherited module) or the construct!
+	public string $moduleRelation = ""; // which database module is related to this (set by "plugins" on XML)
+	/** @var string|array<int, string> Virtual administrative folders before/after normalization. */
+	public string|array $admFolder = "adm"; // Virtual folder where eventual administrative/reports are located. Match this with your administrative plugin/page
+	/** @var array<int|string, mixed> */
+	public array $admOptions = array(); // pages that this script will add on the admin (add just the page name, not the folder, since it will use the above)
 							   // each entry comes as "page" => "term"
-	var $admRestrictionLevel = 0; // minimum required level to access pages above. It's the PLUGIN'S IMPLEMENTATION that will check this. Here just for convenience
+	public int $admRestrictionLevel = 0; // minimum required level to access pages above. It's the PLUGIN'S IMPLEMENTATION that will check this. Here just for convenience
 								  // most administrative systems require at least level 10 to access (bi_xmladm for instance)
-	var $customFields = array(); // fill in the loadSettings with fields that require custom handling
-	var $customPermissions = array(); // extra permissions (other than new/list), in the format 'code' => 'i18n'
+	/** @var array<int|string, mixed> */
+	public array $customFields = array(); // fill in the loadSettings with fields that require custom handling
+	/** @var array<int|string, mixed> */
+	public array $customPermissions = array(); // extra permissions (other than new/list), in the format 'code' => 'i18n'
+
+	function langOut($tag) {
+		return $this->parent !== null ? $this->parent->langOut($tag) : $tag;
+	}
 
 	function __construct(&$parent,$moduleRelation="") {
 		$this->parent = &$parent; // framework object
@@ -100,4 +109,3 @@ class CscriptedModule {
 		# implement this to raise errors during meta-developer checks if the plugins is not properly installed or configured
 	}
 }
-

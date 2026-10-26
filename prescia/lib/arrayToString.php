@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | arrayToString : Converts an array to query-like string. If no array specified, will get from GET and POST.
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto @ www.prescia.net
   | Free to use, change and redistribute, but please keep the above disclamer.
@@ -7,7 +8,11 @@
 
 	# items on excludethese will NOT be outputed.
 	# if noArray is specified, no arrays will be outputed.
-	function arrayToString( $array = false, $excludethese = array(), $noArrays=false ) {
+		/**
+		 * @param array<int|string, scalar|array<int|string, scalar>>|false $array
+		 * @param array<int, int|string> $excludethese
+		 */
+		function arrayToString( $array = false, $excludethese = array(), $noArrays=false ) {
 	  $p_qs = "";
 	  if (!$array) {
 	  	$array = array_merge($_GET, $_POST);
@@ -25,5 +30,4 @@
 	  }
 	  return $p_qs;
   }
-
 

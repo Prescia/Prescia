@@ -1,4 +1,8 @@
-<? /* this file is captured by Prescia to fill a Select Query, as per the functions on common.js:
+<?php
+
+/** @var CPrescia $this Core context that includes this lazy-load from checkActions(). */
+
+/* this file is captured by Prescia to fill a Select Query, as per the functions on common.js:
 
 	HTML triggers the request to fill a SELECT -> startAjaxSelectFill -> THIS FILE
 	THIS FILE -> executeajaxSelectFill -> select is filled as requested
@@ -32,39 +36,57 @@
 	$this->ignore404 = true; // enforce 404 should not be auto-generated (though this script will auto close)
 
 	// load request items and check for mandatory fields
-	$container = isset($_GET['container'])?$_GET['container']:'';
+	$container = isset($_GET['container']) && is_scalar($_GET['container'])?(string)$_GET['container']:'';
 	$module = isset($_GET['module'])?$_GET['module']:''; // the module where all the fields and filters are at (but NOT the one which will be listed)
 	$module = $this->loaded($module);
 	$sm = isset($_GET['sourcemodule'])?$_GET['sourcemodule']:'';
 	if ($sm != '') $sm = $this->loaded($sm);
 	$aoc = isset($_GET['aoc'])?$_GET['aoc']=='true':false;
-	if ($container == '' || $module == '' || $module === false || $sm === false) {
-		$this->log[] = "ajaxQuery with incomplete fields came, query was: ".arrayToString($_GET);
-		echo "<select id=\"$container\" name=\"$container\"><option>".$this->langOut("select_other_field")."</option></select> (error)";
-		$this->close(true);
-	}
-	$preSelected = isset($_GET['preSelected'])?$_GET['preSelected']:'';
-	$className = isset($_GET['className'])?$_GET['className']:'';
-	$widthValue = isset($_GET['widthValue'])?$_GET['widthValue']:'';
+		if ($container == '' || $module == '' || $module === false || $sm === false) {
+			$this->log[] = "ajaxQuery with incomplete fields came, query was: ".arrayToString($_GET);
+			$safeContainer = htmlspecialchars($container,ENT_QUOTES | ENT_SUBSTITUTE,'UTF-8');
+			echo "<select id=\"$safeContainer\" name=\"$safeContainer\"><option>".$this->langOut("select_other_field")."</option></select> (error)";
+			$this->close(true);
+		}
+		if (!$this->authControl->checkPermission($module,CONS_ACTION_SELECT)) {
+			$this->close(true);
+		}
+	$preSelected = isset($_GET['preSelected']) && is_scalar($_GET['preSelected'])?(string)$_GET['preSelected']:'';
+	$className = isset($_GET['className']) && is_scalar($_GET['className'])?(string)$_GET['className']:'';
+	$widthValue = isset($_GET['widthValue']) && is_scalar($_GET['widthValue'])?(string)$_GET['widthValue']:'';
 	$allowEmpty = isset($_GET['allowEmpty']);
+	$preparedTypes = '';
+	$preparedParams = array();
 
 	// prepare SQL to run this select
 	$sql = $module->get_base_sql();
 	$sql['SELECT'][] = $module->name.".".$module->title." as title";
 	if (!isset($module->fields['id']))
 		$sql['SELECT'][] = $module->name.".".$module->keys[0]." as id";
-	if ($preSelected != '')
-		$sql['SELECT'][] = "if (".$module->name.".".$module->keys[0]."=='$preSelected',1,0) as selected";
+		if ($preSelected != '')
+			$sql['SELECT'][] = "if (".$module->name.".".$module->keys[0]."=?,1,0) as selected";
+		if ($preSelected != '') {
+			$preparedTypes .= 's';
+			$preparedParams[] = $preSelected;
+		}
 
 	// locate filters and put into sql
 	if ($sm == '' || $sm === false) {
 		// no translation
 		foreach ($module->fields as $fname => $mfield)
-			if (isset($_GET[$fname]) && $_GET[$fname] != '')
-				$sql['WHERE'][] = $module->name.".".$fname."=\"".$_GET[$fname]."\"";
+				if (isset($_GET[$fname]) && is_scalar($_GET[$fname]) && $_GET[$fname] != '')
+					{
+						$sql['WHERE'][] = $module->name.".".$fname."=?";
+						$preparedTypes .= isset($mfield[CONS_XML_TIPO]) && $mfield[CONS_XML_TIPO] == CONS_TIPO_INT ? 'i' : 's';
+						$preparedParams[] = isset($mfield[CONS_XML_TIPO]) && $mfield[CONS_XML_TIPO] == CONS_TIPO_INT ? (int)$_GET[$fname] : (string)$_GET[$fname];
+					}
 	} else {
-		$where = $sm->getRemoteKeys($module,$_GET);
-		if (count($where) == 0) {
+		$remoteWhere = '';
+		$remoteTypes = '';
+		$remoteParams = array();
+		$remoteData = $_GET;
+		$whereReady = $sm->getRemotePreparedKeys($module,$remoteWhere,$remoteTypes,$remoteParams,$remoteData);
+		if (!$whereReady) {
 			// no filter? weird. Do we have listadd keys?
 			$newlist = array();
 			foreach ($_GET as $gname => $gitem) {
@@ -73,27 +95,31 @@
 				else
 					$newlist[$gname] = $gitem;
 			}
-			$where = $sm->getRemoteKeys($module,$newlist);
+			$whereReady = $sm->getRemotePreparedKeys($module,$remoteWhere,$remoteTypes,$remoteParams,$newlist);
 		}
-		foreach ($where as $whereItem)
-			$sql['WHERE'][] = $whereItem;
+		if ($whereReady && $remoteWhere != '') {
+			$sql['WHERE'][] = $remoteWhere;
+			$preparedTypes .= $remoteTypes;
+			$preparedParams = array_merge($preparedParams,$remoteParams);
+		}
 	}
+	$sql['_preparedTypes'] = $preparedTypes;
+	$sql['_preparedParams'] = $preparedParams;
 
 	// prepare template
 	$tp = new CKTemplate($this->template);
-	$tp->tbreak("<select id=\"$container\" name=\"$container\" {extras}>".($allowEmpty?"<option value=''></option>":"")."{_options}<option {selected|selected} value=\"{id}\">{title}</option>{/options}</select>");
+	$safeContainer = htmlspecialchars($container,ENT_QUOTES | ENT_SUBSTITUTE,'UTF-8');
+	$tp->tbreak("<select id=\"$safeContainer\" name=\"$safeContainer\" {extras}>".($allowEmpty?"<option value=''></option>":"")."{_options}<option {selected|selected} value=\"{id}\">{title}</option>{/options}</select>");
 	$extras = "";
 	if ($aoc) $extras .= "onChange=\"selectChange();\" ";
-	if ($className != "") $extras .= "class=\"$className\" ";
-	if ($widthValue != "") $extras .= "style=\"width:$widthValue\" ";
+	if ($className != "" && preg_match('/^[A-Za-z0-9 _-]+$/',$className)) $extras .= "class=\"".htmlspecialchars($className,ENT_QUOTES | ENT_SUBSTITUTE,'UTF-8')."\" ";
+	if ($widthValue != "" && preg_match('/^[0-9]+(?:\.[0-9]+)?(?:px|%)$/i',$widthValue)) $extras .= "style=\"width:".htmlspecialchars($widthValue,ENT_QUOTES | ENT_SUBSTITUTE,'UTF-8')."\" ";
 	$tp->assign("extras",$extras);
 	// fill select
-	$this->safety = false; // <-- show all fields we can list
-	$total = $module->runContent($tp,$sql,"_options",false,false,false);
-	$this->safety = true; // <-- back to normal
+		$total = $module->runContent($tp,$sql,"_options",false,false,false);
 
 	if($total == 0)
-		echo "<select id=\"$container\" name=\"$container\" $extras><option>".$this->langOut("select_other_field")."</option></select>";
+		echo "<select id=\"$safeContainer\" name=\"$safeContainer\" $extras><option>".$this->langOut("select_other_field")."</option></select>";
 	else
 		echo $tp->techo();
 

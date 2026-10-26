@@ -1,8 +1,11 @@
-<? /* EDIT PANEL TOC (you can search these strings):
+<?php /* EDIT PANEL TOC (you can search these strings):
  * CONSTANTS AND VARIABLES
  * CALLBACK
  * USER PREFERENCES
 -*/
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 
 	############################ CONSTANTS AND VARIABLES #####################
@@ -36,7 +39,7 @@
 	// control's maximum size
 	if ($core->layout == 0 && defined('CONS_USER_RESOLUTION') && isset($_SESSION[CONS_USER_RESOLUTION]) && !isset($_REQUEST['cellwidth'])) {
 		$maxcellwidth = explode("x",$_SESSION[CONS_USER_RESOLUTION]);
-		$maxcellwidth = floor(($maxcellwidth[0] - $listMarginOffset)/$maxColumns);
+		$maxcellwidth = floor(((int) $maxcellwidth[0] - $listMarginOffset)/$maxColumns);
 	} else {
 		$maxcellwidth = isset($_REQUEST['cellwidth'])?$_REQUEST['cellwidth']:floor((1024-$listMarginOffset)/$maxColumns); // 1024 considered
 	}
@@ -106,7 +109,7 @@
 	############################ USER PREFERENCES #####################
 
 	$up = $_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'];
-	if (!is_array($up)) $up = @unserialize($up);
+	if (!is_array($up)) $up = presciaSafeUnserialize($up);
 	$smartFields = array();
 	$mustReset= false;
 	$useSF = false;
@@ -141,7 +144,7 @@
 		$file = CONS_PATH_CACHE.$_SESSION['CODE']."/admin".$_SESSION[CONS_SESSION_ACCESS_USER]['id_group'].".cache"; // HTML output with normal menu
 		if (!is_file($file)) $this->buildAdminMenu(); // no cache, create it
 		if (is_file($file)) { // we have the cache of admin.xml (might had some error above)
-			$admxml = unserialize(cReadFile($file));
+			$admxml = presciaSafeUnserialize(cReadFile($file));
 			if (is_object($admxml)) {
 				function checkXMLlisting(&$xml,$moduleName) {
 					// does the current node have the listing for my module
@@ -193,6 +196,13 @@
 		if (!in_array($key,$toShow)) $sqltoShow[$key] = 1;
 	$sql = $module->get_advanced_sql($sqltoShow,"","","","adminlist_".$module->name);
 	unset($sqltoShow);
+	$preparedTypes = '';
+	$preparedParams = array();
+	$addPreparedWhere = function ($fragment,$value) use (&$sql,&$preparedTypes,&$preparedParams) {
+		$sql['WHERE'][] = $fragment.'?';
+		$preparedTypes .= 's';
+		$preparedParams[] = (string)$value;
+	};
 
 	// Order and query controls
 	$hasOrder = false; // this module has a "ordem" field
@@ -362,6 +372,7 @@
 	foreach ($module->fields as $name => $field) {
 		if ($name == "ordem") $hasOrder = true;
 		$content = ""; // content blank or false means this field will not be shown
+		$compare = "="; // default comparison when the requested operator is absent or invalid
 		$fillDT = array('field' => $name,
 						'width' => '90%'); // data for the INPUT html
 		$outdata = array('name' => $name); // data for the whole search HTML (content =$fillDT)
@@ -413,10 +424,13 @@
 
 				// prepare filters
 
-				if (isset($_REQUEST[$name]) && !is_array($_REQUEST[$name]) && $_REQUEST[$name] != '0' && $_REQUEST[$name] != "") {
-					// filter this on, so we will fill this select instead of showing "select other fields ..."
-					$sql['WHERE'][] = $module->name.".".$name."$compare\"".$_REQUEST[$name]."\"";
-					$sqlin['SELECT'][] = "if (".$mod->name.".".$mod->keys[0].$compare."'".$_REQUEST[$name]."',1,0) as selected";
+						if (isset($_REQUEST[$name]) && !is_array($_REQUEST[$name]) && $_REQUEST[$name] != '0' && $_REQUEST[$name] != "") {
+							// filter this on, so we will fill this select instead of showing "select other fields ..."
+							$addPreparedWhere($module->name.".".$name."$compare",$_REQUEST[$name]);
+							$selectedCompare = in_array($compare,array('=','<>','>','<',' LIKE '),true) ? $compare : '=';
+							$sqlin['SELECT'][] = "if (".$mod->name.".".$mod->keys[0].$selectedCompare."?,1,0) as selected";
+							$sqlin['_preparedTypes'] = 's';
+							$sqlin['_preparedParams'] = array((string)$_REQUEST[$name]);
 					$filtering++;
 					$isFilteringThis = true;
 					if ($useSF) {
@@ -428,7 +442,7 @@
 							$up['smartfields'][$module->name][$name] = 1;
 					}
 				}
-				if ($core->layout != 0) continue; // do not treat this interface
+				if ($core->layout != 0) continue 2; // do not treat this interface
 
 				// load select field as the template we will use
 				$field_sel = $core->template->get("_select_field");
@@ -498,7 +512,7 @@
 			break;
 			case CONS_TIPO_ENUM:  ################################################################ ENUM
 				if (isset($_REQUEST[$name]) && !is_array($_REQUEST[$name]) &&$_REQUEST[$name]!="") {
-					$sql['WHERE'][] = $module->name.".".$name."$compare\"".$_REQUEST[$name]."\"";
+					$addPreparedWhere($module->name.".".$name."$compare",$_REQUEST[$name]);
 					$filtering++;
 					$isFilteringThis = true;
 					if ($useSF) {
@@ -508,9 +522,9 @@
 							if ($up['smartfields'][$module->name][$name]>=10) $mustReset = true;
 						} else
 							$up['smartfields'][$module->name][$name] = 1;
+						}
 					}
-				}
-				if ($core->layout != 0) continue; // no inteface for seach on pop/ajax
+					if ($core->layout != 0) continue 2; // no inteface for seach on pop/ajax
 				preg_match("@ENUM \(([^)]*)\).*@",$module->fields[$name][CONS_XML_SQL],$regs);
 				$xtp = "<option value=\"{enum}\" {checked}>{enum_translated}</option>";
 				$tp = new CKTemplate($core->template);
@@ -535,26 +549,26 @@
 				$fillDT['isbetween'] = 0;
 				if ($compare != "m" && $compare != "b" && isset($_REQUEST[$name]) && $_REQUEST[$name] != "0000-00-00" && $_REQUEST[$name] != "0000-00-00 00:00:00" && $_REQUEST[$name] != "") {
 					if (isData($_REQUEST[$name],$data)) {
-						$sql['WHERE'][] = $module->name.".".$name."$compare\"".$data."\"";
+							$addPreparedWhere($module->name.".".$name."$compare",$data);
 						$filtering++;
 						$isFilteringThis = true;
 					}
 				} else if ($compare == "m") {
 					if (is_numeric($_REQUEST[$name])) {
 						if ($_REQUEST[$name]<10) $_REQUEST[$name] = "0".$_REQUEST[$name];
-						$sql['WHERE'][] = $module->name.".".$name." LIKE \"____-".$_REQUEST[$name]."-%\"";
+							$addPreparedWhere($module->name.".".$name." LIKE ","____-".$_REQUEST[$name]."-%");
 						$filtering++;
 						$isFilteringThis = true;
 					} else if (preg_match("@([0-9]{1,2})[^0-9]([0-9]{1,2})[^0-9]([0-9]{1,4})@",$_REQUEST[$name],$regs)>0) {
 						$regs = (int)$regs[2];
 						if ($regs<10) $regs = "0".$regs;
-						$sql['WHERE'][] = $module->name.".".$name." LIKE \"____-".$regs."-%\"";
+							$addPreparedWhere($module->name.".".$name." LIKE ",$regs."-%");
 						$filtering++;
 						$isFilteringThis = true;
 					}
 				} else if ($compare == "b") {
-					$sql['WHERE'][] = $module->name.".".$name." >= \"".$_REQUEST[$name]."\"";
-					$sql['WHERE'][] = $module->name.".".$name." <= \"".$_REQUEST["between_".$name]."\"";
+					$addPreparedWhere($module->name.".".$name." >= ",$_REQUEST[$name]);
+					$addPreparedWhere($module->name.".".$name." <= ",$_REQUEST["between_".$name]);
 					$filtering++;
 					$fillDT['isbetween'] = 1;
 					$fillDT['between_value'] = $_REQUEST['between_'.$name];
@@ -567,7 +581,7 @@
 					} else
 						$up['smartfields'][$module->name][$name] = 1;
 				}
-				if ($core->layout != 0) continue; // no inteface for seach on pop/ajax
+				if ($core->layout != 0) continue 2; // no inteface for seach on pop/ajax
 				$hasCalendar = true;
 				$field_txt = $core->template->get("_datetime_field");
 				$using = clone($field_txt);
@@ -578,14 +592,14 @@
 				$content = $using->techo($fillDT);
 
 			break;
-			case CONS_TIPO_TEXT:  ################################################################ NORMAL INPUT FIELDS (text, numbers)
-			case CONS_TIPO_VC:
+				case CONS_TIPO_TEXT:  ################################################################ NORMAL INPUT FIELDS (text, numbers)
+				case CONS_TIPO_VC:
 				if (isset($_REQUEST[$name]) && !is_array($_REQUEST[$name]) && $_REQUEST[$name] != "") 
 					$_REQUEST[$name] = cleanString($_REQUEST[$name],isset($field[CONS_XML_HTML]));
 			case CONS_TIPO_INT:
-			case CONS_TIPO_FLOAT:
-				if (isset($_REQUEST[$name]) && !is_array($_REQUEST[$name]) && $_REQUEST[$name] != "") {
-					$sql['WHERE'][] = $module->name.".".$name."$compare\"".($compare==" LIKE "?"%":"").$_REQUEST[$name].($compare==" LIKE "?"%":"")."\"";
+				case CONS_TIPO_FLOAT:
+					if (isset($_REQUEST[$name]) && !is_array($_REQUEST[$name]) && $_REQUEST[$name] != "") {
+						$addPreparedWhere($module->name.".".$name."$compare",($compare==" LIKE "?"%":"").$_REQUEST[$name].($compare==" LIKE "?"%":""));
 					$filtering++;
 					$isFilteringThis = true;
 					if ($useSF) {
@@ -598,7 +612,7 @@
 						}
 					}
 				}
-				if ($core->layout != 0) continue;
+				if ($core->layout != 0) continue 2;
 				$field_txt = $core->template->get("_normal_field");
 
 				$using = clone($field_txt);
@@ -646,8 +660,10 @@
 				$up['smartfields'][$module->name][$fname] = $fweight;
 			}
 		}
-		$usql = "UPDATE ".$uMod->dbname." SET userprefs=\"".addslashes(serialize($up))."\" WHERE id=".$_SESSION[CONS_SESSION_ACCESS_USER]['id'];
-		if ($core->dbo->simpleQuery($usql)) {
+			$usql = "UPDATE ".$uMod->dbname." SET userprefs=? WHERE id=?";
+			$updateResult = false;
+			$updateRows = 0;
+			if ($core->dbo->queryPrepared($usql, 'si', array(serialize($up), (int)$_SESSION[CONS_SESSION_ACCESS_USER]['id']), $updateResult, $updateRows)) {
 			$_SESSION[CONS_SESSION_ACCESS_USER]['userprefs'] = $up;
 		}
 		unset($uMod);
@@ -727,10 +743,10 @@
 						if (isset($_REQUEST[$lmod."_".$lfname]) && !is_array($_REQUEST[$lmod."_".$lfname]) && $_REQUEST[$lmod."_".$lfname] != 0 && $_REQUEST[$lmod."_".$lfname] != "") {
 							# filter this out
 							$sql['LEFT'][] = $remoteModule->dbname." as ".$remoteModule->name." ON (".$remoteModule->name.".".$remoteModule->keys[0]." = $lmod.$linkerfname)";
-							$sql['WHERE'][] = $remoteModule->name.".".$remoteModule->keys[0]." = '".$_REQUEST[$lmod."_".$lfname]."'";
+							$addPreparedWhere($remoteModule->name.".".$remoteModule->keys[0]." = ",$_REQUEST[$lmod."_".$lfname]);
 							$filtering++;
 							$skeys .= "<input type=\"hidden\" name=\"match_".$lmod."_".$lfname."\" value=\"".$_REQUEST['match_'.$lmod."_".$lfname]."\"/>";
-							$skeys .= "<input type=\"hidden\" name=\"$name\" value=\"".$_REQUEST[$lmod."_".$lfname]."\"/>";
+					$skeys .= "<input type=\"hidden\" name=\"".$lmod."_".$lfname."\" value=\"".$_REQUEST[$lmod."_".$lfname]."\"/>";
 						}
 					} // if (keys)
 				} // foreach (field in remote module)
@@ -833,7 +849,9 @@
 	$availablewidth = 100-($maxwidth*$usedColumns); // how many % are available as extra, max 99 same reason
 
 
-	$imageDetected = false;
+		$imageDetected = false;
+		$numThumbs = 0;
+		$lastThumb = array(0,0);
 
 	$columnWidth = array();
 	foreach ($toShow as $field) { // evaluates column size AND thumbnail configuration
@@ -849,9 +867,9 @@
 			case CONS_TIPO_UPLOAD:
 				$columnWidth[$field] = $maxwidth;
 				if (isset($linkField[CONS_XML_THUMBNAILS])) {
-					if ($imageDetected) {
-						$core->errorControl->raise(527,$field,$module->name);
-						continue;
+						if ($imageDetected) {
+							$core->errorControl->raise(527,$field,$module->name);
+							continue 2;
 					}
 					$imageDetected = true;
 					$numThumbs = count($linkField[CONS_XML_THUMBNAILS]);
@@ -975,10 +993,12 @@
 										$tp = new CKTemplate($core->template);
 										$tp->tbreak($xtp);
 										$innersql = "";
-										if (isset($_REQUEST['affreferer']) && isset($_REQUEST['affrefererkeys']) && $_REQUEST['affreferer'] == $module->fields[$possibleField][CONS_XML_MODULE] && count($remoteModule->keys)==1) { // only one key, TODO: multikey
-											$innersql = $remoteModule->get_base_sql();
-											$innersql['SELECT'][] = "if (".$remoteModule->name.".".$remoteModule->keys[0]."='".$_REQUEST['affrefererkeys']."',1,0) as selected";
-										}
+											if (isset($_REQUEST['affreferer']) && isset($_REQUEST['affrefererkeys']) && $_REQUEST['affreferer'] == $module->fields[$possibleField][CONS_XML_MODULE] && count($remoteModule->keys)==1) { // only one key, TODO: multikey
+												$innersql = $remoteModule->get_base_sql();
+												$innersql['SELECT'][] = "if (".$remoteModule->name.".".$remoteModule->keys[0]."=?,1,0) as selected";
+												$innersql['_preparedTypes'] = 's';
+												$innersql['_preparedParams'] = array((string)$_REQUEST['affrefererkeys']);
+											}
 										$core->runContent($remoteModule,$tp,$innersql,'_items',false);
 										$la = '<span id="la_'.$possibleField.'_ara" style="width:90%"><select onchange="selectChange(\'la_'.$possibleField.'\');" style="width:100%;margin:0px;border:1px;padding:1px;font-size:9px" name="la_'.$possibleField.'" id="la_'.$possibleField.'">'.$tp->techo().'</select></span>';
 										$laFields[] = $possibleField;
@@ -1040,7 +1060,7 @@
 					break;
 					case CONS_TIPO_ENUM:
 						if (CONS_LIST_AJAXEDITOR && !isset($linkField[CONS_XML_READONLY])) { # use ajax editor for enum fields on the list! Keep in mind that the ajax that treats this must be on the page
-							$temp = isset($module->fields[$name][CONS_XML_MANDATORY])?'':"<option value=''></option>";
+							$temp = isset($module->fields[$field][CONS_XML_MANDATORY])?'':"<option value=''></option>";
 							preg_match("@ENUM \(([^)]*)\).*@",$module->fields[$field][CONS_XML_SQL],$regs);
 							$xtp = "<option value=\"{enum}\" {\}".$field."|selected|{enum}}>{enum_translated}</option>";
 							$tp = new CKTemplate($core->template);
@@ -1079,12 +1099,14 @@
 							$tp = new CKTemplate($core->template);
 							$tp->tbreak($xtp);
 							$innersql = "";
-							if (isset($_REQUEST['affreferer']) && isset($_REQUEST['affrefererkeys']) && $_REQUEST['affreferer'] == $module->fields[$field][CONS_XML_MODULE] && count($rmd->keys)==1) { // only one key, TODO: multikey
-								$innersql = $rmd->get_base_sql();
-								$innersql['SELECT'][] = "if (".$rmd->name.".".$rmd->keys[0]."='".$_REQUEST['affrefererkeys']."',1,0) as selected";
-							}
+								if (isset($_REQUEST['affreferer']) && isset($_REQUEST['affrefererkeys']) && $_REQUEST['affreferer'] == $module->fields[$field][CONS_XML_MODULE] && count($rmd->keys)==1) { // only one key, TODO: multikey
+									$innersql = $rmd->get_base_sql();
+									$innersql['SELECT'][] = "if (".$rmd->name.".".$rmd->keys[0]."=?,1,0) as selected";
+									$innersql['_preparedTypes'] = 's';
+									$innersql['_preparedParams'] = array((string)$_REQUEST['affrefererkeys']);
+								}
 							$core->runContent($rmd,$tp,$innersql,'_items',false);
-							$la = '<span id="la_'.$possibleField.'_ara" style="width:90%"><select onchange="selectChange(\'la_'.$possibleField.'\');" style="width:100%;margin:0px;border:1px;padding:1px;font-size:9px" name="la_'.$field.'" id="la_'.$field.'">'.$tp->techo().'</select><span>';
+							$la = '<span id="la_'.$field.'_ara" style="width:90%"><select onchange="selectChange(\'la_'.$field.'\');" style="width:100%;margin:0px;border:1px;padding:1px;font-size:9px" name="la_'.$field.'" id="la_'.$field.'">'.$tp->techo().'</select><span>';
 							$laFields[] = $field;
 							unset($tp);
 						}
@@ -1148,7 +1170,7 @@
 
 	// prepare default list size
 	if (isset($_REQUEST['p_size']) && is_numeric($_REQUEST['p_size']) && $_REQUEST['p_size']>=0)
-		$this->parent->templateParams['p_size'] = $_REQUEST['p_size'];
+		$this->parent->templateParams['p_size'] = (int)$_REQUEST['p_size'];
 	else {
 		$this->parent->templateParams['p_size'] = CONS_DEFAULT_IPP;
 		if (is_array($up) && isset($up['pfim']) && is_numeric($up['pfim']) && $up['pfim'] > 4) {
@@ -1170,8 +1192,11 @@
 
 	if (isset($_REQUEST['vaction']) && $_REQUEST['vaction'] == "mark" && isset($_REQUEST['markmode']) && $_REQUEST['markmode'] == "true") { // yes, mark all
 		// fetch ALL resulting keys
-		$_REQUEST['multiSelectedIds'] = array();
-		$core->dbo->query($sql,$r,$n);
+			$_REQUEST['multiSelectedIds'] = array();
+			$r = false;
+			$n = 0;
+				$sqlText = $core->dbo->sqlarray_echo($sql);
+				$core->dbo->queryPrepared($sqlText,$preparedTypes,$preparedParams,$r,$n);
 		for ($c=0;$c<$n;$c++) {
 			$msidata = $core->dbo->fetch_assoc($r);
 			$checkkeys = "";
@@ -1198,6 +1223,10 @@
 	}
 
 	##############################################################################
+	if ($preparedTypes !== '') {
+		$sql['_preparedTypes'] = $preparedTypes;
+		$sql['_preparedParams'] = $preparedParams;
+	}
 	$total = $module->runContent($core->template,$sql,"_lineTemplate",true,false,$callback);
 	##############################################################################
 
@@ -1215,15 +1244,16 @@
 
 
 	// some memory cleaning because we are neat
-	unset($core->templareParams['callbackModule']);
+	unset($core->templateParams['callbackModule']);
 
 
 
-	############################ RELATED LINKS #####################
+		############################ RELATED LINKS #####################
 
-	// detect relate links (supports only ONE at this point (first found))
-	if ($core->layout == 0) { //relatewithlinker
-		foreach ($core->modules as $mname => $modobj) {
+		// detect relate links (supports only ONE at this point (first found))
+		if ($core->layout == 0) { //relatewithlinker
+			$isLinker = false;
+			foreach ($core->modules as $mname => $modobj) {
 			$isLinker = false;
 			$prevKey = "";
 			if ($modobj->linker) {
@@ -1240,7 +1270,7 @@
 					$core->template->assign("linkermodule_relate",$modobj->fields[$prevKey][CONS_XML_MODULE]);
 					$core->template->assign("linkermodule",$mname);
 					$mod = $core->modules[$modobj->fields[$prevKey][CONS_XML_MODULE]];
-					$n = $core->dbo->fetch("SELECT count(*) FROM ".$mod->dbname);
+						$n = $core->dbo->fetchPrepared("SELECT count(*) FROM ".$mod->dbname, "", array());
 					if ($n>CONS_MAX_RELATESIZE) {
 						$core->template->assign("_relatewithlinker","");
 						$core->log[] = $core->langOut('relatewithlinkertoobig')." :".$mod->name;

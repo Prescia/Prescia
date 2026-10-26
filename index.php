@@ -1,9 +1,9 @@
-<? #<- please ensure short tags is enabled on your apache
+<?php #<- please ensure short tags is enabled on your apache
   /* -------------------------------- Prescia ENTRYPOINT
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ for Prescia (BSD/open source)
   |
-  | Remember: UTF-8 server/php and php 5.+ ARE MANDATORY, all files are UTF-8, php 5.4+ recommended
+  | Remember: UTF-8 server/php and php 8.0+ ARE MANDATORY, all files are UTF-8
   | Also, always use some rewrite engine to divert EVERYTHING not multimidia (or at least .php) to this entrypoint.
   | -----------------------------------------------
   | NOTEs:
@@ -12,7 +12,7 @@
   | + Requires short tags
   | + The ab test requires: (1) set a single domain on CONS_SINGLEDOMAIN, (2) disable CONS_CACHE, CONS_ECONOMICMODE, CONS_BOTPROTECT and CONS_FREECPU
   |	  Displayed ab test data have up to 4 numbers:
-  |		on developer mode		not on developer mode		not on developer mode, CACHE ON				not on developer mode, CACHE ON, ECONOMICMODE ON	
+  |		on developer mode		not on developer mode		not on developer mode, CACHE ON				not on developer mode, CACHE ON, ECONOMICMODE ON
   |   AB test is made to detect choke points and see how the caching is improving performance
   | -----------------------------------------------
   | Last ab test: 15.5.17 (1.01) on an i7-3770 Windows 7 Apache 2.2 php 5.4. Daisuki.com site model
@@ -41,11 +41,32 @@ if (CONS_ONSERVER && is_file("heavymaint.html")) {
 	include "heavymaint.html";
 	die();
 }
-# Server settings and libraries
-require CONS_PATH_SETTINGS."settings.php";
-# Database
-require CONS_PATH_INCLUDE."dbo/cdbo.php";
-require CONS_PATH_INCLUDE."dbo/".CONS_AFF_DATABASECONNECTOR.".php";
+	# Server settings and libraries
+	$settingsFile = CONS_PATH_SETTINGS."settings.php";
+			if (!is_file($settingsFile))
+				throw new RuntimeException("Prescia settings file not found: ".$settingsFile);
+			require $settingsFile;
+			$cspNonce = base64_encode(random_bytes(16));
+			if (!headers_sent()) {
+				header('X-Content-Type-Options: nosniff');
+				header('X-Frame-Options: SAMEORIGIN');
+				header('Referrer-Policy: strict-origin-when-cross-origin');
+				header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+					header('X-Permitted-Cross-Domain-Policies: none');
+					header('X-Download-Options: noopen');
+					header('X-DNS-Prefetch-Control: off');
+					header('Cross-Origin-Opener-Policy: same-origin');
+					header('Cross-Origin-Resource-Policy: same-origin');
+				header("Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'nonce-".$cspNonce."'; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self';");
+			if (!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off')
+				header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+		}
+		# Database
+	require CONS_PATH_INCLUDE."dbo/cdbo.php";
+	$databaseConnectorFile = CONS_PATH_INCLUDE."dbo/".CONS_AFF_DATABASECONNECTOR.".php";
+	if (!is_file($databaseConnectorFile))
+		throw new RuntimeException("Prescia database connector not found: ".$databaseConnectorFile);
+	require $databaseConnectorFile;
 # Core
 require CONS_PATH_SYSTEM."coreVar.php";
 require CONS_PATH_SYSTEM."core.php";
@@ -53,10 +74,10 @@ require CONS_PATH_SYSTEM."core.php";
 # ab -n50 total mean: 17ms	16ms
 
 
-if (CONS_DEVELOPER || isset($_GET['debugmode'])) {
-	require CONS_PATH_SYSTEM."coreFull.php";
-	$cdbo = "CDBO_".CONS_AFF_DATABASECONNECTOR;
-	$core = new CPresciaFull(new $cdbo('','','','',isset($_GET['debugmode'])),true);
+	if (CONS_DEVELOPER) {
+		require CONS_PATH_SYSTEM."coreFull.php";
+		$cdbo = "CDBO_".CONS_AFF_DATABASECONNECTOR;
+		$core = new CPresciaFull(new $cdbo('','','','',true),true);
 } else {
 	$cdbo = "CDBO_".CONS_AFF_DATABASECONNECTOR;
 	$core = new CPrescia(new $cdbo('','','','',false),false);
@@ -89,10 +110,13 @@ if (CONS_AFF_ERRORHANDLER) { // override PHP error messaging? (if true, will not
 	function PresciaExceptionHandler($exception) {
 		global $core;
 		if (error_reporting() === 0) return; // if the function had a "@" before it, then ignore it totally
-		if ($core && $core->debugmode)
-			$core->errorControl->raise(602,$exception->getMessage());
-		else
-			die($exception->getMessage());
+			if ($core && $core->debugmode && CONS_DEVELOPER)
+				$core->errorControl->raise(602,$exception->getMessage());
+			else {
+				error_log($exception->getMessage());
+				http_response_code(500);
+				die('Internal server error');
+			}
 	}
 
 	$crap = set_exception_handler('PresciaExceptionHandler');
@@ -116,12 +140,13 @@ if (!$core->dbconnect()) $core->offlineMode = true;
 # ab -n50 total mean: 30ms	27ms	26ms	26ms
 
 if (!$core->loadMetadata()) $core->errorControl->raise(1,"metamodel fault"); // loadMetadata loads dimconfig
-if ($core->debugmode) $core->applyMetaData(); // only in debug. Executes onMeta's and save metadata/sql changes
+if ($core->debugmode && $core instanceof CPresciaFull) $core->applyMetaData(); // only in debug. Executes onMeta's and save metadata/sql changes
 # ab -n50 total mean: 363ms 	28ms	28ms	28ms
 
 
-# -- start parsing the request
-if (!$core->servingFile) {
+	# -- start parsing the request
+	$PAGE = '';
+	if (!$core->servingFile) {
 	// if serving file, we just want to enable the database and run onEcho plugins
 	$core->parseRequest();	
 	
@@ -141,11 +166,12 @@ if (!$core->servingFile) {
 		'METAKEYS' => '', // meta keys contents (not the tag)
 		'METADESC' => '', // meta description contents ( not the tag)
 		'CANONICAL' => '', // canonical contents (the URL, not the tag)
-		'HEADCSSTAGS' => '', // CSS tags (should be echoed before js)
-		'HEADJSTAGS' => '', // JS tags
-		'HEADUSERTAGS' => '', // other tags that will come last in the HEADER
-		'METATAGS' => '' // actual meta tags (build with the contents above, at core::showTemplate)
-	);
+	'HEADCSSTAGS' => '', // CSS tags (should be echoed before js)
+	'HEADJSTAGS' => '', // JS tags
+	'HEADUSERTAGS' => '', // other tags that will come last in the HEADER
+	'METATAGS' => '', // actual meta tags (build with the contents above, at core::showTemplate)
+	'CSP_NONCE' => $cspNonce
+);
 	$core->template->lang_selectors = explode(",",CONS_POSSIBLE_LANGS);
 	$core->template->current_language = $_SESSION[CONS_SESSION_LANG];
 	require CONS_PATH_SYSTEM."tcexternal.php"; // template classes not built-in into the core (plugins)

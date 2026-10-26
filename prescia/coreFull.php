@@ -1,4 +1,5 @@
-<?/* -------------------------------- Prescia Core (Debug mode)
+<?php
+/* -------------------------------- Prescia Core (Debug mode)
   | Copyleft (ɔ) 2012+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
 -*/
@@ -86,34 +87,30 @@ class CPresciaFull extends CPrescia {
 		}
 		$this->errorControl->raise(1000);
 		$this->log = array(); // we don't want the above "log" to cause an abort (yes, this function uses the log size to confirm an error - lame but extremelly effective)
-		$this->allModulesLoaded = true;
+			$this->allModulesLoaded = true;
 
-		# initial clean up and check
-		if (!is_dir(CONS_PATH_TEMP)) safe_mkdir(CONS_PATH_TEMP);
-		if (!is_dir(CONS_PATH_CACHE)) safe_mkdir(CONS_PATH_CACHE);
-		if (!is_dir(CONS_PATH_DINCONFIG)) safe_mkdir(CONS_PATH_DINCONFIG);
-		if (!is_dir(CONS_PATH_CACHE."locale/")) safe_mkdir(CONS_PATH_CACHE."locale/");
-		if (!is_dir(CONS_PATH_LOGS)) safe_mkdir(CONS_PATH_LOGS);
-		if (!is_dir(CONS_PATH_LOGS.$_SESSION['CODE']."/")) safe_mkdir(CONS_PATH_LOGS.$_SESSION['CODE']."/");
-		if (!is_dir(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/")) safe_mkdir(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/");
-		if (!is_dir(CONS_PATH_CACHE.$_SESSION['CODE']."/")) safe_mkdir(CONS_PATH_CACHE.$_SESSION['CODE']."/");
-		if (!is_dir(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/")) safe_mkdir(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/");
-		if (!is_dir(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/locale")) safe_mkdir(CONS_PATH_CACHE.$_SESSION['CODE']."/meta/locale/");
-		if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/")) safe_mkdir(CONS_PATH_PAGES.$_SESSION['CODE']."/");
-		if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/actions/")) safe_mkdir(CONS_PATH_PAGES.$_SESSION['CODE']."/actions");
-		if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/content/")) safe_mkdir(CONS_PATH_PAGES.$_SESSION['CODE']."/content");
-		if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/_config/locale/")) safe_mkdir(CONS_PATH_PAGES.$_SESSION['CODE']."/_config/locale");
-		if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/files/")) safe_mkdir(CONS_PATH_PAGES.$_SESSION['CODE']."/files");
-		if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/template/")) {
-			 safe_mkdir(CONS_PATH_PAGES.$_SESSION['CODE']."/template");
+			# initial clean up and check
+			$files = new \Prescia\Services\FileService();
+			$directories = array(
+				CONS_PATH_TEMP, CONS_PATH_CACHE, CONS_PATH_DINCONFIG, CONS_PATH_CACHE."locale/",
+				CONS_PATH_LOGS, CONS_PATH_LOGS.$_SESSION['CODE']."/", CONS_PATH_DINCONFIG.$_SESSION['CODE']."/",
+				CONS_PATH_CACHE.$_SESSION['CODE']."/", CONS_PATH_CACHE.$_SESSION['CODE']."/meta/",
+				CONS_PATH_CACHE.$_SESSION['CODE']."/meta/locale", CONS_PATH_PAGES.$_SESSION['CODE']."/",
+				CONS_PATH_PAGES.$_SESSION['CODE']."/actions/", CONS_PATH_PAGES.$_SESSION['CODE']."/content/",
+				CONS_PATH_PAGES.$_SESSION['CODE']."/_config/locale/", CONS_PATH_PAGES.$_SESSION['CODE']."/files/"
+			);
+			foreach ($directories as $directory)
+				if (!is_dir($directory)) $files->ensureDirectory($directory);
+			if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/template/")) {
+				 $files->ensureDirectory(CONS_PATH_PAGES.$_SESSION['CODE']."/template");
 			 copy(CONS_PATH_SETTINGS."defaults/basefile.html",CONS_PATH_PAGES.$_SESSION['CODE']."/template/basefile.html");
 			 copy(CONS_PATH_SETTINGS."defaults/index.html",CONS_PATH_PAGES.$_SESSION['CODE']."/template/index.html");
 		}
-		if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/mail/")) safe_mkdir(CONS_PATH_PAGES.$_SESSION['CODE']."/mail");
+			if (!is_dir(CONS_PATH_PAGES.$_SESSION['CODE']."/mail/")) $files->ensureDirectory(CONS_PATH_PAGES.$_SESSION['CODE']."/mail");
 
 		# Dimconfig
 		if (is_file(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/din.dat"))
-			$this->dimconfig = unserialize(cReadFile(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/din.dat"));
+			$this->dimconfig = presciaSafeUnserialize(cReadFile(CONS_PATH_DINCONFIG.$_SESSION['CODE']."/din.dat"));
 		if ($this->dimconfig === false) $this->dimconfig = array(); # Error on load
 		$this->checkConfig();
 		# clear the meta cache
@@ -358,10 +355,10 @@ class CPresciaFull extends CPrescia {
 			if (!isset($this->modules[$rel[0]]) || !isset($this->modules[$rel[2]])) {
 				array_push($this->log,"Error (pass 1) trying to build foreign keys from '".$rel[0]."' to '".$rel[2]."' at ".$rel[1].": one of the modules do not exist, ignoring relation");
 			} else {
-				$sfield = "";
-				if (strpos($rel[1],":") !== false) {
-					#serialized field
-					$field = explode(":",$field);
+					$sfield = "";
+					if (strpos($rel[1],":") !== false) {
+						#serialized field
+						$field = explode(":",$rel[1]);
 					$sfield = $field[0];
 					$field = $field[1];
 				} else
@@ -509,19 +506,19 @@ class CPresciaFull extends CPrescia {
 		}
 
 		# DIE FREAKING THUMBS.DB, DIE!
-		function dieFreakingThumbs($folder) {
+		$dieFreakingThumbs = function (string $folder) use (&$dieFreakingThumbs): void {
 			if ($folder[strlen($folder)-1] != '/') $folder .= "/";
 			foreach(glob($folder."*") as $file) {
 				if(is_dir($file))
-					dieFreakingThumbs($file);
+					$dieFreakingThumbs($file);
 				else {
 					$arf = explode(".",$file);
 					if (array_pop($arf) == 'db')
 						@unlink($file);
 				}
 			}
-		}
-		dieFreakingThumbs(CONS_PATH_PAGES.$_SESSION['CODE']."/");
+		};
+		$dieFreakingThumbs(CONS_PATH_PAGES.$_SESSION['CODE']."/");
 
 		$customxml = is_file(CONS_PATH_PAGES.$_SESSION["CODE"]."/_config/custom.xml")?cReadFile(CONS_PATH_PAGES.$_SESSION["CODE"]."/_config/custom.xml"):'';
 		# All plugins are loaded, check their manifest and customs
@@ -622,7 +619,7 @@ class CPresciaFull extends CPrescia {
 					if ($tmpConnection) {
 						$this->log[] = "Connected to server and trying to create database";
 						$this->dbchanged = true;
-						$ok = $this->dbo->simpleQuery("CREATE DATABASE ".CONS_SQL_QUOTE.CONS_DB_BASE.CONS_SQL_QUOTE." DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;");
+							$ok = $this->dbo->simpleQuery("CREATE DATABASE ".$this->dbo->quoteIdentifier(CONS_DB_BASE)." DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;");
 						if (!$ok) {
 							$this->log[] = "Unable to create database using CREATE DATABASE command";
 							$this->errorControl->raise(122);
@@ -647,19 +644,21 @@ class CPresciaFull extends CPrescia {
 	function check_sql() {
 		foreach($this->modules as $nome => $module) {
 		  if ($module->dbname != "") {
-			$chave = $module->keys[0];
-			$sql = "SHOW TABLES LIKE '".$module->dbname."'";
-			if (!$this->dbo->fetch($sql)) { # table does not exists (else would return it's name)
+				$chave = $module->keys[0];
+				$table = $this->dbo->quoteIdentifier($module->dbname);
+				if (!$this->dbo->fetchPrepared("SHOW TABLES LIKE ?",'s',array($module->dbname))) { # table does not exists (else would return it's name)
 				$sql = "";
 				foreach ($module->fields as $cnome => $campo) {
 					if ($campo[CONS_XML_SQL] != "") {
-						if ($cnome == 'id')
-							$sql = CONS_SQL_QUOTE.$cnome.CONS_SQL_QUOTE." ".$campo[CONS_XML_SQL].",".$sql;
-						else
-							$sql .= CONS_SQL_QUOTE.$cnome.CONS_SQL_QUOTE." ".$campo[CONS_XML_SQL].",";
+							if ($cnome == 'id')
+								$sql = $this->dbo->quoteIdentifier($cnome)." ".$campo[CONS_XML_SQL].",".$sql;
+							else
+								$sql .= $this->dbo->quoteIdentifier($cnome)." ".$campo[CONS_XML_SQL].",";
 					}
 				}
-				$sql = "CREATE TABLE ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE." ( $sql PRIMARY KEY(".implode(",",$module->keys).")) ENGINE=MYISAM";
+					$quotedKeys = array();
+					foreach ($module->keys as $key) $quotedKeys[] = $this->dbo->quoteIdentifier($key);
+					$sql = "CREATE TABLE ".$table." ( $sql PRIMARY KEY(".implode(",",$quotedKeys).")) ENGINE=MYISAM";
 				if ($this->dbo->simpleQuery($sql)) {
 					$this->dbchanged = true;
 					array_push($this->log,"Base ".$module->dbname." for ".$module->name." not detected and created!");
@@ -667,10 +666,12 @@ class CPresciaFull extends CPrescia {
 					$this->errorState = true;
 					array_push($this->log,"Base ".$module->dbname." for ".$module->name." not detected and an error occured while creating it! (triggered errorState)");
 				}
-			} else {
-				# checks if all fields are ok
-				$sql = "SHOW FIELDS FROM ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE;
-				$this->dbo->query($sql,$r,$n);
+					} else {
+					# checks if all fields are ok
+						$sql = "SHOW FIELDS FROM ".$table;
+					$r = false;
+					$n = 0;
+					$this->dbo->queryPrepared($sql,"",array(),$r,$n);
 				$camposdb = array();
 				$data = $this->dbo->fetch_row($r);
 				while (is_array($data)){
@@ -680,7 +681,7 @@ class CPresciaFull extends CPrescia {
 				foreach ($module->fields as $nome => $campo) {
 					if ($campo[CONS_XML_SQL] != "" && !in_array($nome,$camposdb)) {
 						array_push($this->log,"Missing field at ".$module->dbname.":$nome");
-						$sql = "ALTER TABLE ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE." ADD ".CONS_SQL_QUOTE.$nome.CONS_SQL_QUOTE." ".$campo[CONS_XML_SQL];
+							$sql = "ALTER TABLE ".$table." ADD ".$this->dbo->quoteIdentifier($nome)." ".$campo[CONS_XML_SQL];
 						if (!$this->dbo->simpleQuery($sql)) {
 							$this->errorState = true;
 							array_push($this->log,"Unable to create it! (triggered errorState)");
@@ -690,9 +691,11 @@ class CPresciaFull extends CPrescia {
 						}
 					}
 				}
-				# checks keys and uniques
-				$sql = "SHOW KEYS FROM ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE;
-				$this->dbo->query($sql,$r,$n);
+					# checks keys and uniques
+						$sql = "SHOW KEYS FROM ".$table;
+					$r = false;
+					$n = 0;
+					$this->dbo->queryPrepared($sql,"",array(),$r,$n);
 				$camposdb = array();
 				$uniquedb = array();
 				$normalkeys = array();
@@ -710,10 +713,12 @@ class CPresciaFull extends CPrescia {
 				foreach ($module->keys as $x => $nome) {
 					if (!in_array($nome,$camposdb)) {
 						array_push($this->log,"Missing key at ".$module->dbname.":$nome");
-						$sql = "ALTER TABLE ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE." DROP PRIMARY KEY, ADD PRIMARY KEY (".implode(",",$module->keys).")";
+							$quotedKeys = array();
+							foreach ($module->keys as $key) $quotedKeys[] = $this->dbo->quoteIdentifier($key);
+							$sql = "ALTER TABLE ".$table." DROP PRIMARY KEY, ADD PRIMARY KEY (".implode(",",$quotedKeys).")";
 						if (!$this->dbo->simpleQuery($sql)) {
 							array_push($this->log,"Error updating keys! Trying without drop ...");
-							$sql = "ALTER TABLE ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE." ADD PRIMARY KEY (".implode(",",$module->keys).")";
+								$sql = "ALTER TABLE ".$table." ADD PRIMARY KEY (".implode(",",$quotedKeys).")";
 							if (!$this->dbo->simpleQuery($sql)) {
 								$this->errorState = true;
 								array_push($this->log,"Error updating keys! (triggered errorState)");
@@ -729,7 +734,7 @@ class CPresciaFull extends CPrescia {
 				foreach ($module->unique as $name) {
 					if (!in_array($name,$uniquedb)) {
 						$this->log[] = "Missing unique key at ".$module->dbname.":".$name;
-						$sql = "ALTER TABLE  ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE." ADD UNIQUE ($name)";
+							$sql = "ALTER TABLE ".$table." ADD UNIQUE (".$this->dbo->quoteIdentifier($name).")";
 						if (!$this->dbo->simpleQuery($sql)) {
 							$this->errorState = true;
 							array_push($this->log,"Error updating unique! (triggered errorState)");
@@ -743,7 +748,7 @@ class CPresciaFull extends CPrescia {
 				foreach ($module->hash as $name) {
 					if (!in_array($name,$normalkeys)) {
 						$this->log[] = "Missing hash key at ".$module->dbname.":".$name;
-						$sql = "ALTER TABLE  ".CONS_SQL_QUOTE.$module->dbname.CONS_SQL_QUOTE." ADD INDEX ($name)";
+							$sql = "ALTER TABLE ".$table." ADD INDEX (".$this->dbo->quoteIdentifier($name).")";
 						if (!$this->dbo->simpleQuery($sql)) {
 							$this->errorState = true;
 							array_push($this->log,"Error updating index! (triggered errorState)");
@@ -795,10 +800,10 @@ class CPresciaFull extends CPrescia {
 		}
 		// now add plugin templates
 
-		foreach ($this->loadedPlugins as $pname => $plugin) {
-			if ($plugin->moduleRelation == '') {
+			foreach ($this->loadedPlugins as $pname => $plugin) {
 				$p = "000000000"; // standard
-				$pos = 9;
+				if ($plugin->moduleRelation == '') {
+					$pos = 9;
 				foreach ($plugin->customPermissions as $ptag => $pi18n) {
 					$p .= "0";
 					$pos++;

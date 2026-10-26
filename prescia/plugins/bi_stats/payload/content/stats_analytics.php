@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_stats $this Runtime module context injected by the framework. */
 
 	$graphWidth = 400;
 	
@@ -20,7 +23,9 @@
 
 	// hits, unique hits, browsing hits (interested), returning hits (24h)
 	$sql = "SELECT data,sum(hits),sum(uhits),sum(bhits),sum(rhits) FROM ".$statsfullObj->dbname." GROUP BY data ORDER BY data DESC";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	for ($c=0;$c<$n;$c++) {
 		list($data,$hits,$uhits,$bhits,$rhits) = $core->dbo->fetch_row($r);
 		if ($uhits<$bhits) $uhits = $bhits; // weird bugs not getting uhits (uhit might have started on the day before, bhit the day next)
@@ -28,8 +33,10 @@
 	}
 
 	// khits = bookmarks
-	$sql = "SELECT data,sum(hits) FROM ".$statsrObj->dbname." WHERE referer=\"\" GROUP BY data ORDER BY data DESC";
-	$core->dbo->query($sql,$r,$n);
+	$sql = "SELECT data,sum(hits) FROM ".$statsrObj->dbname." WHERE referer=? GROUP BY data ORDER BY data DESC";
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, 's', array(''), $r, $n);
 	for ($c=0;$c<$n;$c++) {
 		list($data,$khits) = $core->dbo->fetch_row($r);
 		if (isset($outputArr[$data]))
@@ -79,18 +86,23 @@
 	$yesterday = datecalc(date("Y-m-d"),0,0,-1);
 	
 	if (isset($_REQUEST['normalize']) && isset($_REQUEST['hour']) && isset($_REQUEST['changeto']) && is_numeric($_REQUEST['hour']) && is_numeric($_REQUEST['changeto'])) {
-		if ($_REQUEST['changeto'] < 2) $_REQUEST['changeto'] = 2;
-		$sql = "DELETE FROM ".$statsObj->dbname." WHERE uhits=0 AND data='".date("Y-m-d")."' AND hour=".$_REQUEST['hour'];
-		$core->dbo->simpleQuery($sql);
-		$sql = "UPDATE ".$statsObj->dbname." SET hits=".$_REQUEST['changeto'].", uhits=1 WHERE data='".date("Y-m-d")."' AND hour=".$_REQUEST['hour']." AND hits>".$_REQUEST['changeto']; 
-		if ($core->dbo->simpleQuery($sql))
-			$core->log[] = "Hour ".$_REQUEST['hour']." hits normalized to max ".$_REQUEST['changeto']." hits, non unique hit pages removed.";
+		$normalizeHour = max(0, min(23, (int)$_REQUEST['hour']));
+		$normalizeLimit = max(2, (int)$_REQUEST['changeto']);
+		$normalizeDate = date("Y-m-d");
+		$r = false;
+		$n = 0;
+		$core->dbo->queryPrepared("DELETE FROM ".$statsObj->dbname." WHERE uhits=0 AND data=? AND hour=?", 'si', array($normalizeDate, $normalizeHour), $r, $n);
+		$sql = "UPDATE ".$statsObj->dbname." SET hits=?, uhits=1 WHERE data=? AND hour=? AND hits>?";
+		if ($core->dbo->queryPrepared($sql, 'isii', array($normalizeLimit, $normalizeDate, $normalizeHour, $normalizeLimit), $r, $n))
+			$core->log[] = "Hour ".$normalizeHour." hits normalized to max ".$normalizeLimit.", non unique hit pages removed.";
 		else
-			$core->log[] = "Error trying to normalize ".$_REQUEST['hour']."h hits";
+			$core->log[] = "Error trying to normalize ".$normalizeHour."h hits";
 	}
 
-	$sql = "SELECT data,hour,sum(hits),sum(uhits) FROM ".$statsObj->dbname." WHERE data>='$yesterday' GROUP BY data,hour ORDER BY data DESC";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$sql = "SELECT data,hour,sum(hits),sum(uhits) FROM ".$statsObj->dbname." WHERE data>=? GROUP BY data,hour ORDER BY data DESC";
+	$core->dbo->queryPrepared($sql, 's', array($yesterday), $r, $n);
 	for ($c=0;$c<$n;$c++) {
 		list($data,$hour,$hits,$uhits) = $core->dbo->fetch_row($r);
 		if ($data != date("Y-m-d") && $hour <= date("H")) continue; // more than 24h
@@ -122,7 +134,9 @@
 	$max = 1;
 	$maxu = 1;
 	$horarios = array();
-	$core->dbo->query("SELECT sum(hits) as hits,sum(uhits) as uhits, data, hour FROM ".$statsObj->dbname." WHERE data<'$df' AND data>='$di' GROUP BY data, hour",$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared("SELECT sum(hits) as hits,sum(uhits) as uhits, data, hour FROM ".$statsObj->dbname." WHERE data<? AND data>=? GROUP BY data, hour", 'ss', array($df, $di), $r, $n);
 	for ($c=0;$c<$n;$c++) {
 		$data = $core->dbo->fetch_assoc($r);
 		if (!isset($datebuffer[$data['data']])) {
@@ -155,7 +169,7 @@
 
 	foreach ($horarios as $horario => $hdata) {
 		// hits
-		$corRED = 255*($hdata['hits']/$hdata['sum'])/$max;
+		$corRED = 255*((float) $hdata['hits']/(float) $hdata['sum'])/(float) $max;
 		$corBLUE = 255-$corRED;
 		$corRED = dechex($corRED);
 		$corGREEN = dechex(floor($corBLUE/2));
@@ -164,10 +178,12 @@
 		if (strlen($corGREEN)==1) $corGREEN = "0".$corGREEN;
 		if (strlen($corBLUE)==1) $corBLUE = "0".$corBLUE;
 		$horario = explode("_",$horario); // weekday, hour
-		$output .= "<div title=\"".$translateweek[$horario[0]]." ".$horario[1]."h: ".(floor($hdata['hits']/$hdata['sum']))." visitas\" style=\"width:".$daywidth."px;height:".$hourheight."px;left:".($daywidth*($horario[0]+1))."px;top:".($hourheight*$horario[1])."px;position:absolute;background:#".$corRED.$corGREEN.$corBLUE."\">&nbsp;</div>";
+		$weekday = (int) $horario[0];
+		$hour = (int) $horario[1];
+		$output .= "<div title=\"".$translateweek[$weekday]." ".$hour."h: ".(floor((float) $hdata['hits']/(float) $hdata['sum']))." visitas\" style=\"width:".$daywidth."px;height:".$hourheight."px;left:".($daywidth*($weekday+1))."px;top:".($hourheight*$hour)."px;position:absolute;background:#".$corRED.$corGREEN.$corBLUE."\">&nbsp;</div>";
 
 		// uhits
-		$corRED = 255*($hdata['uhits']/$hdata['sum'])/$maxu;
+		$corRED = 255*((float) $hdata['uhits']/(float) $hdata['sum'])/(float) $maxu;
 		$corBLUE = 255-$corRED;
 		$corRED = dechex($corRED);
 		$corGREEN = dechex(floor($corBLUE/2));
@@ -175,7 +191,7 @@
 		if (strlen($corRED)==1) $corRED = "0".$corRED;
 		if (strlen($corGREEN)==1) $corGREEN = "0".$corGREEN;
 		if (strlen($corBLUE)==1) $corBLUE = "0".$corBLUE;
-		$output2 .= "<div title=\"".$translateweek[$horario[0]]." ".$horario[1]."h: ".(floor($hdata['uhits']/$hdata['sum']))." pessoas\" style=\"width:".$daywidth."px;height:".$hourheight."px;left:".($daywidth*($horario[0]+1))."px;top:".($hourheight*$horario[1])."px;position:absolute;background:#".$corRED.$corGREEN.$corBLUE."\">&nbsp;</div>";
+		$output2 .= "<div title=\"".$translateweek[$weekday]." ".$hour."h: ".(floor((float) $hdata['uhits']/(float) $hdata['sum']))." pessoas\" style=\"width:".$daywidth."px;height:".$hourheight."px;left:".($daywidth*($weekday+1))."px;top:".($hourheight*$hour)."px;position:absolute;background:#".$corRED.$corGREEN.$corBLUE."\">&nbsp;</div>";
 
 	}
 	for ($c=0;$c<7;$c++) { // day names
@@ -217,7 +233,9 @@
 
 	# gets the top pages on this month
 	$sql = "SELECT sum( hits ) AS h, page,hid FROM ".$statsh->dbname." WHERE DATA > NOW() - INTERVAL 32 DAY AND page <> 'setres' AND page <> '' GROUP BY page,hid ORDER BY h DESC LIMIT 20";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	$pagesTotal = $n;
 	$where = array();
 	for ($c=0;$c<$n;$c++) {
@@ -235,7 +253,9 @@
 
 	# now fill up the stats for each valid page
 	$sql = "SELECT hits, page, data, hid FROM ".$statsh->dbname." WHERE data > NOW( ) - INTERVAL 32 DAY AND (".implode(" OR ",$where).") ORDER BY DATA ASC";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	for ($c=0;$c<$n;$c++) {
 		list($hits,$page,$data,$hid) = $core->dbo->fetch_row($r);
 		$datediff = date_diff_ex($yesterday,$data);
@@ -246,7 +266,7 @@
 	for ($c=0;$c<$pagesTotal;$c++) {
 		if (isset($moduletranslator[$pages[$c][1]]) && $pages[$c][2] != 0) {
 			$mod = $core->loaded($moduletranslator[$pages[$c][1]]);
-			$name = $core->dbo->fetch("SELECT ".$mod->title." FROM ".$mod->dbname." WHERE id=".$pages[$c][2]);
+			$name = $core->dbo->fetchPrepared("SELECT ".$mod->title." FROM ".$mod->dbname." WHERE id=?", 'i', array((int)$pages[$c][2]));
 			if ($name == '') $name = $pages[$c][1].($pages[$c][2]==0?'':' ('.$pages[$c][2].')');
 			$pages[$c][3] = trim($name);
 		}
@@ -275,11 +295,15 @@
 	
 	# day #
 	$sql = "SELECT sum(hits) as hits, referer FROM ".$refD->dbname." WHERE data > NOW() - INTERVAL 2 DAY GROUP BY referer ORDER BY hits DESC LIMIT 100";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	$refs = array();
 	$total = 0;
 	for($c=0;$c<$n;$c++) {
 		$ref = $core->dbo->fetch_assoc($r);
+		if (!is_array($ref) || !isset($ref['hits'])) continue;
+		$ref['hits'] = (float)$ref['hits'];
 		if ($ref['referer'] == '') $ref['referer'] = 'BOOKMARK';
 		$refs[] = $ref;
 		$total += $ref['hits'];
@@ -287,19 +311,24 @@
 	if ($total == 0) $total = 1;
 	$refdObj = $core->template->get("_refd");
 	$output = "";
-	for($c=0;$c<$n;$c++) {
-		$refs[$c]['width'] = ceil($graphWidth*$refs[$c]['hits']/$total);
+	for($c=0;$c<count($refs);$c++) {
+		$hits = isset($refs[$c]['hits']) && is_numeric($refs[$c]['hits']) ? (float)$refs[$c]['hits'] : 0.0;
+		$refs[$c]['width'] = ceil($graphWidth*$hits/$total);
 		$output .= $refdObj->techo($refs[$c]);
 	}
 	$core->template->assign("_refd",$output);
 
 	# month #
 	$sql = "SELECT sum(hits) as h, referer FROM ".$refH->dbname." WHERE data > NOW() - INTERVAL 31 DAY  GROUP BY referer HAVING h>2 ORDER BY h DESC LIMIT 100";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	$refs = array();
 	$total = 0;
 	for($c=0;$c<$n;$c++) {
 		$ref = $core->dbo->fetch_assoc($r);
+		if (!is_array($ref) || !isset($ref['h'])) continue;
+		$ref['h'] = (float)$ref['h'];
 		if ($ref['referer'] == '') $ref['referer'] = 'BOOKMARK';
 		$refs[] = $ref;
 		$total += $ref['h'];
@@ -307,27 +336,33 @@
 	if ($total == 0) $total = 1;
 	$refdObj = $core->template->get("_refh");
 	$output = "";
-	for($c=0;$c<$n;$c++) {
-		$refs[$c]['width'] = ceil($graphWidth*$refs[$c]['h']/$total);
+	for($c=0;$c<count($refs);$c++) {
+		$hits = isset($refs[$c]['h']) && is_numeric($refs[$c]['h']) ? (float)$refs[$c]['h'] : 0.0;
+		$refs[$c]['width'] = ceil($graphWidth*$hits/$total);
 		$output .= $refdObj->techo($refs[$c]);
 	}
 	$core->template->assign("_refh",$output);
 
 	# entry #
 	$sql = "SELECT sum(hits) as h, referer, entrypage FROM ".$refH->dbname." WHERE data > NOW() - INTERVAL 31 DAY GROUP BY referer,entrypage ORDER BY h DESC LIMIT 100";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	$refs = array();
 	$total = 0;
 	for($c=0;$c<$n;$c++) {
 		$ref = $core->dbo->fetch_assoc($r);
+		if (!is_array($ref) || !isset($ref['h'])) continue;
+		$ref['h'] = (float)$ref['h'];
 		$refs[] = $ref;
 		$total += $ref['h'];
 	}
 	if ($total == 0) $total = 1;
 	$refdObj = $core->template->get("_refe");
 	$output = "";
-	for($c=0;$c<$n;$c++) {
-		$refs[$c]['width'] = ceil($graphWidth*$refs[$c]['h']/$total);
+	for($c=0;$c<count($refs);$c++) {
+		$hits = isset($refs[$c]['h']) && is_numeric($refs[$c]['h']) ? (float)$refs[$c]['h'] : 0.0;
+		$refs[$c]['width'] = ceil($graphWidth*$hits/$total);
 		$output .= $refdObj->techo($refs[$c]);
 	}
 	$core->template->assign("_refe",$output);
@@ -338,7 +373,9 @@
 	$sql = "SELECT DISTINCT(page) FROM ".$pathmod->dbname." WHERE data > NOW() - INTERVAL 31 DAY";
 	$pagesObj = $core->template->get("_pages");
 	$output = "";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	for ($c=0;$c<$n;$c++) {
 		$data = $core->dbo->fetch_assoc($r);
 		$data['checked'] = $data['page'] == "index"?"selected":"";
@@ -376,7 +413,9 @@
 
 	$sql = "SELECT hits, browser, data FROM ".$statsb->dbname." WHERE data>=NOW() - INTERVAL 31 DAY ORDER BY data ASC";
 
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	$total  =0;
 	$mobtotal = 0;
 	for ($c=0;$c<$n;$c++) {
@@ -448,7 +487,9 @@
 
 	// complete stats
 	$sql = "SELECT sum(hits) as hits, browser FROM ".$statsb->dbname." WHERE data>=NOW() - INTERVAL 31 DAY GROUP BY browser ORDER BY hits DESC";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	$obj = $core->template->get("_browserEX");
 	$output = "";
 	for ($c=0;$c<$n;$c++) {
@@ -477,7 +518,9 @@
 
 	$statsb = $core->loaded('statsres');
 	$sql = "SELECT sum(hits) as hits, resolution FROM ".$statsb->dbname." WHERE data>=NOW() - INTERVAL 31 DAY GROUP BY resolution ORDER BY hits DESC";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	$res=array();
 	$total  =0;
 	$simpleList = array(array('prop' => 'Standard 4:3','hits' => 0,'code' => DIM_ST),
@@ -490,6 +533,8 @@
 				   );
 	for ($c=0;$c<$n;$c++) {
 	$ares = $core->dbo->fetch_assoc($r);
+		if (!is_array($ares) || !isset($ares['hits'])) continue;
+		$ares['hits'] = (float)$ares['hits'];
 		$res[] = $ares;
 		$total += $ares['hits'];
 		if (in_array($ares['resolution'],$cpack[DIM_ST])) {
@@ -507,9 +552,10 @@
 	if ($total == 0) $total = 1;
 	$obj = $core->template->get("_res");
 	$output = "";
-	for ($c=0;$c<$n;$c++) {
-		$res[$c]['percent'] = 100*$res[$c]['hits'] / $total;
-		$res[$c]['width'] = ceil($innerWidth * $res[$c]['hits'] / $total);
+	for ($c=0;$c<count($res);$c++) {
+		$hits = isset($res[$c]['hits']) && is_numeric($res[$c]['hits']) ? (float)$res[$c]['hits'] : 0.0;
+		$res[$c]['percent'] = 100*$hits / $total;
+		$res[$c]['width'] = ceil($innerWidth * $hits / $total);
 		$output .= $obj->techo($res[$c]);
 		if ($res[$c]['percent'] < 0.25) break; # we don't care
 	}
@@ -533,30 +579,37 @@
 	$core->runContent('STATSRT',$core->template,array("data > NOW() - INTERVAL 30 MINUTE","data_ini DESC",""),"_rvisitor",false,false,'counthitsrt');
 	
 	#################################### BOT HITS 24h ########################################
-	$core->template->assign("bothits",CONS_ECONOMICMODE?'economic mode on':$core->dbo->fetch("SELECT hits FROM stats_bots WHERE data='".date("Y-m-d")."'"));
+	$core->template->assign("bothits",CONS_ECONOMICMODE?'economic mode on':$core->dbo->fetchPrepared("SELECT hits FROM stats_bots WHERE data=?", 's', array(date("Y-m-d"))));
 	
 	#################################### HONEYPOT ############################################
 	$core->template->assign("honeypot",isset($_SESSION[CONS_SESSION_HONEYPOTLIST])?count($_SESSION[CONS_SESSION_HONEYPOTLIST]):0);
 	
 	#################################### LANGUAGE ############################################
 	$sql = "SELECT sum(uhits) as hits, lang FROM stats_hitsh WHERE data>NOW() - INTERVAL 1 MONTH GROUP BY lang ORDER BY lang ASC";
-	$core->dbo->query($sql,$r,$n);
+	$r = false;
+	$n = 0;
+	$core->dbo->queryPrepared($sql, "", array(), $r, $n);
 	
 	$t = 0;
 	$langs = array();
 	for ($c=0;$c<$n;$c++) {
 		$langs[$c] = $core->dbo->fetch_assoc($r);
+		if (!is_array($langs[$c]) || !isset($langs[$c]['hits'])) {
+			unset($langs[$c]);
+			continue;
+		}
+		$langs[$c]['hits'] = (float)$langs[$c]['hits'];
 		$t += $langs[$c]['hits'];
 	}
 	if ($t==0) $t=1;
 	$temp ="";
 	$obj = $core->template->get("_lang");
-	for ($c=0;$c<$n;$c++) {
-		$langs[$c]['percent'] = $langs[$c]['hits']/$t;
-		$langs[$c]['width'] = ceil($graphWidth * $langs[$c]['percent']);
-		$langs[$c]['percent'] *= 100;
-		$temp .= $obj->techo($langs[$c]);
+	for ($c=0;$c<count($langs);$c++) {
+		$language = $langs[$c] ?? null;
+		if (!is_array($language) || !array_key_exists('hits',$language) || !is_numeric($language['hits'])) continue;
+		$language['percent'] = (float)$language['hits']/$t;
+		$language['width'] = ceil($graphWidth * $language['percent']);
+		$language['percent'] *= 100;
+		$temp .= $obj->techo($language);
 	}
-	$core->template->assign("_lang",$temp);
-	
-	
+		$core->template->assign("_lang",$temp);

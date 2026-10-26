@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $this Runtime page-action context injected by the framework. */
+
 	$ok = false;
 	if (isset($_REQUEST['haveinfo'])) {
 		$step = $this->dimconfig['presciastage'];
@@ -6,13 +9,13 @@
 
 		switch ($step) {
 			case 'start': # just created
-			
+
 				$ok = $this->dimconfig['i_am_alive'] == 'presciacounter plugin is alive <3';
 				if (!$ok) {
 					$this->log [] = "<b>ERROR: Plugin presciacounter was not loaded properly!</b>";
 					break;
 				}
-				
+
 				$this->authControl->logUser(1,CONS_AUTH_SESSION_NEW);
 				# some alpha
 				$this->log[] = "Alpha 1";
@@ -115,7 +118,7 @@
 				'id_beta' => $beta1,
 				'oneofakind' => 2,
 				'mylanguage' => $_SESSION[CONS_SESSION_LANG]);
-				
+
 				$ok = $this->runAction('presciator',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
 				$this->log[] = "Tor 3";
@@ -141,8 +144,8 @@
 				'oneofakind' => 3,
 				'mylanguage' => $_SESSION[CONS_SESSION_LANG]);
 
-				unset($_FILES['somefile']);
-				unset($_FILES['someimage']);
+				if (isset($_FILES['somefile'])) unset($_FILES['somefile']);
+				if (isset($_FILES['someimage'])) unset($_FILES['someimage']);
 				$_FILES['conditionedimage'] = array( 'error'=>0, 'tmp_name' => CONS_PATH_PAGES.$_SESSION['CODE']."/files/prescia.png", 'virtual'=>true, 'name'=> "prescia3.png"	);
 
 				$ok = $this->runAction('presciator',CONS_ACTION_INCLUDE,$data);
@@ -169,8 +172,8 @@
 				'oneofakind' => 4,
 				'mylanguage' => $_SESSION[CONS_SESSION_LANG]);
 
-				unset($_FILES['somefile']);
-				unset($_FILES['someimage']);
+				if (isset($_FILES['somefile'])) unset($_FILES['somefile']);
+				if (isset($_FILES['someimage'])) unset($_FILES['someimage']);
 				$_FILES['conditionedimage'] = array( 'error'=>0, 'tmp_name' => CONS_PATH_PAGES.$_SESSION['CODE']."/files/prescia.png", 'virtual'=>true, 'name'=> "prescia4.png"	);
 				$ok = $this->runAction('presciator',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
@@ -218,8 +221,8 @@
 				'oneofakind' => 23,
 				'mylanguage' => $_SESSION[CONS_SESSION_LANG]);
 
-				unset($_FILES['somefile']);
-				unset($_FILES['someimage']);
+				if (isset($_FILES['somefile'])) unset($_FILES['somefile']);
+				if (isset($_FILES['someimage'])) unset($_FILES['someimage']);
 				$_FILES['conditionedimage'] = array( 'error'=>0, 'tmp_name' => CONS_PATH_PAGES.$_SESSION['CODE']."/files/prescia.png", 'virtual'=>true, 'name'=> "prescia5.png"	);
 
 				$ok = $this->runAction('presciator',CONS_ACTION_INCLUDE,$data);
@@ -234,7 +237,7 @@
 				$_FILES['someimage'] = array( 'error'=>0, 'tmp_name' => CONS_PATH_PAGES.$_SESSION['CODE']."/files/prescia.png", 'virtual'=>true, 'name'=> "prescia1.png"	);
 				$ok = $this->runAction('presciamkey',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
-				
+
 				$this->log[] = "Multiple linker MKEY 2 with file";
 				$data = array(
 					'id_tor' => 'key',
@@ -243,7 +246,7 @@
 					'changesintor' => 0);
 				$ok = $this->runAction('presciamkey',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
-				unset($_FILES['someimage']);
+				if (isset($_FILES['someimage'])) unset($_FILES['someimage']);
 				$this->log[] = "Multiple linker MKEY 3";
 				$data = array(
 					'id_tor' => 'chave',
@@ -337,8 +340,8 @@
 				}
 			break;
 			case 'creation': # just main fill, WITH ERRORS!
-			
-			
+
+
 				$this->authControl->logUser(1,CONS_AUTH_SESSION_NEW); // log master
 				$ok = true;
 				$this->log[] = "Alpha error: no title (expected error: 127)";
@@ -346,9 +349,9 @@
 							  'title' => '');
 				$ok = !$this->runAction('presciaalpha',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
-				$this->errorState = false;
-				$this->log[] = "Alpha error: ciclic parent (expected error: 128)";
-				$id = $this->dbo->fetch("SELECT id FROM dba LIMIT 1");
+					$this->errorState = false;
+					$this->log[] = "Alpha error: ciclic parent (expected error: 128)";
+					$id = $this->dbo->fetchPrepared("SELECT id FROM dba LIMIT 1", "", array());
 				$data = array('id_parent' => $id,
 							  'id' => $id,
 							  'title' => 'this should be interesting');
@@ -365,13 +368,15 @@
 				$data = array('title' => 'nested inside null');
 				$ok = !$this->runAction('presciabeta',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
-				$this->errorState = false;
-				$this->log[] = "Linker error: wtf a link is missing! (expected error: 127)";
+					$this->errorState = false;
+					$this->log[] = "Linker error: wtf a link is missing! (expected error: 127)";
 				$data = array('id_a' => $id);
 				$ok = !$this->runAction('prescialinker',CONS_ACTION_INCLUDE,$data);
 				if (!$ok) break;
-				$this->errorState = false;
-				if (!$this->dbo->query("SELECT alpha,beta,oneofakind FROM dbp LIMIT 2",$r,$n) || $n !=2) {
+					$this->errorState = false;
+					$r = false;
+					$n = 0;
+					if (!$this->dbo->queryPrepared("SELECT alpha,beta,oneofakind FROM dbp LIMIT 2", "", array(), $r, $n) || $n !=2) {
 					$this->log[] = "FAILED to select 2 Presciator";
 					$ok = false;
 					break;
@@ -379,7 +384,7 @@
 				list($a1,$b1,$o1) = $this->dbo->fetch_row($r);
 				list($a2,$b2,$o2) = $this->dbo->fetch_row($r);
 				unset($r);
-				
+
 				$this->log[] = "Fun with TOR 1: overflow fields (expected error: 136, and DBO raw output)";
 				$data = array('alpha' => $a1,
 							  'beta' => $b1,
@@ -389,7 +394,7 @@
 				$ok = !$this->runAction('presciator',CONS_ACTION_UPDATE,$data);
 				if (!$ok) break;
 				$this->errorState = false;
-				
+
 				$this->log[] = "Fun with TOR 2: duplicate unique key (expected error: 137)";
 				$data = array('alpha' => $a2,
 							  'beta' => $b2,
@@ -398,25 +403,25 @@
 				$ok = !$this->runAction('presciator',CONS_ACTION_UPDATE,$data);
 				if (!$ok) break;
 				$this->errorState = false;
-				
+
 				$this->log[] = "Fun with TOR 3: invalid file upload type (expected error: 202)";
 				$_FILES['somefile'] = array( 'error'=>0, 'tmp_name' => CONS_PATH_PAGES.$_SESSION['CODE']."/files/prescia.png", 'virtual'=>true, 'name'=> "prescia1.png"	);
 				$data = array('alpha' => $a2,
 							  'beta' => $b2);
 				$ok = $this->runAction('presciator',CONS_ACTION_UPDATE,$data); // will update what it can (aka nothing)
-				unset($_FILES['somefile']);
+				if (isset($_FILES['somefile'])) unset($_FILES['somefile']);
 				if (!$ok) break;
-				$this->errorState = false;
-				
-				$this->log[] = "Logging in with low-level user";
-				$uid = $this->dbo->fetch("SELECT id FROM auth_users WHERE login='wd40user'");
+					$this->errorState = false;
+
+					$this->log[] = "Logging in with low-level user";
+					$uid = $this->dbo->fetchPrepared("SELECT id FROM auth_users WHERE login=?", "s", array('wd40user'));
 				if ($uid === false) {
 					$ok = false;
 					$this->log[] = "Failed to fetch wd40 user";
 					return;
 				}
 				$this->authControl->logUser($uid,CONS_AUTH_SESSION_NEW);
-				
+
 				$this->log[] = "Fun with TOR 4: trying to edit fields only higher levels can (expected error: 145)";
 				$data = array('alpha' => $a1,
 							  'beta' => $b1,
@@ -424,47 +429,47 @@
 							  );
 				$ok = $this->runAction('presciator',CONS_ACTION_UPDATE,$data); // will succeed, ignoring getawaylowly
 				$this->errorState = false;
-				
+
 				$this->log[] = "Permission denied test (if wd40 has no permission to presciaalpha) (expected errors: 150 + 306)";
 				$data = array('id_parent' => 0,
 							  'title' => 'not going to happen pal');
 				$ok = !$this->runAction('presciaalpha',CONS_ACTION_INCLUDE,$data);
 				$this->errorState = false;
-				
-				
-			
-				
+
+
+
+
 				// should have counted one change on each $a1+$b1, $a2+$b2 and the edit to delete key+1 somefile
-				
-				
-				
-				
+
+
+
+
 				$this->log[] = "Logging off ...";
 				$this->authControl->logsGuest();
-				
+
 				if ($ok) {
 					// automatic log should have set we are in deep trouble for all the errors, set we are not, they were expected
 					$this->setLog(CONS_LOGGING_SUCCESS,"",true);
 					$this->dimconfig['presciastage'] = 'pass1';
 					$this->saveConfig();
 				}
-				
+
 			break;
 			case 'pass1': // test file management
-			
-				$ok = true;	
-				//order to delete a specific file field from presciator ... should NOT delete all fields  
+
+				$ok = true;
+				//order to delete a specific file field from presciator ... should NOT delete all fields
 				// alpha=key&beta=1& should have ALL files
 
 				$this->log[] = "Logging in with low-level user";
-				$uid = $this->dbo->fetch("SELECT id FROM auth_users WHERE login='wd40user'");
+				$uid = $this->dbo->fetchPrepared("SELECT id FROM auth_users WHERE login=?", "s", array('wd40user'));
 				if ($uid === false) {
 					$ok = false;
 					$this->log[] = "Failed to fetch wd40 user";
 					return;
 				}
 				$this->authControl->logUser($uid,CONS_AUTH_SESSION_NEW); // log wd40
-				
+
 				// are files there?
 				$f = CONS_FMANAGER."presciator/somefile_key_1_1";
 				$yes1 = locateAnyFile($f,$e); // any file because it is a txt
@@ -474,10 +479,10 @@
 				$yes3 = locateFile($f,$e); // should be 100x100
 				$f = CONS_FMANAGER."presciator/conditionedimage_chave_1_1";
 				$yes3 = locateFile($f,$e2); // should be 200x200
-				
+
 				if ($yes1 && $yes2 && $yes3) {
 					$this->log[] = "File management test on presciator. All files detected - ok";
-					
+
 					$h = getimagesize(CONS_FMANAGER."presciator/conditionedimage_key_1_1.".$e);
 					$h2 = getimagesize(CONS_FMANAGER."presciator/conditionedimage_chave_1_1.".$e2);
 					if ($h[0] !== 100 || $h[1] != 100 || $h2[0] !== 200 || $h[2] != 200) {
@@ -485,7 +490,7 @@
 						$ok = false;
 					}
 					else $this->log[] = "Conditioned file-size seems working";
-					
+
 					$this->log[] = "Testing delete a file, no error expected";
 					$data = array('alpha' => 'key',
 							  'beta' => 1,
@@ -493,43 +498,43 @@
 							  );
 					$ok = $this->runAction('presciator',CONS_ACTION_UPDATE,$data); // will succeed, and delete somefile
 					$this->errorState = false;
-					
+
 					clearstatcache();
-					
+
 					$f = CONS_FMANAGER."presciator/somefile_key_1_1";
 					$yes1 = locateAnyFile($f,$e);
 					$f = CONS_FMANAGER."presciator/someimage_key_1_1";
 					$yes2 = locateFile($f,$e);
-					
+
 					if (!$yes1 && $yes2) $this->log[] = "Success, file has been deleted, other file fields intact!";
 					else {
 						$this->log[] = "<b>ERROR</b>: ".($yes1?"File was not deleted!":"").(!$yes2?"Other files were also deleted, should only delete one field!":"");
 						$ok = false;
 					}
-					
+
 				} else {
 					$this->log[] = "<b>ERROR</b>: some files on presciator key_1 were not found, all should be present:".($yes1?"somefile ok,":"somefile missing,").($yes2?"someimage ok,":"someimage missing,").($yes3?"conditionedimage ok.":"conditionedimage missing.");
 					$ok = false;
 				}
-			
+
 				$this->log[] = "Logging off ...";
 				$this->authControl->logsGuest();
-				
+
 				if ($ok) {
 					// automatic log should have set we are in deep trouble for all the errors, set we are not, they were expected
 					$this->setLog(CONS_LOGGING_SUCCESS,"",true);
 					$this->dimconfig['presciastage'] = 'pass2';
 					$this->saveConfig();
 				}
-				
+
 			break;
-			case 'pass2': // undo test 
+			case 'pass2': // undo test
 				$ok = true;
-			
+
 				$this->authControl->logUser(1,CONS_AUTH_SESSION_NEW);
-				
-				
-			
+
+
+
 				if ($ok) {
 					$this->dimconfig['presciastage'] = 'pass3';
 					$this->saveConfig();
@@ -537,7 +542,7 @@
 			break;
 			case 'pass3': // end (delete all)
 				$ok = true;
-				
+
 				$this->log[] = "This is the end dude";
 				$this->dimconfig['presciastage'] = 'end';
 				$this->saveConfig();

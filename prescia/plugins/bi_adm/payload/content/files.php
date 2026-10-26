@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 	if (!$core->authControl->checkPermission('bi_adm','can_fm'))
 		$core->fastClose(403);
@@ -53,9 +56,10 @@
 		$core->template->assign("_perm");
 
 	$tp = $core->template->get('_file');
-	$output = "";
-	$c = 0;
-	if (!function_exists('filetypeIcon')) include CONS_PATH_INCLUDE."filetypeIcon.php";
+		$output = "";
+		$c = 0;
+		$ext = '';
+		if (!function_exists('filetypeIcon')) include CONS_PATH_INCLUDE."filetypeIcon.php";
 
 
 	// separated in two loops pratically the same for performance reasons:

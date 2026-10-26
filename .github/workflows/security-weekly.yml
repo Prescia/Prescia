@@ -1,0 +1,81 @@
+name: Weekly security audit
+
+on:
+  schedule:
+    - cron: '15 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-security-audit
+  cancel-in-progress: false
+
+jobs:
+  security-audit:
+    name: Dependency and source security audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, pdo_mysql, mbstring
+          coverage: none
+          cache: composer
+          tools: composer:v2
+
+      - name: Validate Composer configuration
+        run: composer validate --strict
+
+      - name: Audit Composer dependencies
+        run: composer audit --locked --no-interaction
+
+      - name: Install locked development dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run regression tests
+        run: composer test
+
+      - name: Run PHPStan
+        run: composer analyse
+
+      - name: Lint tracked PHP files
+        run: git ls-files '*.php' -z | xargs -0 -n1 php -l
+
+      - name: Scan source for high-risk execution sinks
+        shell: bash
+        run: |
+          set -o pipefail
+          {
+            echo '# Weekly source security scan'
+            echo
+            echo '## Dynamic execution and shell sinks'
+            if rg -n --glob '*.php' --glob '!pages/_js/ckfinder/**' \
+              '\b(eval|assert|shell_exec|system|passthru|proc_open|popen)\s*\(' prescia pages tools; then
+              true
+            else
+              echo 'No dynamic execution or shell sinks found.'
+            fi
+            echo
+            echo '## SQL execution calls'
+            rg -n --glob '*.php' --glob '!pages/_js/ckfinder/**' \
+              '(simpleQuery|query|fetch)\s*\(' prescia pages tools || true
+          } | tee security-source-scan.md
+
+      - name: Upload security evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-${{ github.run_id }}
+          path: security-source-scan.md
+          if-no-files-found: error
+          retention-days: 30

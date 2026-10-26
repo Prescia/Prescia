@@ -1,4 +1,7 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
+/** @var mod_bi_adm $this Runtime module context injected by the framework. */
 
 	if (isset($_REQUEST['haveinfo'])) {
 		$module = $core->loaded($_REQUEST['module']);
@@ -11,9 +14,10 @@
 		foreach ($module->keys as $key) {
 			$mainFile .= $_REQUEST[$key]."_";
 			$thumbStart .= $_REQUEST[$key]."_";
-		}
-		$mainFile .= "1";
-		if (!locateFile($mainFile,$ext)) {
+			}
+			$mainFile .= "1";
+			$ext = '';
+			if (!locateFile($mainFile,$ext)) {
 			$core->log[] = "Image not found: ".$mainFile;
 			return;
 		}
@@ -81,11 +85,12 @@
 			}
 		}
 		$core->action = "edit_thumbnails"; // if internalFoward disabled, go to edit pane
-		$qs = array();
+		$query = array(
+			'module' => $module->name,
+			'field' => $field,
+		);
 		foreach ($module->keys as $key) {
-			$qs[] = $key . "=" . $_REQUEST[$key];
+			$query[$key] = $_REQUEST[$key];
 		}
-		$qs = "module=".$module->name."&field=".$_REQUEST['field']."&".implode("&",$qs);
-		$core->headerControl->internalFoward("edit_thumbnails.html?".$qs);
+		$core->headerControl->internalFoward("edit_thumbnails.html?".http_build_query($query, '', '&', PHP_QUERY_RFC3986));
 	}
-

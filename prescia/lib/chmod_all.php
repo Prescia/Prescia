@@ -1,4 +1,5 @@
-<?/*--------------------------------\
+<?php
+/*--------------------------------\
   | chmod_all : Sets the chmod of a whole folder structure, possible even using local FTP connection if normal chmod fails (improperly configured linux permissions)
   | Made for Prescia family framework (cc) Caio Vianna de Lima Netto
   | Free to use, change and redistribute, but please keep the above disclamer.

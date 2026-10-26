@@ -1,4 +1,6 @@
-<?
+<?php
+
+/** @var CPrescia $core Runtime payload context injected by the framework. */
 	return; // EM MANUTENÇÃO
 
 	$core->loadAllmodules();

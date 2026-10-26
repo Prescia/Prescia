@@ -1,4 +1,5 @@
-<?/* -------------------------------- Prescia Core variables and constants
+<?php
+/* -------------------------------- Prescia Core variables and constants
   | Copyleft (ɔ) 2011+, Caio Vianna de Lima Netto (www.prescia.net)
   | LICENSE TYPE: BSD-new/ɔ
 -*/
@@ -159,6 +160,7 @@ class CPresciaVar {
 	# Controllers --
 	var $dbo = null; # Database Controller object (dbo.php)
 	var $errorControl = null; # Error and Exception controller object (errorControl.php)
+	var $headerControl = null; # Header and redirect controller object (headerControl.php)
 	var $cacheControl = null; # Cache control object (cacheControl.php)
 	var $intlControl = null; #Intl object (intlControl.php)
 	var $authControl = null; #Authentication default object (authControl.php)

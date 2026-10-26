@@ -1,4 +1,4 @@
-<? # Prescia simple pop3 controler
+<?php # Prescia simple pop3 controler
 
 	class Cpop3 { // http://www.ietf.org/rfc/rfc1939.txt
 
