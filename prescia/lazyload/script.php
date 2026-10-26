@@ -33,7 +33,7 @@
 				$this->addLink("html5shiv.min.js");
 				$this->addLink("respond.min.js");
 			}
-			if (!isset($this->storage['_scripts_jquery_added'])) $this->addLink("jquery-1.11.1.min.js"); // bootstrap flavours j-query 1.x
+			if (!isset($this->storage['_scripts_jquery_added'])) $this->addLink("jquery-3.7.1.min.js");
 			$this->addLink("bootstrap/js/bootstrap.min.js");
 
 			$this->storage['_scripts_bootstrap_added'] = true;
