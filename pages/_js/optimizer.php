@@ -1,72 +1,28 @@
-<?php # will gzip files, if possible. Note this will also auto-detect the latest jquery min version if you call jquery.js
+<?php
+declare(strict_types=1);
 
+require_once dirname(__DIR__, 2) . '/prescia/lib/assetOptimizer.php';
 
-	define ('CONS_CACHE_TIME',604800); // 7 days
-	$gzip = isset($_SERVER['HTTP_ACCEPT_ENCODING']) && strpos( $_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') !== false;
-
-	function cReadFile($ofile) {
-	  if (is_file($ofile)) {
-	    $fd = fopen ($ofile, "rb");
-	    $size = filesize($ofile);
-	    if ($size>0) $saida = fread($fd,$size);
-	    else $saida = "";
-	    fclose($fd);
-	    return $saida;
-	  }
-	}
-
-	function fastDir($pattern) {
-		$files = array();
-		$patternlen = strlen($pattern);
-		if ($handle = opendir("./")) {
-			while (false !== ($file = readdir($handle)))
-				if ($file != "." && $file != ".." && strlen($file)>= $patternlen && substr($file,0,$patternlen) == $pattern)
-					$files[]= $file;
-			closedir($handle);
-		}
-		return $files;
-	}
-
-	$file = "";
-	if (isset($_REQUEST['js'])) {
-		$file = $_REQUEST['js'];
-		if ($file == "jquery.js" && !is_file($file)) {
-			// we will serve the latest jquery min!
-			$possibilities = fastDir("jquery");
-			$maxF = "";
-			$maxP = 0;
-			foreach ($possibilities as $possible) {
-				$p = (float)substr($possible,7,3);
-				if ($p>$maxP) {
-					$maxP = $p;
-					$maxF = $possible;
-				}
-			}
-			$file = $maxF;
-		}
-	} else if (isset($_REQUEST['css'])) {
-		$file = $_REQUEST['css'];
-	}
-
-	$file = str_replace("..","",$file); // very basic anti-injection
-
-	if (is_file($file)) {
-		if ($gzip) {
-			header("Content-Encoding: gzip");
-			header("Content-Type: ".(isset($_REQUEST['js'])?"text/javascript":"text/css"));
-			header('Pragma: public');
-			header('Cache-Control: public,max-age='.CONS_CACHE_TIME.',s-maxage='.CONS_CACHE_TIME);
-    		echo gzencode(cReadFile($file));
-		} else {
-			header("Content-Type: ".(isset($_REQUEST['js'])?"text/javascript":"text/css"));
-			header('Pragma: public');
-			header('Cache-Control: public,max-age='.CONS_CACHE_TIME.',s-maxage='.CONS_CACHE_TIME);
-			readfile($file);
-		}
-	} else {
-		header("HTTP/1.0 404 Not Found");
-		header('Pragma: no-cache');
-  		die("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\"><HTML><HEAD><TITLE>404 Not Found</TITLE></HEAD><BODY><H1>Not Found</H1>The requested URL was not found on this server.<P><P>Additionally, a 404 Not Found error was encountered while trying to use an ErrorDocument to handle the request.<br/><br/>Aff optimizer, $file</BODY></HTML>");
-	}
-
-?>
+header('X-Content-Type-Options: nosniff');
+$method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+if (!in_array($method, ['GET', 'HEAD'], true)) {
+    header('Allow: GET, HEAD');
+    http_response_code(405);
+    exit;
+}
+$extension = isset($_GET['js']) ? 'js' : 'css';
+$file = presciaResolveAsset(__DIR__, $_GET[$extension] ?? null, $extension);
+$content = $file === null ? false : file_get_contents($file);
+if ($content === false) {
+    http_response_code(404);
+    header('Cache-Control: no-store');
+    exit;
+}
+header('Content-Type: ' . ($extension === 'js' ? 'text/javascript' : 'text/css') . '; charset=UTF-8');
+header('Cache-Control: public, max-age=604800');
+header('Vary: Accept-Encoding');
+if ($method === 'HEAD') {
+    exit;
+}
+// PHP/Apache can negotiate compression; gzip;q=0 must never force gzip output.
+echo $content;
