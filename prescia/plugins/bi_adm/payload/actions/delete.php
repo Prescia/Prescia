@@ -2,7 +2,14 @@
 
 /** @var CPrescia $core Runtime payload context injected by the framework. */
 
-	if (!isset($_REQUEST['module']) || !$core->loaded($_REQUEST['module'])) {
+	if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
+		header('Allow: POST');
+		http_response_code(405);
+		exit;
+	}
+	presciaValidateCsrf();
+
+	if (!isset($_POST['module']) || !is_string($_POST['module']) || !$core->loaded($_POST['module'])) {
 		# master check if this is a valid module
 		$core->log[] = "Module not found";
 		$core->action = "index";
@@ -12,9 +19,9 @@
 		return;
 	}
 
-	$module = $core->loaded($_REQUEST['module']);
+	$module = $core->loaded($_POST['module']);
 
- 	$ok = $core->runAction($module,CONS_ACTION_DELETE,$_REQUEST);
+	$ok = $core->runAction($module,CONS_ACTION_DELETE,$_POST);
  	if ($ok) {
 		$core->setLog(CONS_LOGGING_SUCCESS,str_replace("{#}",$core->langOut($module->name),$core->langOut('delete_sucess')));
 	}
