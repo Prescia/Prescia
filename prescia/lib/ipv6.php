@@ -42,18 +42,14 @@ function ExpandIPv6Notation($Ip) {
 }
 
 function GetIP($remote=true) { // if remote is false, will get the SERVER address
-	if (!isset($_REQUEST['nocache']) && isset($_SESSION['prescia_ipcache_'.($remote?'remote':'local')]))
+	if (!$remote && !isset($_REQUEST['nocache']) && isset($_SESSION['prescia_ipcache_local']))
 		return $_SESSION['prescia_ipcache_'.($remote?'remote':'local')];
     $Ip = '0.0.0.0';
     if ($remote) {
-	    if (isset($_SERVER['HTTP_CLIENT_IP']) && $_SERVER['HTTP_CLIENT_IP'] != '')
-	        $Ip = $_SERVER['HTTP_CLIENT_IP'];
-	    elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR'] != '')
-	        $Ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-	    elseif (isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] != '')
-	        $Ip = $_SERVER['REMOTE_ADDR'];
-	    if (($CommaPos = strpos($Ip, ',')) > 0)
-	        $Ip = substr($Ip, 0, ($CommaPos - 1));
+	    // Only the connection peer is authoritative. Configure trusted proxies
+	    // in the web server so REMOTE_ADDR already contains the verified client.
+	    $peer = $_SERVER['REMOTE_ADDR'] ?? '';
+	    $Ip = is_string($peer) && filter_var($peer, FILTER_VALIDATE_IP) !== false ? $peer : '0.0.0.0';
     } else {
     	$Ip = isset($_SERVER['SERVER_ADDR'])?$_SERVER['SERVER_ADDR']:$_SERVER['LOCAL_ADDR'];
     }
