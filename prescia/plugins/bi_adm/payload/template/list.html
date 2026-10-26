@@ -575,7 +575,24 @@ CAjaxList.prototype = {
 		if (!module_tl) module_tl = module
 		if (confirm("{_t}delete{/t} ("+module_tl+")?")) {
 			waitWhileLoad();
-	  		document.location = 'delete.html?module='+module+'&'+skeys;
+			var form = document.createElement('form');
+			form.method = 'post';
+			form.action = 'delete.html';
+			var token = document.querySelector('input[name="csrf_token"]');
+			if (!token) { remove_wwl(); return; }
+			var fields = 'module=' + encodeURIComponent(module) + '&' + skeys;
+			fields.split('&').forEach(function(pair) {
+				var separator = pair.indexOf('=');
+				if (separator < 0) return;
+				var input = document.createElement('input');
+				input.type = 'hidden';
+				input.name = decodeURIComponent(pair.slice(0, separator).replace(/\+/g, ' '));
+				input.value = decodeURIComponent(pair.slice(separator + 1).replace(/\+/g, ' '));
+				if (input.name !== 'csrf_token') form.appendChild(input);
+			});
+			form.appendChild(token.cloneNode(true));
+			document.body.appendChild(form);
+			HTMLFormElement.prototype.submit.call(form);
 	  	}
 	}
 	function listselectchange(module,skeys, value, field) {
